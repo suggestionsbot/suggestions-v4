@@ -1,7 +1,7 @@
 from bot.tables import UserConfig
 
 
-async def test_defaults():
+async def test_user_config_default():
     r_1: UserConfig = UserConfig(id=123)
     assert r_1.id == 123
     assert r_1.dm_messages_disabled is False

@@ -1,0 +1,76 @@
+from piccolo.columns import BigInt, Boolean, Array
+from piccolo.table import Table
+
+from bot.mixins.tables import AuditMixin
+
+
+class GuildConfig(AuditMixin, Table):
+    id = BigInt(
+        primary_key=True,
+        unique=True,
+        index=True,
+        help_text="The discord guild id",
+    )
+    keep_logs = Boolean(
+        default=False,
+        help_text="Should resolved suggestions stay in the suggestions channel?",
+    )
+    dm_messages_disabled = Boolean(
+        default=False,
+        help_text="If True, don't send messages to members of this guild",
+    )
+    log_channel_id = BigInt(
+        default=None,
+        null=True,
+        help_text="The channel to send resolved suggestions to",
+    )
+    queued_suggestion_channel_id = BigInt(
+        default=None,
+        null=True,
+        help_text="The channel to send queued suggestions to",
+    )
+    queued_suggestion_log_channel_id = BigInt(
+        default=None,
+        null=True,
+        help_text="The channel to send rejected queued suggestions to",
+    )
+    threads_for_suggestions = Boolean(
+        default=True,
+        help_text="If True, create a thread on new suggestions",
+    )
+    suggestions_channel_id = BigInt(
+        default=None,
+        null=True,
+        help_text="The channel to send suggestions to",
+    )
+    can_have_anonymous_suggestions = Boolean(
+        default=False,
+        help_text="Is this guild allowed to make suggestions anonymously?",
+    )
+    auto_archive_threads = Boolean(
+        default=False,
+        help_text="Auto archive threads when suggestions are resolved?",
+    )
+    uses_suggestions_queue = Boolean(
+        default=False,
+        help_text="If True, suggestions go to a queue for review instead of to the suggestions channel",
+    )
+    virtual_suggestions_queue = Boolean(
+        default=True, help_text="If True, the suggestions queue is virtual"
+    )
+    can_have_images_in_suggestions = Boolean(
+        default=True,
+        help_text="If True, users are allowed to add images to suggestions",
+    )
+    anonymous_resolutions = Boolean(
+        default=False,
+        help_text="If True, moderators will be anonymous when suggestions are resolved",
+    )
+    blocked_users = Array(
+        BigInt(),
+        help_text="A list of users who cannot make suggestions",
+    )
+    ping_on_thread_creation = Boolean(
+        default=True,
+        help_text="Ping the suggestions author in the suggestions thread",
+    )

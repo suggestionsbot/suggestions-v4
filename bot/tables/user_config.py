@@ -1,9 +1,16 @@
 from piccolo.table import Table
 from piccolo.columns import BigInt, Boolean
 
+from bot.mixins.tables import AuditMixin
 
-class UserConfig(Table):
-    id = BigInt(primary_key=True, help_text="The discord user id")
+
+class UserConfig(AuditMixin, Table):
+    id = BigInt(
+        primary_key=True,
+        unique=True,
+        index=True,
+        help_text="The discord user id",
+    )
     dm_messages_disabled = Boolean(
         default=False, help_text="If True, don't send this user DM's"
     )
