@@ -1,7 +1,7 @@
 from piccolo.columns import BigInt, Boolean, Array
 from piccolo.table import Table
 
-from bot.mixins.tables import AuditMixin
+from bot.tables.mixins import AuditMixin
 
 
 class GuildConfig(AuditMixin, Table):

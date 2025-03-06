@@ -1,7 +1,7 @@
 from piccolo.columns import Text, Varchar, BigInt, Integer, Boolean
 from piccolo.table import Table
 
-from bot.mixins.tables import AuditMixin
+from bot.tables.mixins import AuditMixin
 from bot.utils import generate_id
 
 
