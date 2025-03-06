@@ -1,0 +1,16 @@
+[project]
+name = "suggestions-version-4"
+version = "4.0.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "piccolo[all,postgres]>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.25.3",
+]
