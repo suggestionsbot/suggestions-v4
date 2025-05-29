@@ -1,17 +1,18 @@
 from __future__ import annotations
 
-import random
 from pathlib import Path
-from unittest.mock import AsyncMock
+from typing import Sequence, TypeVar, Type
+from unittest import mock
 
-import disnake
 import fakeredis
+import hikari
+import lightbulb
 import pytest
 from piccolo.apps.tester.commands.run import set_env_var, refresh_db
 from piccolo.conf.apps import Finder
 from piccolo.table import create_db_tables, drop_db_tables
 
-from bot import SuggestionsBot
+T = TypeVar("T")
 
 
 @pytest.fixture(autouse=True)
@@ -27,6 +28,9 @@ def change_test_dir(request, monkeypatch):
 
 @pytest.fixture(scope="function", autouse=True)
 async def configure_testing():
+    # Due to the complexity of tables,
+    #   tests can only run with a postgres db present
+
     # Setup DB per test
     with set_env_var(var_name="PICCOLO_CONF", temp_value="piccolo_conf_test"):
         refresh_db()
@@ -46,19 +50,19 @@ def redis_client(request) -> fakeredis.FakeAsyncRedis:
     return redis_client
 
 
-@pytest.fixture
-def bot(redis_client) -> SuggestionsBot:
-    return SuggestionsBot(redis_instance=redis_client)
+async def prepare_command(
+    cls: Type[T],
+    options: Sequence[hikari.CommandInteractionOption] = None,
+) -> (T, lightbulb.Context):
+    await cls.as_command_builder(
+        hikari.Locale.EN_GB, lightbulb.localization_unsupported
+    )
+    client: lightbulb.Client = mock.AsyncMock()
+    ctx: lightbulb.Context = mock.AsyncMock(spec=lightbulb.Context, client=client)
+    if options is not None:
+        ctx.options = options
 
+    cls_instance: T = cls()
+    cls_instance._set_context(ctx)  # noqa
 
-@pytest.fixture
-def fake_interaction(bot) -> AsyncMock:
-    """An async mock acting like disnake.Interaction"""
-    mock = AsyncMock()
-    mock.client = bot
-    mock.channel_id = random.randint(1, 10000)
-    mock.author.id = random.randint(1, 10000)
-    mock.guild_id = random.randint(1, 10000)
-    mock.locale = disnake.Locale.en_GB
-    mock.id = random.randint(5000, 10000)
-    return mock
+    return cls_instance, ctx

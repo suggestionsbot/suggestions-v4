@@ -1,82 +1,9 @@
-from typing import Optional
-
-import disnake
-from disnake.ext.commands import CheckFailure
+class SuggestionException(Exception):
+    """Base exception class"""
 
 
-class MissingSuggestionsChannel(CheckFailure):
-    """This command requires a suggestions channel to run."""
+class MessageTooLong(SuggestionException):
+    """The content provided was too long."""
 
-
-class MissingLogsChannel(CheckFailure):
-    """This command requires a logs channel to run."""
-
-
-class MissingQueueLogsChannel(CheckFailure):
-    """This command requires a queue logs channel to run."""
-
-
-class MissingPermissionsToAccessQueueChannel(disnake.DiscordException):
-    """The bot does not have permissions to interact with the queue channel."""
-
-
-class ErrorHandled(disnake.DiscordException):
-    """This tells error handlers the error was already handled, and can be ignored."""
-
-
-class SuggestionNotFound(disnake.DiscordException):
-    """Cannot find a suggestion with this id."""
-
-
-class SuggestionTooLong(disnake.DiscordException):
-    """The suggestion content was too long."""
-
-    def __init__(self, suggestion_text: str):
-        self.suggestion_text = suggestion_text
-
-
-class InvalidGuildConfigOption(disnake.DiscordException):
-    """The provided guild config choice doesn't exist."""
-
-
-class ConfiguredChannelNoLongerExists(disnake.DiscordException):
-    """The configured channel can no longer be found."""
-
-
-class UnhandledError(Exception):
-    """Something went wrong."""
-
-
-class QueueImbalance(disnake.DiscordException):
-    """This queued suggestion has already been dealt with in another queue."""
-
-
-class BlocklistedUser(CheckFailure):
-    """This user is blocked from taking this action in this guild."""
-
-
-class ConflictingHandlerInformation(disnake.DiscordException):
-    """Raised when an InteractionHandler class gets both content and a translation key"""
-
-
-class InvalidFileType(disnake.DiscordException):
-    """The file you attempted to upload is not allowed."""
-
-
-class SuggestionSecurityViolation(disnake.DiscordException):
-    """A security violation occurred."""
-
-    def __init__(
-        self,
-        message: str | None = None,
-        *,
-        user_facing_message: str,
-        sid: str,
-    ):
-        self.suggestion_id: str = sid
-        self.user_facing_message = user_facing_message
-        self.message = message if message is not None else self.__doc__
-
-
-class PremiumRequired(disnake.DiscordException):
-    """This command requires a premium subscription to run."""
+    def __init__(self, text: str):
+        self.message_text = text

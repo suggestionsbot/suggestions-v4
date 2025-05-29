@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import traceback
+
 from piccolo.columns import Text, Varchar, BigInt, Integer, Boolean
 from piccolo.table import Table
 
@@ -5,7 +9,7 @@ from bot.tables.mixins import AuditMixin
 from bot.utils import generate_id
 
 
-class Error(AuditMixin, Table):
+class InternalError(AuditMixin, Table):
     # Old is 8 chars, new is 11
     id = Varchar(
         length=11,
@@ -25,10 +29,6 @@ class Error(AuditMixin, Table):
         length=100,
         help_text="The name of the command in which the error was triggered",
     )
-    cluster_id = Integer(
-        help_text="The id of the cluster in which the error was triggered"
-    )
-    shard_id = Integer(help_text="The id of the shard where the error was triggered")
     has_been_fixed = Boolean(
         default=False,
         help_text="Has this specific error been fixed? "
@@ -39,3 +39,23 @@ class Error(AuditMixin, Table):
         # Error objects should 'unique' based off the error itself
         # and not the extra metadata such as cluster or shard of execution
         return hash((self.error_name, self.traceback, self.command_name))
+
+    @classmethod
+    async def persist_error(
+        cls,
+        exception: Exception,
+        *,
+        command_name: str,
+        guild_id: int,
+        author_id: int,
+    ) -> InternalError:
+        internal_error = cls(
+            id=generate_id(),
+            traceback="".join(traceback.format_exception(exception)),
+            error_name=exception.__class__.__name__,
+            command_name=command_name,
+            guild_id=guild_id,
+            user_id=author_id,
+        )
+        await internal_error.save()
+        return internal_error

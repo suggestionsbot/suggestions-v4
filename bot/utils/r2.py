@@ -6,8 +6,6 @@ import secrets
 from aiobotocore.session import get_session
 from logoo import Logger
 
-from bot.exceptions import InvalidFileType
-
 logger = Logger(__name__)
 
 
@@ -19,6 +17,7 @@ async def upload_file_to_r2(
     user_id: int,
 ) -> str:
     """Upload a file to R2 and get the cdn url back"""
+    raise ValueError("Implement custom errors!")
 
     session = get_session()
     async with session.create_client(

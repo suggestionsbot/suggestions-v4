@@ -1,3 +1,1 @@
-from bot.bot import SuggestionsBot
-
-__all__ = ["SuggestionsBot"]
+from bot.bot import create_bot

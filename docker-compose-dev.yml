@@ -1,0 +1,31 @@
+x-shared-variables: &common-variables
+  POSTGRES_HOST: suggestions_db
+  POSTGRES_DB: suggestions_db
+  POSTGRES_USER: suggestions_db_user
+  POSTGRES_PASSWORD: product-defeat-follow-worshiper-swimwear-drown
+  POSTGRES_PORT: 2501
+
+services:
+  suggestions_db:
+    image: postgres:17
+    container_name: "suggestions_db"
+    command: -p 2501
+    ports:
+      - "2501:2501"
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: suggestions_db
+      POSTGRES_USER: suggestions_db_user
+      POSTGRES_PASSWORD: product-defeat-follow-worshiper-swimwear-drown
+    volumes:
+      - .db:/var/lib/postgresql/data
+
+volumes:
+  cache:
+    driver: local
+
+
+#networks:
+#  default:
+#    name: spook
+#    external: true

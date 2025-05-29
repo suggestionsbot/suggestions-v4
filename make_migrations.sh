@@ -1,1 +1,1 @@
-piccolo migrations new home --auto
+piccolo migrations new bot --auto
