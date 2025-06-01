@@ -10,8 +10,20 @@ from hikari import Bytes
 from bot import utils
 from bot.constants import MAX_CONTENT_LENGTH, ErrorCode
 from bot.extensions.suggest import Suggest
-from bot.tables import GuildConfig, InternalError
+from bot.tables import GuildConfig, InternalError, Suggestions, UserConfig
 from tests.conftest import prepare_command
+
+
+def create_options(suggestion: str) -> Sequence[hikari.CommandInteractionOption]:
+    options: Sequence[hikari.CommandInteractionOption] = [
+        hikari.CommandInteractionOption(
+            name="suggestion",
+            type=hikari.OptionType.STRING,
+            value=suggestion,
+            options=None,
+        ),
+    ]
+    return options
 
 
 async def invoke_suggest(
@@ -19,32 +31,29 @@ async def invoke_suggest(
     user_id: int = None,
     *,
     guild_config: GuildConfig = None,
-) -> (lightbulb.Context, GuildConfig):
+    user_config: UserConfig = None,
+) -> (lightbulb.Context, GuildConfig, UserConfig):
     if guild_config is None:
         guild_config = mock.Mock(spec=GuildConfig)
+
+    if user_config is None:
+        user_config = mock.Mock(spec=UserConfig)
 
     cmd, ctx = await prepare_command(Suggest, options)
     if user_id is not None:
         ctx.user.id = user_id
 
-    await cmd.invoke(ctx, guild_config)
+    await cmd.invoke(ctx, guild_config, user_config)
     ctx.defer.assert_called_once_with(ephemeral=True)
-    return ctx, guild_config
+    return ctx, guild_config, user_config
 
 
 @freeze_time("2025-01-20")
 async def test_suggestion_too_long():
     """Asserts an error message is sent when a suggestion is too long."""
     content = "a" * MAX_CONTENT_LENGTH + "a"
-    options: Sequence[hikari.CommandInteractionOption] = [
-        hikari.CommandInteractionOption(
-            name="suggestion",
-            type=hikari.OptionType.STRING,
-            value=content,
-            options=None,
-        ),
-    ]
-    ctx, guild_config = await invoke_suggest(options)
+    options = create_options(content)
+    ctx, _, __ = await invoke_suggest(options)
     internal_error = await InternalError.objects().first()
     ctx.respond.assert_called_once_with(
         embed=utils.error_embed(
@@ -56,3 +65,11 @@ async def test_suggestion_too_long():
         ),
         attachment=hikari.files.Bytes(io.StringIO(content), "content.txt"),
     )
+
+
+async def test_newline_handling():
+    """Asserts newlines passed in as content end up rendered correctly."""
+    options = create_options("a\\nb")
+    await invoke_suggest(options)
+    suggestion: Suggestions = await Suggestions.objects().first()
+    assert suggestion.suggestion == "a\nb"
