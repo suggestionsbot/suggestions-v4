@@ -1,11 +1,14 @@
 import json
 from pathlib import Path
+from string import Template
 
 import hikari
+import lightbulb
 import logoo
 from lightbulb import DictLocalizationProvider
 
 from bot.exceptions import MissingTranslation
+from bot.tables import GuildConfig
 
 logger = logoo.Logger(__name__)
 
@@ -39,3 +42,43 @@ class Localisation:
                 raise MissingTranslation  # TODO Handle this on the bots error handler
 
             return fallback_value
+
+    @staticmethod
+    def inject_locale_values(
+        content: str,
+        ctx: lightbulb.Context,
+        *,
+        extras: dict = None,
+        guild_config: GuildConfig | None = None,
+    ):
+        base_config = {
+            "CHANNEL_ID": ctx.channel_id,
+            "GUILD_ID": ctx.guild_id,
+            "AUTHOR_ID": ctx.user.id,
+        }
+        if extras is not None:
+            base_config = {**base_config, **extras}
+
+        if guild_config is not None:
+            guild_data = {}
+            for k, v in guild_config.to_dict().items():
+                guild_data[f"GUILD_CONFIG_{k.upper()}"] = v
+
+            guild_data.pop("GUILD_CONFIG__ID")
+            base_config = {**base_config, **guild_data}
+
+        return Template(content).safe_substitute(base_config)
+
+    def get_localized_string(
+        self,
+        key: str,
+        ctx: lightbulb.Context,
+        *,
+        guild_config: GuildConfig | None = None,
+    ):
+        content = self.get_locale(key, hikari.Locale(ctx.interaction.locale))
+        return self.inject_locale_values(
+            content,
+            ctx=ctx,
+            guild_config=guild_config,
+        )

@@ -5,20 +5,8 @@ Please see [this](https://github.com/suggestionsbot/suggestions-bot-rewrite/issu
 
 ---
 
-Files are expected in the following format:
 
-```json
-{
-    "<COMMAND>_NAME": "The name of the command",
-    "<COMMAND>_DESCRIPTION": "The description of the command",
-    "<COMMAND>_ARG_<ARGUMENT>_NAME": "The name of this argument",
-    "<COMMAND>_ARG_<ARGUMENT>_DESCRIPTION": "The description of this argument",
-    "<COMMAND>_INNER_<KEY>": "The value for this key."
-}
-```
-
-- `_ARG_` is reserved for all parameters to the provided method
-- `_INNER_` is reserved for all strings sent within the method itself
+Files follow [this](https://hikari-lightbulb.readthedocs.io/en/latest/by-examples/090_localization.html) spec.
 
 ## Variables
 
@@ -35,7 +23,7 @@ or existing `en_GB` translation to see what these values are.
 
 #### Guild Configuration Values
 
-All values within the `objects.GuildConfig` class are available as
+All values within the `bot.tables.GuildConfig` class are available as
 `$GUILD_CONFIG_<FIELD>` where the field is the uppercase variable name.
 
 **Note:** *These values will not be available for all translations*
