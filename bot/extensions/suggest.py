@@ -61,19 +61,26 @@ def handle_suggestions_errors(func):
 @loader.command
 class Suggest(
     lightbulb.SlashCommand,
-    name="suggest",
-    description="Create a new suggestion.",
+    name="commands.suggest.name",
+    description="commands.suggest.description",
+    localize=True,
 ):
-    suggestion = lightbulb.string("suggestion", "Your suggestion.")
+    suggestion = lightbulb.string(
+        "commands.suggest.options.suggestion.name",
+        "commands.suggest.options.suggestion.description",
+        localize=True,
+    )
     image = lightbulb.attachment(
-        "image",
-        "An image to add to your suggestion.",
+        "commands.suggest.options.image.name",
+        "commands.suggest.options.image.description",
         default=None,
+        localize=True,
     )
     anonymously = lightbulb.boolean(
-        "anonymously",
-        "Submit your suggestion anonymously.",
+        "commands.suggest.options.anonymously.name",
+        "commands.suggest.options.anonymously.description",
         default=False,
+        localize=True,
     )
 
     @lightbulb.invoke
@@ -86,7 +93,7 @@ class Suggest(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
-        if len(self.suggestion) > 1:
+        if len(self.suggestion) > MAX_CONTENT_LENGTH:
             raise MessageTooLong(self.suggestion)
 
         # TODO Implement more

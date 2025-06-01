@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import hikari
 import lightbulb
 import logoo
@@ -29,14 +31,18 @@ async def create_user_config(ctx: lightbulb.Context) -> UserConfig:
     return uc
 
 
-async def create_bot(token) -> (hikari.GatewayBot, lightbulb.Client):
+async def create_bot(token, base_path: Path) -> (hikari.GatewayBot, lightbulb.Client):
     bot = hikari.GatewayBot(
         token=token,
         cache_settings=CacheSettings(components=config.CacheComponents.NONE),
         intents=hikari.Intents.NONE,
     )
-    localisations = Localisation()
-    client = lightbulb.client_from_app(bot)
+    localisations = Localisation(base_path)
+    client = lightbulb.client_from_app(
+        bot,
+        default_locale=hikari.Locale.EN_GB,
+        localization_provider=localisations.lightbulb_provider,
+    )
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
         GuildConfig, create_guild_config
     )
