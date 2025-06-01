@@ -1179,16 +1179,16 @@ wheels = [
 
 [[package]]
 name = "logoo"
-version = "1.5.1"
+version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
     { name = "orjson" },
     { name = "skelmis-commons" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/69/e0/a770f6aa78ef626fde200b9cdd5518916e7af6fb88c7baab3fa0ee133090/logoo-1.5.1.tar.gz", hash = "sha256:25b989f583764455bb5922dbd46626084a8765c80429d9907a95e5d4ba83d34b", size = 5654, upload_time = "2024-06-13T09:40:51.48Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/88/9f/3261f7d07dc77dcba7ea8437ca5e20dace348abb8a0eebfe8762f2c87593/logoo-1.6.0.tar.gz", hash = "sha256:82a7a5ad83edb86f2b634cc7590d047df39a9ae32633dc1f054eb5827455a543", size = 5670, upload_time = "2025-06-01T10:33:01.891Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1d/79/c5ab321dddadab536e7923ff30b3bd17e2917195a2d8189cfcfafc7384c8/logoo-1.5.1-py3-none-any.whl", hash = "sha256:3d7377d6a8a5bdaff95182605cc1d6dd5597908f76fd26b6bc7a9ab5134877a0", size = 6388, upload_time = "2024-06-13T09:40:50.107Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/61/b1e1541da1a113c5295d15a862c012a01c63bbf3c30c41f2d701e8723c3b/logoo-1.6.0-py3-none-any.whl", hash = "sha256:99190de17a781a1f0890664920e5d82389783b4a56afa16348cc1ace2278c7b5", size = 6393, upload_time = "2025-06-01T10:33:00.478Z" },
 ]
 
 [[package]]
@@ -2013,7 +2013,7 @@ requires-dist = [
     { name = "hikari", extras = ["speedups"], specifier = ">=2.3.3" },
     { name = "hikari-lightbulb", specifier = ">=3.0.0a25" },
     { name = "infisicalsdk", specifier = ">=1.0.8" },
-    { name = "logoo", specifier = ">=1.5.1" },
+    { name = "logoo", specifier = ">=1.6.0" },
     { name = "orjson", specifier = ">=3.10.18" },
     { name = "piccolo", extras = ["all", "postgres"], specifier = ">=1.26.0" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
