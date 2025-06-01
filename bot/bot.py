@@ -3,6 +3,7 @@ import lightbulb
 import logoo
 from hikari.impl import CacheSettings, config
 
+from bot.localisation import Localisation
 from bot.tables import GuildConfig, UserConfig
 
 logger = logoo.Logger(__name__)
@@ -34,12 +35,16 @@ async def create_bot(token) -> (hikari.GatewayBot, lightbulb.Client):
         cache_settings=CacheSettings(components=config.CacheComponents.NONE),
         intents=hikari.Intents.NONE,
     )
+    localisations = Localisation()
     client = lightbulb.client_from_app(bot)
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
         GuildConfig, create_guild_config
     )
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
         UserConfig, create_user_config
+    )
+    client.di.registry_for(lightbulb.di.Contexts.DEFAULT).register_value(
+        Localisation, localisations
     )
 
     @client.error_handler

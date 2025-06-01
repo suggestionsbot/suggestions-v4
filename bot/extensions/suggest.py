@@ -6,6 +6,7 @@ import lightbulb
 from bot import utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MessageTooLong
+from bot.localisation import Localisation
 from bot.tables import GuildConfig, InternalError, UserConfig
 
 loader = lightbulb.Loader()
@@ -19,6 +20,7 @@ def handle_suggestions_errors(func):
         ctx: lightbulb.Context,
         guild_config: GuildConfig,
         user_config: UserConfig,
+        localisations: Localisation,
     ):
         try:
             return await func(
@@ -26,6 +28,7 @@ def handle_suggestions_errors(func):
                 ctx=ctx,
                 guild_config=guild_config,
                 user_config=user_config,
+                localisations=localisations,
             )
         except Exception as exception:
             internal_error: InternalError = await InternalError.persist_error(
@@ -80,6 +83,7 @@ class Suggest(
         ctx: lightbulb.Context,
         guild_config: GuildConfig,
         user_config: UserConfig,
+        localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
         if len(self.suggestion) > 1:

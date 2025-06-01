@@ -7,3 +7,7 @@ class MessageTooLong(SuggestionException):
 
     def __init__(self, text: str):
         self.message_text = text
+
+
+class MissingTranslation(SuggestionException):
+    """The en_GB translation file is missing a translation."""
