@@ -12,6 +12,8 @@ from piccolo.apps.tester.commands.run import set_env_var, refresh_db
 from piccolo.conf.apps import Finder
 from piccolo.table import create_db_tables, drop_db_tables
 
+from bot.localisation import Localisation
+
 T = TypeVar("T")
 
 
@@ -48,6 +50,11 @@ async def configure_testing():
 def redis_client(request) -> fakeredis.FakeAsyncRedis:
     redis_client = fakeredis.FakeAsyncRedis(decode_responses=True)
     return redis_client
+
+
+@pytest.fixture(scope="session")
+def localisation() -> Localisation:
+    return Localisation(Path("../bot"))
 
 
 async def prepare_command(

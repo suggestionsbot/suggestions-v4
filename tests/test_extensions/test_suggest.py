@@ -54,11 +54,11 @@ async def invoke_suggest(
 
 
 @freeze_time("2025-01-20")
-async def test_suggestion_too_long():
+async def test_suggestion_too_long(localisation):
     """Asserts an error message is sent when a suggestion is too long."""
     content = "a" * MAX_CONTENT_LENGTH + "a"
     options = create_options(content)
-    ctx, _, _, _ = await invoke_suggest(options)
+    ctx, _, _, _ = await invoke_suggest(options, localisations=localisation)
     internal_error = await InternalError.objects().first()
     ctx.respond.assert_called_once_with(
         embed=utils.error_embed(
@@ -72,9 +72,9 @@ async def test_suggestion_too_long():
     )
 
 
-async def test_newline_handling():
+async def test_newline_handling(localisation):
     """Asserts newlines passed in as content end up rendered correctly."""
     options = create_options("a\\nb")
-    await invoke_suggest(options)
+    await invoke_suggest(options, localisations=localisation)
     suggestion: Suggestions = await Suggestions.objects().first()
     assert suggestion.suggestion == "a\nb"

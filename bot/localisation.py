@@ -11,15 +11,15 @@ logger = logoo.Logger(__name__)
 
 
 class Localisation:
-    def __init__(self):
+    def __init__(self, base_path: Path = Path(".")):
         self._file_to_locale: dict[Path, hikari.Locale] = {
-            Path("locales/da.json"): hikari.Locale.DA,
-            Path("locales/de.json"): hikari.Locale.DE,
-            Path("locales/en_GB.json"): hikari.Locale.EN_GB,
-            Path("locales/en_US.json"): hikari.Locale.EN_US,
-            Path("locales/fr.json"): hikari.Locale.FR,
-            Path("locales/pt_BR.json"): hikari.Locale.PT_BR,
-            Path("locales/tr.json"): hikari.Locale.TR,
+            base_path / Path("locales/da.json"): hikari.Locale.DA,
+            base_path / Path("locales/de.json"): hikari.Locale.DE,
+            base_path / Path("locales/en_GB.json"): hikari.Locale.EN_GB,
+            base_path / Path("locales/en_US.json"): hikari.Locale.EN_US,
+            base_path / Path("locales/fr.json"): hikari.Locale.FR,
+            base_path / Path("locales/pt_BR.json"): hikari.Locale.PT_BR,
+            base_path / Path("locales/tr.json"): hikari.Locale.TR,
         }
         data: dict[hikari.Locale, dict[str, str]] = {}
         for k, v in self._file_to_locale.items():
