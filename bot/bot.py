@@ -10,7 +10,7 @@ async def create_guild_config(ctx: lightbulb.Context) -> GuildConfig:
         GuildConfig.id == ctx.guild_id
     )
     if gc._was_created:
-        # Debug log a new guild config was created
+        # TODO Debug log a new guild config was created
         pass
 
     return gc

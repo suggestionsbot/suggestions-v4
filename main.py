@@ -5,12 +5,13 @@ import hikari
 from dotenv import load_dotenv
 
 from bot import create_bot
+from bot.constants import INFISICAL_SDK
 
 load_dotenv()
 
 
 async def main():
-    bot, client = await create_bot(token=os.environ["BOT_TOKEN"])
+    bot, client = await create_bot(token=INFISICAL_SDK.get_secret("BOT_TOKEN"))
 
     @bot.listen(hikari.StartingEvent)
     async def on_starting(_: hikari.StartingEvent) -> None:

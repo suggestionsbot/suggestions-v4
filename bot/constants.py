@@ -4,8 +4,12 @@ from enum import IntEnum
 
 from hikari import Color
 
+from bot.infisical import Infisical
+
 MAX_CONTENT_LENGTH = 1000
 ERROR_COLOR = Color.of((214, 48, 49))
+
+INFISICAL_SDK = Infisical()
 
 
 class ErrorCode(IntEnum):
