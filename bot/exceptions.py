@@ -11,3 +11,7 @@ class MessageTooLong(SuggestionException):
 
 class MissingTranslation(SuggestionException):
     """The en_GB translation file is missing a translation."""
+
+
+class InvalidFileType(SuggestionException):
+    """The attempted image upload was invalid."""

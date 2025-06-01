@@ -102,5 +102,33 @@ class Suggest(
         if len(self.suggestion) > MAX_CONTENT_LENGTH:
             raise MessageTooLong(self.suggestion)
 
+        if (
+            self.anonymously is True
+            and guild_config.can_have_anonymous_suggestions is False
+        ):
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "values.suggest.no_anonymous_suggestions", ctx
+                )
+            )
+            return None
+
+        image_url: str | None = None
+        if self.image is not None:
+            if guild_config.can_have_images_in_suggestions is False:
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "values.suggest.no_images_in_suggestions", ctx
+                    )
+                )
+                return None
+
+            image_url = await utils.upload_file_to_r2(
+                file_name=self.image.filename,
+                file_data=await self.image.read(),
+                guild_id=ctx.guild_id,
+                user_id=ctx.user.id,
+            )
+
         # TODO Implement more
         raise ValueError("Who knows")

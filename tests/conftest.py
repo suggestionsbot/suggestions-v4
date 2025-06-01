@@ -53,7 +53,7 @@ def redis_client(request) -> fakeredis.FakeAsyncRedis:
 
 
 @pytest.fixture
-def ctx() -> lightbulb.Context:
+def context() -> lightbulb.Context:
     client: lightbulb.Client = mock.AsyncMock()
     ctx: lightbulb.Context = mock.AsyncMock(spec=lightbulb.Context, client=client)
     ctx.interaction.locale = "en-GB"

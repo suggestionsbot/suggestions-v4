@@ -1,3 +1,4 @@
+import typing
 from enum import Enum
 
 from piccolo.columns import Serial, Varchar, Text, ForeignKey, BigInt, Timestamptz
@@ -97,6 +98,14 @@ class Suggestions(Table, AuditMixin):
     author_display_name = Text(
         help_text="How should we display the author? Either name or <Anonymous>",
     )
+
+    # noinspection PyPep8Naming
+    @classmethod
+    async def fetch_suggestion(cls, sID: str) -> typing.Self:
+        """Simple helper method to also ensure configurations are prefetched"""
+        return await cls.objects(
+            Suggestions.user_configuration, Suggestions.guild_configuration
+        ).get(Suggestions.sID == sID)
 
     @property
     def guild_id(self) -> int:
