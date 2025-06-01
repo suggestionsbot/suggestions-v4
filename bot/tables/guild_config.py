@@ -1,10 +1,14 @@
-from piccolo.columns import BigInt, Boolean, Array
+import hikari
+import lightbulb
+from piccolo.columns import BigInt, Boolean, Array, ForeignKey, LazyTableReference
 from piccolo.table import Table
 
+from bot.tables import PremiumGuildConfigs
 from bot.tables.mixins import AuditMixin
+from bot.tables.mixins.audit import utc_now
 
 
-class GuildConfig(AuditMixin, Table):
+class GuildConfigs(AuditMixin, Table):
     id = BigInt(
         primary_key=True,
         unique=True,
@@ -74,3 +78,27 @@ class GuildConfig(AuditMixin, Table):
         default=True,
         help_text="Ping the suggestions author in the suggestions thread",
     )
+    premium: PremiumGuildConfigs = ForeignKey(
+        LazyTableReference(
+            table_class_name="PremiumGuildConfigs",
+            app_name="bot",
+        ),
+        index=True,
+    )
+
+    def premium_is_enabled(self, ctx: lightbulb.Context) -> bool:
+        """Returns true if this guild is considered to have active premium"""
+        now = utc_now()
+        for entitlement in ctx.interaction.entitlements:
+            if entitlement.is_deleted is True:
+                continue
+
+            if entitlement.starts_at is not None and now < entitlement.starts_at:
+                continue
+
+            if entitlement.ends_at is not None and now >= entitlement.ends_at:
+                continue
+
+            return True
+
+        return False

@@ -12,7 +12,7 @@ from bot import utils
 from bot.constants import MAX_CONTENT_LENGTH, ErrorCode
 from bot.extensions.suggest import Suggest
 from bot.localisation import Localisation
-from bot.tables import GuildConfig, InternalError, Suggestions, UserConfig
+from bot.tables import GuildConfigs, InternalErrors, Suggestions, UserConfigs
 from tests.conftest import prepare_command
 
 
@@ -58,26 +58,33 @@ async def invoke_suggest(
     guild_id: int = 23456,
     *,
     image: hikari.files.Bytes = None,
-    guild_config: GuildConfig = None,
-    user_config: UserConfig = None,
-) -> (lightbulb.Context, GuildConfig, UserConfig, Localisation):
+    guild_config: GuildConfigs = None,
+    user_config: UserConfigs = None,
+    bot: hikari.GatewayBot = None,
+) -> (lightbulb.Context, GuildConfigs, UserConfigs, Localisation, hikari.GatewayBot):
     if guild_config is None:
-        guild_config = GuildConfig()
+        guild_config = GuildConfigs()
 
     if user_config is None:
-        user_config = UserConfig()
+        user_config = UserConfigs()
+
+    await user_config.save()
+    await guild_config.save()
 
     cmd, ctx = await prepare_command(Suggest, localisations, options)
     ctx.user.id = user_id
     ctx.guild_id = guild_id
 
+    if bot is None:
+        bot = AsyncMock(spec=hikari.GatewayBot)
+
     if image is not None:
         cmd.image = image
         ctx.interaction.resolved.attachments[hikari.Snowflake(12121)] = image
 
-    await cmd.invoke(ctx, guild_config, user_config, localisations)
+    await cmd.invoke(ctx, guild_config, user_config, localisations, bot)
     ctx.defer.assert_called_once_with(ephemeral=True)
-    return ctx, guild_config, user_config, localisations
+    return ctx, guild_config, user_config, localisations, bot
 
 
 @freeze_time("2025-01-20")
@@ -85,8 +92,8 @@ async def test_suggestion_too_long(localisation):
     """Asserts an error message is sent when a suggestion is too long."""
     content = "a" * MAX_CONTENT_LENGTH + "a"
     options = create_options(content)
-    ctx, _, _, _ = await invoke_suggest(options, localisations=localisation)
-    internal_error = await InternalError.objects().first()
+    ctx, _, _, _, _ = await invoke_suggest(options, localisations=localisation)
+    internal_error = await InternalErrors.objects().first()
     ctx.respond.assert_called_once_with(
         embed=utils.error_embed(
             "Command Failed",
@@ -111,7 +118,7 @@ async def test_newline_handling(localisation):
 async def test_anonymous_when_disabled(localisation):
     """Asserts that when anon suggestions are disabled that they cant be used"""
     options = create_options("test", anon=True)
-    ctx, _, _, _ = await invoke_suggest(options, localisations=localisation)
+    ctx, _, _, _, _ = await invoke_suggest(options, localisations=localisation)
     ctx.respond.assert_called_once_with(
         "Your guild does not allow anonymous suggestions."
     )
@@ -120,9 +127,9 @@ async def test_anonymous_when_disabled(localisation):
 async def test_images_when_disabled(localisation):
     """Asserts that when images are disabled that they cant be used"""
     options = create_options("test", image=True)
-    gc = GuildConfig()
+    gc = GuildConfigs()
     gc.can_have_images_in_suggestions = False
-    ctx, _, _, _ = await invoke_suggest(
+    ctx, _, _, _, _ = await invoke_suggest(
         options,
         localisations=localisation,
         guild_config=gc,
@@ -137,9 +144,9 @@ async def test_images_when_disabled(localisation):
 async def test_anonymous_suggestion(localisation):
     """Asserts that created anonymous suggestions are actually anonymous"""
     options = create_options("test", anon=True)
-    gc = GuildConfig()
+    gc = GuildConfigs()
     gc.can_have_anonymous_suggestions = True
-    ctx, _, _, _ = await invoke_suggest(
+    ctx, _, _, _, _ = await invoke_suggest(
         options,
         localisations=localisation,
         user_id=1,
@@ -163,7 +170,7 @@ async def test_image_in_suggestion(localisation):
         ),
     ) as mock:
         options = create_options("test", image=True)
-        ctx, _, _, _ = await invoke_suggest(
+        ctx, _, _, _, _ = await invoke_suggest(
             options,
             localisations=localisation,
             image=hikari.files.Bytes(io.StringIO("test"), "content.txt"),
@@ -176,3 +183,70 @@ async def test_image_in_suggestion(localisation):
             guild_id=ctx.guild_id,
             user_id=ctx.user.id,
         )
+
+
+@freeze_time("2025-01-20")
+async def test_queued_suggestion_missing_queue_channel_config(localisation):
+    options = create_options("test")
+    gc = GuildConfigs()
+    gc.uses_suggestions_queue = True
+    gc.virtual_suggestions_queue = False
+    ctx, _, _, _, _ = await invoke_suggest(
+        options, localisations=localisation, guild_config=gc
+    )
+    internal_error = await InternalErrors.objects().first()
+    ctx.respond.assert_called_once()
+    ctx.respond.assert_called_once_with(
+        embed=utils.error_embed(
+            "Command Failed",
+            "This command requires a queue channel to use.\n"
+            "Please contact an administrator and ask them to set one up "
+            "using the following command.\n`/config queue_channel`",
+            error_code=ErrorCode.MISSING_QUEUE_CHANNEL,
+            internal_error_reference=internal_error,
+        ),
+    )
+
+
+@freeze_time("2025-01-20")
+async def test_queued_suggestion_missing_queue_channel(localisation):
+    """Asserts the bot behaves when it can't fetch the queue channel"""
+    options = create_options("test")
+    gc = GuildConfigs()
+    gc.uses_suggestions_queue = True
+    gc.virtual_suggestions_queue = False
+    gc.queued_suggestion_channel_id = 12345
+    bot = AsyncMock(spec=hikari.GatewayBot)
+    bot.rest.fetch_channel.side_effect = hikari.ForbiddenError("test", {}, "test")
+
+    ctx, _, uc, _, _ = await invoke_suggest(
+        options,
+        localisations=localisation,
+        guild_config=gc,
+        bot=bot,
+    )
+    ctx.respond.assert_called_once()
+    ctx.respond.assert_called_once_with(
+        embed=utils.error_embed(
+            "Command Failed",
+            "The bot does not have permissions to interact with the queue channel.\nPlease contact an administrator and ask them to ensure the channel exists and that the bot can see it.",
+            error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
+        ),
+    )
+    bot.rest.fetch_channel.side_effect = hikari.NotFoundError("test", {}, "test")
+
+    ctx, _, _, _, _ = await invoke_suggest(
+        options,
+        localisations=localisation,
+        guild_config=gc,
+        bot=bot,
+        user_config=uc,
+    )
+    ctx.respond.assert_called_once()
+    ctx.respond.assert_called_once_with(
+        embed=utils.error_embed(
+            "Command Failed",
+            "The bot does not have permissions to interact with the queue channel.\nPlease contact an administrator and ask them to ensure the channel exists and that the bot can see it.",
+            error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
+        ),
+    )

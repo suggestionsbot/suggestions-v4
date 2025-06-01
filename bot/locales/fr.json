@@ -47,7 +47,7 @@
     "values.suggest_suggestion_sent": "H\u00e9, {}. Votre suggestion a \u00e9t\u00e9 envoy\u00e9e \u00e0 {} pour \u00eatre vot\u00e9e !\n\nVeuillez attendre qu'elle soit approuv\u00e9e ou rejet\u00e9e par un membre du personnel.\n\nL'ID de votre suggestion (sID) pour r\u00e9f\u00e9rence est **{}**.",
     "values.suggest_suggestion_sent_footer": "ID de guilde : {} | sID : {}",
     "values.suggest_thanks": "Merci pour votre suggestion !",
-    "values.suggest_sent_to_queue": "Votre suggestion a \u00e9t\u00e9 envoy\u00e9e \u00e0 la file d'attente pour traitement.",
+    "values.suggest.sent_to_queue": "Votre suggestion a \u00e9t\u00e9 envoy\u00e9e \u00e0 la file d'attente pour traitement.",
     "values.suggest.no_anonymous_suggestions": "Votre guilde n'autorise pas les suggestions anonymes.",
     "values.suggest.no_images_in_suggestions": "Votre guilde n'autorise pas les images dans les suggestions.",
     "values.config_anonymous_enable_success": "J'ai activ\u00e9 les suggestions anonymes pour cette guilde.",

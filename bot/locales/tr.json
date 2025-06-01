@@ -51,7 +51,7 @@
     "values.suggest_suggestion_sent": "Hey, {}. \u00d6neriniz oylanmak \u00fczere {} kanal\u0131na g\u00f6nderildi!\n\nL\u00fctfen bir yetkili taraf\u0131ndan onaylanana veya reddedilene kadar bekleyin.\n\nBa\u015fvuru i\u00e7in \u00f6neri ID'niz (sID): **{}**",
     "values.suggest_suggestion_sent_footer": "Sunucu ID: {} | sID: {}",
     "values.suggest_thanks": "\u00d6neriniz i\u00e7in te\u015fekk\u00fcrler!",
-    "values.suggest_sent_to_queue": "\u00d6neriniz i\u015fleme al\u0131nmak \u00fczere kuyru\u011fa g\u00f6nderildi.",
+    "values.suggest.sent_to_queue": "\u00d6neriniz i\u015fleme al\u0131nmak \u00fczere kuyru\u011fa g\u00f6nderildi.",
     "values.suggest.no_anonymous_suggestions": "Sunucunuz anonim \u00f6nerilere izin vermiyor.",
     "values.suggest.no_images_in_suggestions": "Sunucunuz \u00f6nerilerde resim kullan\u0131lmas\u0131na izin vermiyor.",
     "values.config_anonymous_enable_success": "Bu sunucu i\u00e7in anonim \u00f6nerileri etkinle\u015ftirdim.",

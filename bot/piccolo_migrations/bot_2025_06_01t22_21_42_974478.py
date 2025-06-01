@@ -8,6 +8,7 @@ from piccolo.columns.column_types import Array
 from piccolo.columns.column_types import BigInt
 from piccolo.columns.column_types import Boolean
 from piccolo.columns.column_types import ForeignKey
+from piccolo.columns.column_types import Integer
 from piccolo.columns.column_types import Serial
 from piccolo.columns.column_types import Text
 from piccolo.columns.column_types import Timestamptz
@@ -17,7 +18,21 @@ from piccolo.columns.indexes import IndexMethod
 from piccolo.table import Table
 
 
-class GuildConfig(Table, tablename="guild_config", schema=None):
+class GuildConfigs(Table, tablename="guild_configs", schema=None):
+    id = BigInt(
+        default=0,
+        null=False,
+        primary_key=True,
+        unique=True,
+        index=True,
+        index_method=IndexMethod.btree,
+        choices=None,
+        db_column_name=None,
+        secret=False,
+    )
+
+
+class PremiumGuildConfigs(Table, tablename="premium_guild_configs", schema=None):
     id = BigInt(
         default=0,
         null=False,
@@ -44,7 +59,7 @@ class Suggestions(Table, tablename="suggestions", schema=None):
     )
 
 
-class UserConfig(Table, tablename="user_config", schema=None):
+class UserConfigs(Table, tablename="user_configs", schema=None):
     id = BigInt(
         default=0,
         null=False,
@@ -58,7 +73,7 @@ class UserConfig(Table, tablename="user_config", schema=None):
     )
 
 
-ID = "2025-05-29T22:37:04:822536"
+ID = "2025-06-01T22:21:42:974478"
 VERSION = "1.26.1"
 DESCRIPTION = ""
 
@@ -69,15 +84,36 @@ async def forwards():
     )
 
     manager.add_table(
-        class_name="UserConfig",
-        tablename="user_config",
+        class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
         schema=None,
         columns=None,
     )
 
     manager.add_table(
-        class_name="GuildConfig",
-        tablename="guild_config",
+        class_name="InternalErrors",
+        tablename="internal_errors",
+        schema=None,
+        columns=None,
+    )
+
+    manager.add_table(
+        class_name="SuggestionsVote",
+        tablename="suggestions_vote",
+        schema=None,
+        columns=None,
+    )
+
+    manager.add_table(
+        class_name="UserConfigs",
+        tablename="user_configs",
+        schema=None,
+        columns=None,
+    )
+
+    manager.add_table(
+        class_name="PremiumGuildConfigs",
+        tablename="premium_guild_configs",
         schema=None,
         columns=None,
     )
@@ -90,22 +126,572 @@ async def forwards():
     )
 
     manager.add_table(
-        class_name="InternalError",
-        tablename="internal_error",
+        class_name="GuildConfigs",
+        tablename="guild_configs",
         schema=None,
         columns=None,
     )
 
-    manager.add_table(
-        class_name="SuggestionsVote",
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="created_at",
+        db_column_name="created_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": utc_now,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="last_modified_at",
+        db_column_name="last_modified_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": TimestamptzNow(),
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="id",
+        db_column_name="id",
+        column_class_name="Serial",
+        column_class=Serial,
+        params={
+            "null": False,
+            "primary_key": True,
+            "unique": True,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="sID",
+        db_column_name="sID",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 255,
+            "default": generate_id,
+            "null": False,
+            "primary_key": False,
+            "unique": True,
+            "index": True,
+            "index_method": IndexMethod.hash,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="suggestion",
+        db_column_name="suggestion",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="guild_configuration",
+        db_column_name="guild_configuration",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": GuildConfigs,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="user_configuration",
+        db_column_name="user_configuration",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": UserConfigs,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": True,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="channel_id",
+        db_column_name="channel_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="message_id",
+        db_column_name="message_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="still_in_queue",
+        db_column_name="still_in_queue",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": True,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="related_suggestion",
+        db_column_name="related_suggestion",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": Suggestions,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="resolved_by",
+        db_column_name="resolved_by",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": True,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="resolved_by_display_text",
+        db_column_name="resolved_by_display_text",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="resolved_note",
+        db_column_name="resolved_note",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="resolved_at",
+        db_column_name="resolved_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="image_url",
+        db_column_name="image_url",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="QueuedSuggestions",
+        tablename="queued_suggestions",
+        column_name="author_display_name",
+        db_column_name="author_display_name",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="InternalErrors",
+        tablename="internal_errors",
+        column_name="created_at",
+        db_column_name="created_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": utc_now,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="InternalErrors",
+        tablename="internal_errors",
+        column_name="last_modified_at",
+        db_column_name="last_modified_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": TimestamptzNow(),
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="InternalErrors",
+        tablename="internal_errors",
+        column_name="id",
+        db_column_name="id",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 11,
+            "default": generate_id,
+            "null": False,
+            "primary_key": True,
+            "unique": True,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="InternalErrors",
+        tablename="internal_errors",
+        column_name="traceback",
+        db_column_name="traceback",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="InternalErrors",
+        tablename="internal_errors",
+        column_name="error_name",
+        db_column_name="error_name",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="InternalErrors",
+        tablename="internal_errors",
+        column_name="user_id",
+        db_column_name="user_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": 0,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="InternalErrors",
+        tablename="internal_errors",
+        column_name="guild_id",
+        db_column_name="guild_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": 0,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="InternalErrors",
+        tablename="internal_errors",
+        column_name="command_name",
+        db_column_name="command_name",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 100,
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="InternalErrors",
+        tablename="internal_errors",
+        column_name="has_been_fixed",
+        db_column_name="has_been_fixed",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": False,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="SuggestionsVote",
         tablename="suggestions_vote",
-        schema=None,
-        columns=None,
-    )
-
-    manager.add_column(
-        table_class_name="UserConfig",
-        tablename="user_config",
         column_name="created_at",
         db_column_name="created_at",
         column_class_name="Timestamptz",
@@ -125,8 +711,8 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="UserConfig",
-        tablename="user_config",
+        table_class_name="SuggestionsVote",
+        tablename="suggestions_vote",
         column_name="last_modified_at",
         db_column_name="last_modified_at",
         column_class_name="Timestamptz",
@@ -146,14 +732,13 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="UserConfig",
-        tablename="user_config",
+        table_class_name="SuggestionsVote",
+        tablename="suggestions_vote",
         column_name="id",
         db_column_name="id",
-        column_class_name="BigInt",
-        column_class=BigInt,
+        column_class_name="Serial",
+        column_class=Serial,
         params={
-            "default": 0,
             "null": False,
             "primary_key": True,
             "unique": True,
@@ -167,101 +752,20 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="UserConfig",
-        tablename="user_config",
-        column_name="dm_messages_disabled",
-        db_column_name="dm_messages_disabled",
-        column_class_name="Boolean",
-        column_class=Boolean,
+        table_class_name="SuggestionsVote",
+        tablename="suggestions_vote",
+        column_name="suggestion",
+        db_column_name="suggestion",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
         params={
-            "default": False,
-            "null": False,
+            "references": Suggestions,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
             "primary_key": False,
             "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="UserConfig",
-        tablename="user_config",
-        column_name="ping_on_thread_creation",
-        db_column_name="ping_on_thread_creation",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": True,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="created_at",
-        db_column_name="created_at",
-        column_class_name="Timestamptz",
-        column_class=Timestamptz,
-        params={
-            "default": utc_now,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="last_modified_at",
-        db_column_name="last_modified_at",
-        column_class_name="Timestamptz",
-        column_class=Timestamptz,
-        params={
-            "default": TimestamptzNow(),
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="id",
-        db_column_name="id",
-        column_class_name="BigInt",
-        column_class=BigInt,
-        params={
-            "default": 0,
-            "null": False,
-            "primary_key": True,
-            "unique": True,
             "index": True,
             "index_method": IndexMethod.btree,
             "choices": None,
@@ -272,123 +776,18 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="keep_logs",
-        db_column_name="keep_logs",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": False,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="dm_messages_disabled",
-        db_column_name="dm_messages_disabled",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": False,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="log_channel_id",
-        db_column_name="log_channel_id",
+        table_class_name="SuggestionsVote",
+        tablename="suggestions_vote",
+        column_name="user_id",
+        db_column_name="user_id",
         column_class_name="BigInt",
         column_class=BigInt,
         params={
-            "default": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="queued_suggestion_channel_id",
-        db_column_name="queued_suggestion_channel_id",
-        column_class_name="BigInt",
-        column_class=BigInt,
-        params={
-            "default": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="queued_suggestion_log_channel_id",
-        db_column_name="queued_suggestion_log_channel_id",
-        column_class_name="BigInt",
-        column_class=BigInt,
-        params={
-            "default": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="threads_for_suggestions",
-        db_column_name="threads_for_suggestions",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": True,
+            "default": 0,
             "null": False,
             "primary_key": False,
             "unique": False,
-            "index": False,
+            "index": True,
             "index_method": IndexMethod.btree,
             "choices": None,
             "db_column_name": None,
@@ -398,172 +797,39 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="suggestions_channel_id",
-        db_column_name="suggestions_channel_id",
-        column_class_name="BigInt",
-        column_class=BigInt,
+        table_class_name="SuggestionsVote",
+        tablename="suggestions_vote",
+        column_name="vote_type",
+        db_column_name="vote_type",
+        column_class_name="Varchar",
+        column_class=Varchar,
         params={
-            "default": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="can_have_anonymous_suggestions",
-        db_column_name="can_have_anonymous_suggestions",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": False,
+            "length": 8,
+            "default": "",
             "null": False,
             "primary_key": False,
             "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="auto_archive_threads",
-        db_column_name="auto_archive_threads",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": False,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="uses_suggestions_queue",
-        db_column_name="uses_suggestions_queue",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": False,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="virtual_suggestions_queue",
-        db_column_name="virtual_suggestions_queue",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": True,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="can_have_images_in_suggestions",
-        db_column_name="can_have_images_in_suggestions",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": True,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="anonymous_resolutions",
-        db_column_name="anonymous_resolutions",
-        column_class_name="Boolean",
-        column_class=Boolean,
-        params={
-            "default": False,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
-        column_name="blocked_users",
-        db_column_name="blocked_users",
-        column_class_name="Array",
-        column_class=Array,
-        params={
-            "base_column": BigInt(
-                default=0,
-                null=False,
-                primary_key=False,
-                unique=False,
-                index=False,
-                index_method=IndexMethod.btree,
-                choices=None,
-                db_column_name=None,
-                secret=False,
+            "index": True,
+            "index_method": IndexMethod.hash,
+            "choices": Enum(
+                "SuggestionsVoteTypeEnum",
+                {"UpVote": "UpVote", "DownVote": "DownVote"},
             ),
-            "default": list,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="UserConfigs",
+        tablename="user_configs",
+        column_name="created_at",
+        db_column_name="created_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": utc_now,
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -577,14 +843,233 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="GuildConfig",
-        tablename="guild_config",
+        table_class_name="UserConfigs",
+        tablename="user_configs",
+        column_name="last_modified_at",
+        db_column_name="last_modified_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": TimestamptzNow(),
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="UserConfigs",
+        tablename="user_configs",
+        column_name="id",
+        db_column_name="id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": 0,
+            "null": False,
+            "primary_key": True,
+            "unique": True,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="UserConfigs",
+        tablename="user_configs",
+        column_name="dm_messages_disabled",
+        db_column_name="dm_messages_disabled",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": False,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="UserConfigs",
+        tablename="user_configs",
         column_name="ping_on_thread_creation",
         db_column_name="ping_on_thread_creation",
         column_class_name="Boolean",
         column_class=Boolean,
         params={
             "default": True,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="PremiumGuildConfigs",
+        tablename="premium_guild_configs",
+        column_name="created_at",
+        db_column_name="created_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": utc_now,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="PremiumGuildConfigs",
+        tablename="premium_guild_configs",
+        column_name="last_modified_at",
+        db_column_name="last_modified_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": TimestamptzNow(),
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="PremiumGuildConfigs",
+        tablename="premium_guild_configs",
+        column_name="id",
+        db_column_name="id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": 0,
+            "null": False,
+            "primary_key": True,
+            "unique": True,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="PremiumGuildConfigs",
+        tablename="premium_guild_configs",
+        column_name="suggestions_prefix",
+        db_column_name="suggestions_prefix",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="PremiumGuildConfigs",
+        tablename="premium_guild_configs",
+        column_name="queued_suggestions_prefix",
+        db_column_name="queued_suggestions_prefix",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="PremiumGuildConfigs",
+        tablename="premium_guild_configs",
+        column_name="cooldown_period",
+        db_column_name="cooldown_period",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "Hour",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": Enum(
+                "CooldownPeriod",
+                {
+                    "Hour": "Hour",
+                    "Day": "Day",
+                    "Week": "Week",
+                    "Fortnight": "Fortnight",
+                    "Month": "Month",
+                },
+            ),
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="PremiumGuildConfigs",
+        tablename="premium_guild_configs",
+        column_name="cooldown_amount",
+        db_column_name="cooldown_amount",
+        column_class_name="Integer",
+        column_class=Integer,
+        params={
+            "default": 22,
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -710,7 +1195,7 @@ async def forwards():
         column_class_name="ForeignKey",
         column_class=ForeignKey,
         params={
-            "references": GuildConfig,
+            "references": GuildConfigs,
             "on_delete": OnDelete.cascade,
             "on_update": OnUpdate.cascade,
             "target_column": None,
@@ -734,7 +1219,7 @@ async def forwards():
         column_class_name="ForeignKey",
         column_class=ForeignKey,
         params={
-            "references": UserConfig,
+            "references": UserConfigs,
             "on_delete": OnDelete.cascade,
             "on_update": OnUpdate.cascade,
             "target_column": None,
@@ -809,7 +1294,7 @@ async def forwards():
         column_class_name="ForeignKey",
         column_class=ForeignKey,
         params={
-            "references": UserConfig,
+            "references": UserConfigs,
             "on_delete": OnDelete.cascade,
             "on_update": OnUpdate.cascade,
             "target_column": None,
@@ -817,6 +1302,27 @@ async def forwards():
             "primary_key": False,
             "unique": False,
             "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Suggestions",
+        tablename="suggestions",
+        column_name="moderator_note_added_by_display_text",
+        db_column_name="moderator_note_added_by_display_text",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
             "index_method": IndexMethod.btree,
             "choices": None,
             "db_column_name": None,
@@ -1015,8 +1521,8 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="InternalError",
-        tablename="internal_error",
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
         column_name="created_at",
         db_column_name="created_at",
         column_class_name="Timestamptz",
@@ -1036,8 +1542,8 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="InternalError",
-        tablename="internal_error",
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
         column_name="last_modified_at",
         db_column_name="last_modified_at",
         column_class_name="Timestamptz",
@@ -1057,15 +1563,14 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="InternalError",
-        tablename="internal_error",
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
         column_name="id",
         db_column_name="id",
-        column_class_name="Varchar",
-        column_class=Varchar,
+        column_class_name="BigInt",
+        column_class=BigInt,
         params={
-            "length": 11,
-            "default": generate_id,
+            "default": 0,
             "null": False,
             "primary_key": True,
             "unique": True,
@@ -1079,116 +1584,10 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="InternalError",
-        tablename="internal_error",
-        column_name="traceback",
-        db_column_name="traceback",
-        column_class_name="Text",
-        column_class=Text,
-        params={
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="InternalError",
-        tablename="internal_error",
-        column_name="error_name",
-        db_column_name="error_name",
-        column_class_name="Text",
-        column_class=Text,
-        params={
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="InternalError",
-        tablename="internal_error",
-        column_name="user_id",
-        db_column_name="user_id",
-        column_class_name="BigInt",
-        column_class=BigInt,
-        params={
-            "default": 0,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="InternalError",
-        tablename="internal_error",
-        column_name="guild_id",
-        db_column_name="guild_id",
-        column_class_name="BigInt",
-        column_class=BigInt,
-        params={
-            "default": 0,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="InternalError",
-        tablename="internal_error",
-        column_name="command_name",
-        db_column_name="command_name",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 100,
-            "default": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="InternalError",
-        tablename="internal_error",
-        column_name="has_been_fixed",
-        db_column_name="has_been_fixed",
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="keep_logs",
+        db_column_name="keep_logs",
         column_class_name="Boolean",
         column_class=Boolean,
         params={
@@ -1206,14 +1605,14 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="SuggestionsVote",
-        tablename="suggestions_vote",
-        column_name="created_at",
-        db_column_name="created_at",
-        column_class_name="Timestamptz",
-        column_class=Timestamptz,
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="dm_messages_disabled",
+        db_column_name="dm_messages_disabled",
+        column_class_name="Boolean",
+        column_class=Boolean,
         params={
-            "default": utc_now,
+            "default": False,
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -1227,14 +1626,77 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="SuggestionsVote",
-        tablename="suggestions_vote",
-        column_name="last_modified_at",
-        db_column_name="last_modified_at",
-        column_class_name="Timestamptz",
-        column_class=Timestamptz,
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="log_channel_id",
+        db_column_name="log_channel_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
         params={
-            "default": TimestamptzNow(),
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="queued_suggestion_channel_id",
+        db_column_name="queued_suggestion_channel_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="queued_suggestion_log_channel_id",
+        db_column_name="queued_suggestion_log_channel_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="threads_for_suggestions",
+        db_column_name="threads_for_suggestions",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": True,
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -1248,17 +1710,18 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="SuggestionsVote",
-        tablename="suggestions_vote",
-        column_name="id",
-        db_column_name="id",
-        column_class_name="Serial",
-        column_class=Serial,
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="suggestions_channel_id",
+        db_column_name="suggestions_channel_id",
+        column_class_name="BigInt",
+        column_class=BigInt,
         params={
-            "null": False,
-            "primary_key": True,
-            "unique": True,
-            "index": True,
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
             "index_method": IndexMethod.btree,
             "choices": None,
             "db_column_name": None,
@@ -1268,14 +1731,193 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="SuggestionsVote",
-        tablename="suggestions_vote",
-        column_name="suggestion",
-        db_column_name="suggestion",
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="can_have_anonymous_suggestions",
+        db_column_name="can_have_anonymous_suggestions",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": False,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="auto_archive_threads",
+        db_column_name="auto_archive_threads",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": False,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="uses_suggestions_queue",
+        db_column_name="uses_suggestions_queue",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": False,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="virtual_suggestions_queue",
+        db_column_name="virtual_suggestions_queue",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": True,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="can_have_images_in_suggestions",
+        db_column_name="can_have_images_in_suggestions",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": True,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="anonymous_resolutions",
+        db_column_name="anonymous_resolutions",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": False,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="blocked_users",
+        db_column_name="blocked_users",
+        column_class_name="Array",
+        column_class=Array,
+        params={
+            "base_column": BigInt(
+                default=0,
+                null=False,
+                primary_key=False,
+                unique=False,
+                index=False,
+                index_method=IndexMethod.btree,
+                choices=None,
+                db_column_name=None,
+                secret=False,
+            ),
+            "default": list,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="ping_on_thread_creation",
+        db_column_name="ping_on_thread_creation",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": True,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="premium",
+        db_column_name="premium",
         column_class_name="ForeignKey",
         column_class=ForeignKey,
         params={
-            "references": Suggestions,
+            "references": PremiumGuildConfigs,
             "on_delete": OnDelete.cascade,
             "on_update": OnUpdate.cascade,
             "target_column": None,
@@ -1285,52 +1927,6 @@ async def forwards():
             "index": True,
             "index_method": IndexMethod.btree,
             "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="SuggestionsVote",
-        tablename="suggestions_vote",
-        column_name="user_id",
-        db_column_name="user_id",
-        column_class_name="BigInt",
-        column_class=BigInt,
-        params={
-            "default": 0,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": True,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="SuggestionsVote",
-        tablename="suggestions_vote",
-        column_name="vote_type",
-        db_column_name="vote_type",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 8,
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": True,
-            "index_method": IndexMethod.hash,
-            "choices": Enum(
-                "SuggestionsVoteTypeEnum",
-                {"UpVote": "UpVote", "DownVote": "DownVote"},
-            ),
             "db_column_name": None,
             "secret": False,
         },

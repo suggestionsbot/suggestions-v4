@@ -4,7 +4,7 @@ from piccolo.columns import BigInt, Boolean
 from bot.tables.mixins import AuditMixin
 
 
-class UserConfig(AuditMixin, Table):
+class UserConfigs(AuditMixin, Table):
     id = BigInt(
         primary_key=True,
         unique=True,

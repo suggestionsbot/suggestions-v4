@@ -8,7 +8,7 @@ import logoo
 from lightbulb import DictLocalizationProvider
 
 from bot.exceptions import MissingTranslation
-from bot.tables import GuildConfig
+from bot.tables import GuildConfigs
 
 logger = logoo.Logger(__name__)
 
@@ -41,7 +41,7 @@ class Localisation:
             ].get(key, None)
             if fallback_value is None:
                 logger.critical(f"Could not find base translation for {key}")
-                raise MissingTranslation  # TODO Handle this on the bots error handler
+                raise MissingTranslation
 
             return fallback_value
 
@@ -51,7 +51,7 @@ class Localisation:
         ctx: lightbulb.Context,
         *,
         extras: dict = None,
-        guild_config: GuildConfig | None = None,
+        guild_config: GuildConfigs | None = None,
     ):
         base_config = {
             "CHANNEL_ID": ctx.channel_id,
@@ -66,7 +66,6 @@ class Localisation:
             for k, v in guild_config.to_dict().items():
                 guild_data[f"GUILD_CONFIG_{k.upper()}"] = v
 
-            guild_data.pop("GUILD_CONFIG__ID")
             base_config = {**base_config, **guild_data}
 
         return Template(content).safe_substitute(base_config)
@@ -77,7 +76,7 @@ class Localisation:
         ctx: lightbulb.Context,
         *,
         extras: dict = None,
-        guild_config: GuildConfig | None = None,
+        guild_config: GuildConfigs | None = None,
     ):
         locale = ctx.interaction.locale
         if not isinstance(locale, hikari.Locale):

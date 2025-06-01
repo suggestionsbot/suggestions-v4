@@ -6,14 +6,17 @@ import logoo
 from hikari.impl import CacheSettings, config
 
 from bot.localisation import Localisation
-from bot.tables import GuildConfig, UserConfig
+from bot.tables import GuildConfigs, UserConfigs, PremiumGuildConfigs
 
 logger = logoo.Logger(__name__)
 
 
-async def create_guild_config(ctx: lightbulb.Context) -> GuildConfig:
-    gc: GuildConfig = await GuildConfig.objects().get_or_create(
-        GuildConfig.id == ctx.guild_id  # type: ignore
+async def create_guild_config(ctx: lightbulb.Context) -> GuildConfigs:
+    pgc: PremiumGuildConfigs = await PremiumGuildConfigs.objects().get_or_create(
+        PremiumGuildConfigs.id == ctx.guild_id  # type: ignore
+    )
+    gc: GuildConfigs = await GuildConfigs.objects().get_or_create(
+        (GuildConfigs.id == ctx.guild_id) & (GuildConfigs.premium == pgc)  # type: ignore
     )
     if gc._was_created:
         logger.debug("Created new GuildConfig for %s", ctx.guild_id)
@@ -21,9 +24,9 @@ async def create_guild_config(ctx: lightbulb.Context) -> GuildConfig:
     return gc
 
 
-async def create_user_config(ctx: lightbulb.Context) -> UserConfig:
-    uc: UserConfig = await UserConfig.objects().get_or_create(
-        UserConfig.id == ctx.user.id  # type: ignore
+async def create_user_config(ctx: lightbulb.Context) -> UserConfigs:
+    uc: UserConfigs = await UserConfigs.objects().get_or_create(
+        UserConfigs.id == ctx.user.id  # type: ignore
     )
     if uc._was_created:
         logger.debug("Created new UserConfig for %s", ctx.user.id)
@@ -44,10 +47,10 @@ async def create_bot(token, base_path: Path) -> (hikari.GatewayBot, lightbulb.Cl
         localization_provider=localisations.lightbulb_provider,
     )
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
-        GuildConfig, create_guild_config
+        GuildConfigs, create_guild_config
     )
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
-        UserConfig, create_user_config
+        UserConfigs, create_user_config
     )
     client.di.registry_for(lightbulb.di.Contexts.DEFAULT).register_value(
         Localisation, localisations

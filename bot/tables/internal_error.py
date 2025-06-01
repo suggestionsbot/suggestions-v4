@@ -9,7 +9,7 @@ from bot.tables.mixins import AuditMixin
 from bot.utils import generate_id
 
 
-class InternalError(AuditMixin, Table):
+class InternalErrors(AuditMixin, Table):
     # Old is 8 chars, new is 11
     id = Varchar(
         length=11,
@@ -48,7 +48,7 @@ class InternalError(AuditMixin, Table):
         command_name: str,
         guild_id: int,
         author_id: int,
-    ) -> InternalError:
+    ) -> InternalErrors:
         internal_error = cls(
             id=generate_id(),
             traceback="".join(traceback.format_exception(exception)),

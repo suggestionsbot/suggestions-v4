@@ -1,15 +1,19 @@
 import io
+from typing import cast
 
 import hikari
 import lightbulb
+import logoo
+from hikari.impl import MessageActionRowBuilder
 
 from bot import utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
-from bot.exceptions import MessageTooLong
+from bot.exceptions import MessageTooLong, MissingQueueChannel
 from bot.localisation import Localisation
-from bot.tables import GuildConfig, InternalError, UserConfig
+from bot.tables import GuildConfigs, InternalErrors, UserConfigs, QueuedSuggestions
 
 loader = lightbulb.Loader()
+logger = logoo.Logger(__name__)
 
 
 def handle_suggestions_errors(func):
@@ -18,20 +22,22 @@ def handle_suggestions_errors(func):
     async def _wrapper(
         command_data,
         ctx: lightbulb.Context,
-        guild_config: GuildConfig,
-        user_config: UserConfig,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
+        bot: hikari.RESTBot | hikari.GatewayBot,
     ):
         try:
             return await func(
                 command_data,
                 ctx=ctx,
+                bot=bot,
                 guild_config=guild_config,
                 user_config=user_config,
                 localisations=localisations,
             )
         except Exception as exception:
-            internal_error: InternalError = await InternalError.persist_error(
+            internal_error: InternalErrors = await InternalErrors.persist_error(
                 exception,
                 command_name="suggest",
                 guild_id=ctx.guild_id,
@@ -42,11 +48,11 @@ def handle_suggestions_errors(func):
                 await ctx.respond(
                     embed=utils.error_embed(
                         localisations.get_localized_string(
-                            "values.suggest.content_too_long_title",
+                            "errors.suggest.content_too_long.title",
                             ctx=ctx,
                         ),
                         localisations.get_localized_string(
-                            "values.suggest.content_too_long_description",
+                            "errors.suggest.content_too_long.description",
                             ctx=ctx,
                             extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
                         ),
@@ -55,6 +61,23 @@ def handle_suggestions_errors(func):
                     ),
                     attachment=hikari.files.Bytes(
                         io.StringIO(exception.message_text), "content.txt"
+                    ),
+                )
+                return None
+
+            elif isinstance(exception, MissingQueueChannel):
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        localisations.get_localized_string(
+                            "errors.suggest.missing_queue_channel.title",
+                            ctx=ctx,
+                        ),
+                        localisations.get_localized_string(
+                            "errors.suggest.missing_queue_channel.description",
+                            ctx=ctx,
+                        ),
+                        error_code=ErrorCode.MISSING_QUEUE_CHANNEL,
+                        internal_error_reference=internal_error,
                     ),
                 )
                 return None
@@ -94,9 +117,10 @@ class Suggest(
     async def invoke(
         self,
         ctx: lightbulb.Context,
-        guild_config: GuildConfig,
-        user_config: UserConfig,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
+        bot: hikari.RESTBot | hikari.GatewayBot,
     ) -> None:
         await ctx.defer(ephemeral=True)
         if len(self.suggestion) > MAX_CONTENT_LENGTH:
@@ -130,5 +154,107 @@ class Suggest(
                 user_id=ctx.user.id,
             )
 
+        if guild_config.uses_suggestions_queue:
+            return await self.handle_queued_suggestion(
+                ctx, guild_config, user_config, localisations, image_url, bot
+            )
+
         # TODO Implement more
         raise ValueError("Who knows")
+
+    async def handle_queued_suggestion(
+        self,
+        ctx: lightbulb.Context,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        localisations: Localisation,
+        image_url: str | None,
+        bot: hikari.RESTBot | hikari.GatewayBot,
+    ):
+        """Specific helper for handling queued suggestions"""
+        qs: QueuedSuggestions = QueuedSuggestions(
+            guild_configuration=guild_config,
+            user_configuration=user_config,
+            suggestion=self.suggestion,
+            image_url=image_url,
+            author_display_name=(
+                f"<@{ctx.user.id}>" if self.anonymously is False else "Anonymous"
+            ),
+        )
+
+        if guild_config.virtual_suggestions_queue is False:
+            # Need to send to a channel
+            if guild_config.queued_suggestion_channel_id is None:
+                raise MissingQueueChannel
+
+            try:
+                channel = await bot.rest.fetch_channel(
+                    guild_config.queued_suggestion_channel_id
+                )
+                channel = cast(hikari.GuildTextChannel, channel)
+            except (hikari.ForbiddenError, hikari.NotFoundError):
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        localisations.get_localized_string(
+                            "errors.suggest.queue_channel_not_found.title",
+                            ctx=ctx,
+                        ),
+                        localisations.get_localized_string(
+                            "errors.suggest.queue_channel_not_found.description",
+                            ctx=ctx,
+                            extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
+                        ),
+                        error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
+                    ),
+                )
+                return None
+
+            prefix = (
+                guild_config.premium.queued_suggestions_prefix
+                if guild_config.premium_is_enabled(ctx)
+                else ""
+            )
+            components = [
+                (
+                    MessageActionRowBuilder()
+                    .add_interactive_button(
+                        hikari.ButtonStyle.SUCCESS,
+                        f"queue_approve|",
+                        label=localisations.get_localized_string(
+                            "values.suggest.queue_approve", ctx
+                        ),
+                    )
+                    .add_interactive_button(
+                        hikari.ButtonStyle.DANGER,
+                        f"queue_reject|",
+                        label=localisations.get_localized_string(
+                            "values.suggest.queue_reject", ctx
+                        ),
+                    )
+                )
+            ]
+            message: hikari.Message = await channel.send(
+                content=prefix,
+                embed=await qs.as_embed(bot),
+                components=components,
+            )
+            qs.channel_id = message.channel_id
+            qs.message_id = message.id
+            await qs.save()
+
+        logger.debug(
+            f"User {ctx.user.id} created new queued"
+            f" suggestion in guild {ctx.guild_id}",
+            extra_metadata={
+                "author_id": ctx.user.id,
+                "guild_id": ctx.guild_id,
+            },
+        )
+        await ctx.respond(
+            localisations.get_localized_string(
+                "values.suggest.sent_to_queue",
+                ctx,
+                guild_config=guild_config,
+            )
+        )
+        return None

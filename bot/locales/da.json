@@ -51,7 +51,7 @@
     "values.suggest_suggestion_sent": "Hej, {}. Dit forslag er blevet sendt til {} for at blive stemt p\u00e5!\n\nVent venligst, indtil det bliver godkendt eller afvist af et staff medlem.\n\nDit forslags-id (sID) til reference er **{}**.",
     "values.suggest_suggestion_sent_footer": "Guild ID: {} | sID: {}",
     "values.suggest_thanks": "Tak for dit forslag!",
-    "values.suggest_sent_to_queue": "Dit forslag er blevet sendt til k\u00f8en til behandling.",
+    "values.suggest.sent_to_queue": "Dit forslag er blevet sendt til k\u00f8en til behandling.",
     "values.suggest.no_anonymous_suggestions": "Dit guild tillader ikke anonyme forslag.",
     "values.suggest.no_images_in_suggestions": "Dit guild tillader ikke billeder i forslag.",
     "values.config_anonymous_enable_success": "Jeg har aktiveret anonyme forslag til denne guild.",

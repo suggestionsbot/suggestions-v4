@@ -51,7 +51,7 @@
     "values.suggest_suggestion_sent": "Ei, {}. Sua sugest\u00e3o foi enviada para {} para ser votada!\n\nPor favor, aguarde at\u00e9 ela ser aprovada ou rejeitada por um membro da staff.\n\nPara refer\u00eancia, seu ID de sugest\u00e3o (sID) \u00e9 {}.",
     "values.suggest_suggestion_sent_footer": "ID do servidor: {} | sID: {}",
     "values.suggest_thanks": "Obrigado por sua sugest\u00e3o!",
-    "values.suggest_sent_to_queue": "Sua sugest\u00e3o foi enviada \u00e0 fila para processamento.",
+    "values.suggest.sent_to_queue": "Sua sugest\u00e3o foi enviada \u00e0 fila para processamento.",
     "values.suggest.no_anonymous_suggestions": "Seu servidor n\u00e3o permite sugest\u00f5es an\u00f4nimas.",
     "values.suggest.no_images_in_suggestions": "Seu servidor n\u00e3o permite imagens em sugest\u00f5es.",
     "values.suggest_ping_author_in_thread": "Ei, <@$AUTHOR_ID>, criei este t\u00f3pico para voc\u00ea discutir sua sugest\u00e3o nele.",

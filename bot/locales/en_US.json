@@ -51,7 +51,7 @@
     "values.suggest_suggestion_sent": "Hey, {}. Your suggestion has been sent to {} to be voted on!\n\nPlease wait until it gets approved or rejected by a staff member.\n\nYour suggestion ID (sID) for reference is **{}**.",
     "values.suggest_suggestion_sent_footer": "Guild ID: {} | sID: {}",
     "values.suggest_thanks": "Thanks for your suggestion!",
-    "values.suggest_sent_to_queue": "Your suggestion has been sent to the queue for processing.",
+    "values.suggest.sent_to_queue": "Your suggestion has been sent to the queue for processing.",
     "values.suggest.no_anonymous_suggestions": "Your guild does not allow anonymous suggestions.",
     "values.suggest.no_images_in_suggestions": "Your guild does not allow images in suggestions.",
     "values.config_anonymous_enable_success": "I have enabled anonymous suggestions for this guild.",

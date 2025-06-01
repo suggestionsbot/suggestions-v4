@@ -1,9 +1,9 @@
-from bot.tables import InternalError
+from bot.tables import InternalErrors
 
 
 async def test_default_error():
     # Only test defaults
-    r_1: InternalError = InternalError(
+    r_1: InternalErrors = InternalErrors(
         error_name="Test",
         traceback="Boo",
         user_id=1,

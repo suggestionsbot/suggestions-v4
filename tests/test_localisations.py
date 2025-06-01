@@ -21,7 +21,7 @@ def test_falls_back(localisation: Localisation, context: lightbulb.Context):
     context.interaction.locale = "fr"
     assert (
         localisation.get_localized_string(
-            "values.suggest.content_too_long_title",
+            "errors.suggest.content_too_long.title",
             context,
         )
         == "Command Failed"

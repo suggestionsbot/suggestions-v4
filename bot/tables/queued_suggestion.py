@@ -1,25 +1,26 @@
 import typing
-from enum import Enum
 
 import hikari
-from piccolo.columns import Serial, Varchar, Text, ForeignKey, BigInt, Timestamptz
+from piccolo.columns import (
+    Serial,
+    Varchar,
+    Text,
+    ForeignKey,
+    BigInt,
+    Timestamptz,
+    Boolean,
+    LazyTableReference,
+)
 from piccolo.columns.indexes import IndexMethod
 from piccolo.table import Table
 
-from bot.constants import REJECTED_COLOR, APPROVED_COLOR, PENDING_COLOR
+from bot.constants import EMBED_COLOR
 from bot.tables import GuildConfigs, UserConfigs
 from bot.tables.mixins import AuditMixin
 from bot.utils import generate_id
 
 
-class SuggestionStateEnum(Enum):
-    PENDING = "Pending"
-    APPROVED = "Approved"
-    REJECTED = "Rejected"
-    CLEARED = "Cleared"
-
-
-class Suggestions(Table, AuditMixin):
+class QueuedSuggestions(Table, AuditMixin):
     id = Serial(
         primary_key=True,
         unique=True,
@@ -36,21 +37,6 @@ class Suggestions(Table, AuditMixin):
     guild_configuration = ForeignKey(GuildConfigs, index=True)
     # Secret as if anon we don't want to reveal
     user_configuration = ForeignKey(UserConfigs, index=True, secret=True)
-    state = Varchar(
-        help_text="The current state of this suggestion", choices=SuggestionStateEnum
-    )
-    moderator_note = Text(
-        null=True,
-        required=False,
-        help_text="An optional note that was added by a moderator",
-    )
-    moderator_note_added_by = ForeignKey(UserConfigs, index=True)
-    moderator_note_added_by_display_text = Text(
-        null=True,
-        default=None,
-        required=False,
-        help_text="How should we display the moderator who added the note? Either name or <Anonymous>",
-    )
     channel_id = BigInt(
         null=True,
         default=None,
@@ -63,13 +49,22 @@ class Suggestions(Table, AuditMixin):
         required=False,
         help_text="If this suggestion has been sent to discord, what is it's message id?",
     )
-    thread_id = BigInt(
-        null=True,
-        default=None,
-        required=False,
-        help_text="If a thread was automatically created for this suggestion, what was it?",
+    still_in_queue = Boolean(
+        default=True,
+        help_text="Is this still in the queue or is it a suggestion now?",
+        index=True,
     )
-    # BigInt vs ForeignKey as we moderators dont need configs
+    related_suggestion = ForeignKey(
+        LazyTableReference(
+            table_class_name="Suggestions",
+            app_name="bot",
+        ),
+        default=None,
+        null=True,
+        required=False,
+        help_text="If this is no longer in the queue, what suggestion is it now?",
+    )
+    # BigInt vs ForeignKey as moderators dont need configs
     # Secret as if anon we don't want to reveal
     resolved_by = BigInt(
         null=True,
@@ -108,22 +103,16 @@ class Suggestions(Table, AuditMixin):
     )
 
     @property
-    def color(self) -> hikari.Color:
-        if self.state is SuggestionStateEnum.REJECTED:
-            return REJECTED_COLOR
-
-        elif self.state is SuggestionStateEnum.APPROVED:
-            return APPROVED_COLOR
-
-        return PENDING_COLOR
+    def is_anonymous(self) -> bool:
+        return self.author_display_name == "Anonymous"
 
     # noinspection PyPep8Naming
     @classmethod
-    async def fetch_suggestion(cls, sID: str) -> typing.Self:
+    async def fetch_queued_suggestion(cls, sID: str) -> typing.Self:
         """Simple helper method to also ensure configurations are prefetched"""
         return await cls.objects(
-            Suggestions.user_configuration, Suggestions.guild_configuration
-        ).get(Suggestions.sID == sID)
+            QueuedSuggestions.user_configuration, QueuedSuggestions.guild_configuration
+        ).get(QueuedSuggestions.sID == sID)
 
     @property
     def guild_id(self) -> int:
@@ -132,3 +121,29 @@ class Suggestions(Table, AuditMixin):
     @property
     def author_id(self) -> int:
         return self.user_configuration.id
+
+    async def as_embed(self, bot: hikari.RESTBot | hikari.GatewayBot) -> hikari.Embed:
+        user: hikari.User = await bot.rest.fetch_user(self.author_id)
+
+        embed: hikari.Embed = hikari.Embed(
+            description=f"**Submitter**\n{self.author_display_name}\n\n"
+            f"**Suggestion**\n{self.suggestion}",
+            colour=EMBED_COLOR,
+            timestamp=self.created_at,
+        )
+        embed.set_footer(text=f"Queued suggestion ID: {self.sID}")
+        if not self.is_anonymous:
+            embed.set_thumbnail(user.display_avatar_url)
+
+        if self.image_url:
+            embed.set_image(self.image_url)
+
+        if self.resolved_note and self.resolved_by is not None:
+            # Means it's been rejected so we should show it
+            note_desc = (
+                f"\n\n**Moderator**\n{self.resolved_by_display_text}"
+                f"\n**Moderator note**\n{self.resolved_note}"
+            )
+            embed.description += note_desc
+
+        return embed

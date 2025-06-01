@@ -6,9 +6,13 @@ from hikari import Color
 
 from bot.infisical import Infisical
 
+VERSION = "4.0"
 MAX_CONTENT_LENGTH = 1000
 ERROR_COLOR = Color.of((214, 48, 49))
-
+REJECTED_COLOR = Color.of((207, 0, 15))
+APPROVED_COLOR = Color.of((0, 230, 64))
+PENDING_COLOR = Color.of((255, 214, 99))
+EMBED_COLOR = Color.of((255, 214, 99))
 INFISICAL_SDK = Infisical()
 
 

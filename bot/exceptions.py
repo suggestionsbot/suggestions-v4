@@ -15,3 +15,7 @@ class MissingTranslation(SuggestionException):
 
 class InvalidFileType(SuggestionException):
     """The attempted image upload was invalid."""
+
+
+class MissingQueueChannel(SuggestionException):
+    """Tried to send a queued suggestion to a non-existent channel."""

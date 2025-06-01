@@ -9,7 +9,7 @@ from bot.constants import ErrorCode, ERROR_COLOR
 from bot.tables.mixins.audit import utc_now
 
 if typing.TYPE_CHECKING:
-    from bot.tables import InternalError
+    from bot.tables import InternalErrors
 
 logger = logoo.Logger(__name__)
 
@@ -18,7 +18,7 @@ def error_embed(
     title: str,
     description: str,
     *,
-    internal_error_reference: InternalError | None = None,
+    internal_error_reference: InternalErrors | None = None,
     footer_text: str | None = None,
     error_code: ErrorCode | None = None,
 ) -> hikari.Embed:
