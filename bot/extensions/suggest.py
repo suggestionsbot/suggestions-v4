@@ -41,9 +41,15 @@ def handle_suggestions_errors(func):
             if isinstance(exception, MessageTooLong):
                 await ctx.respond(
                     embed=utils.error_embed(
-                        "Command failed",
-                        f"Your content was too long, please limit it to {MAX_CONTENT_LENGTH} characters or less.\n\n"
-                        "I have attached a file containing your content to save rewriting it entirely.",
+                        localisations.get_localized_string(
+                            "values.suggest.content_too_long_title",
+                            ctx=ctx,
+                        ),
+                        localisations.get_localized_string(
+                            "values.suggest.content_too_long_description",
+                            ctx=ctx,
+                            extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
+                        ),
                         error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
                         internal_error_reference=internal_error,
                     ),

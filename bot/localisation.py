@@ -36,7 +36,9 @@ class Localisation:
         try:
             return self.lightbulb_provider.localizations[locale][key]
         except KeyError:
-            fallback_value = self.lightbulb_provider.localizations[locale].get(key)
+            fallback_value = self.lightbulb_provider.localizations[locale].get(
+                key, None
+            )
             if fallback_value is None:
                 logger.critical(f"Could not find base translation for {key}")
                 raise MissingTranslation  # TODO Handle this on the bots error handler
@@ -74,11 +76,17 @@ class Localisation:
         key: str,
         ctx: lightbulb.Context,
         *,
+        extras: dict = None,
         guild_config: GuildConfig | None = None,
     ):
-        content = self.get_locale(key, hikari.Locale(ctx.interaction.locale))
+        locale = ctx.interaction.locale
+        if not isinstance(locale, hikari.Locale):
+            locale = hikari.Locale(locale)
+
+        content = self.get_locale(key, locale)
         return self.inject_locale_values(
             content,
             ctx=ctx,
             guild_config=guild_config,
+            extras=extras,
         )

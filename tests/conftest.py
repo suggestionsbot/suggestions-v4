@@ -52,20 +52,23 @@ def redis_client(request) -> fakeredis.FakeAsyncRedis:
     return redis_client
 
 
-@pytest.fixture(scope="session")
-def localisation() -> Localisation:
-    return Localisation(Path("../bot"))
+@pytest.fixture(scope="module")
+def localisation(request) -> Localisation:
+    base_dir = Path(request.fspath).parent
+    if base_dir.name != "tests":
+        base_dir = base_dir.parent
+    return Localisation(base_dir / "../bot")
 
 
 async def prepare_command(
     cls: Type[T],
+    localisations: Localisation,
     options: Sequence[hikari.CommandInteractionOption] = None,
 ) -> (T, lightbulb.Context):
-    await cls.as_command_builder(
-        hikari.Locale.EN_GB, lightbulb.localization_unsupported
-    )
+    await cls.as_command_builder(hikari.Locale.EN_GB, localisations.lightbulb_provider)
     client: lightbulb.Client = mock.AsyncMock()
     ctx: lightbulb.Context = mock.AsyncMock(spec=lightbulb.Context, client=client)
+    ctx.interaction.locale = "en-GB"
     if options is not None:
         ctx.options = options
 

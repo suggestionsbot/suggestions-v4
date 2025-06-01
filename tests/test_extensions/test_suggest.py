@@ -29,11 +29,11 @@ def create_options(suggestion: str) -> Sequence[hikari.CommandInteractionOption]
 
 async def invoke_suggest(
     options: Sequence[hikari.CommandInteractionOption],
+    localisations: Localisation,
     user_id: int = None,
     *,
     guild_config: GuildConfig = None,
     user_config: UserConfig = None,
-    localisations: Localisation = None,
 ) -> (lightbulb.Context, GuildConfig, UserConfig, Localisation):
     if guild_config is None:
         guild_config = mock.Mock(spec=GuildConfig)
@@ -41,10 +41,7 @@ async def invoke_suggest(
     if user_config is None:
         user_config = mock.Mock(spec=UserConfig)
 
-    if localisations is None:
-        localisations = mock.Mock(spec=UserConfig)
-
-    cmd, ctx = await prepare_command(Suggest, options)
+    cmd, ctx = await prepare_command(Suggest, localisations, options)
     if user_id is not None:
         ctx.user.id = user_id
 
@@ -62,7 +59,7 @@ async def test_suggestion_too_long(localisation):
     internal_error = await InternalError.objects().first()
     ctx.respond.assert_called_once_with(
         embed=utils.error_embed(
-            "Command failed",
+            "Command Failed",
             f"Your content was too long, please limit it to {MAX_CONTENT_LENGTH} characters or less.\n\n"
             "I have attached a file containing your content to save rewriting it entirely.",
             error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
