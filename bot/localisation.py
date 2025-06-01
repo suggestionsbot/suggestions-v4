@@ -36,9 +36,9 @@ class Localisation:
         try:
             return self.lightbulb_provider.localizations[locale][key]
         except KeyError:
-            fallback_value = self.lightbulb_provider.localizations[locale].get(
-                key, None
-            )
+            fallback_value = self.lightbulb_provider.localizations[
+                hikari.Locale.EN_GB
+            ].get(key, None)
             if fallback_value is None:
                 logger.critical(f"Could not find base translation for {key}")
                 raise MissingTranslation  # TODO Handle this on the bots error handler

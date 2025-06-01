@@ -52,6 +52,14 @@ def redis_client(request) -> fakeredis.FakeAsyncRedis:
     return redis_client
 
 
+@pytest.fixture
+def ctx() -> lightbulb.Context:
+    client: lightbulb.Client = mock.AsyncMock()
+    ctx: lightbulb.Context = mock.AsyncMock(spec=lightbulb.Context, client=client)
+    ctx.interaction.locale = "en-GB"
+    return ctx
+
+
 @pytest.fixture(scope="module")
 def localisation(request) -> Localisation:
     base_dir = Path(request.fspath).parent
