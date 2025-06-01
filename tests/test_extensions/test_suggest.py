@@ -12,7 +12,13 @@ from bot import utils
 from bot.constants import MAX_CONTENT_LENGTH, ErrorCode
 from bot.extensions.suggest import Suggest
 from bot.localisation import Localisation
-from bot.tables import GuildConfigs, InternalErrors, Suggestions, UserConfigs
+from bot.tables import (
+    GuildConfigs,
+    InternalErrors,
+    Suggestions,
+    UserConfigs,
+    QueuedSuggestions,
+)
 from tests.conftest import prepare_command
 
 
@@ -250,3 +256,49 @@ async def test_queued_suggestion_missing_queue_channel(localisation):
             error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
         ),
     )
+
+
+async def test_channel_queued_suggestions(localisation):
+    r_1 = await QueuedSuggestions.count()
+    assert r_1 == 0
+
+    options = create_options("test")
+    gc = GuildConfigs()
+    gc.uses_suggestions_queue = True
+    gc.virtual_suggestions_queue = False
+    gc.queued_suggestion_channel_id = 12345
+    bot = AsyncMock(spec=hikari.GatewayBot)
+    bot.rest.fetch_user = AsyncMock()
+    bot.rest.fetch_channel = AsyncMock()
+    ctx, _, _, _, _ = await invoke_suggest(
+        options, localisations=localisation, guild_config=gc, bot=bot, user_id=5678
+    )
+
+    r_2 = await QueuedSuggestions.count()
+    assert r_2 == 1
+    r_3: QueuedSuggestions = await QueuedSuggestions.objects().first()
+    assert r_3.suggestion == "test"
+    assert r_3.author_display_name == "<@5678>"
+
+
+async def test_channel_anonymous_queued_suggestions(localisation):
+    r_1 = await QueuedSuggestions.count()
+    assert r_1 == 0
+
+    options = create_options("test", anon=True)
+    gc = GuildConfigs()
+    gc.uses_suggestions_queue = True
+    gc.virtual_suggestions_queue = False
+    gc.queued_suggestion_channel_id = 12345
+    bot = AsyncMock(spec=hikari.GatewayBot)
+    bot.rest.fetch_user = AsyncMock()
+    bot.rest.fetch_channel = AsyncMock()
+    ctx, _, _, _, _ = await invoke_suggest(
+        options, localisations=localisation, guild_config=gc, bot=bot, user_id=5678
+    )
+
+    r_2 = await QueuedSuggestions.count()
+    assert r_2 == 1
+    r_3: QueuedSuggestions = await QueuedSuggestions.objects().first()
+    assert r_3.suggestion == "test"
+    assert r_3.author_display_name == "Anonymous"
