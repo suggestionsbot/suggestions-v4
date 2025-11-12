@@ -1,4 +1,4 @@
-from bot.tables import UserConfigs
+from shared.tables import UserConfigs
 
 
 async def test_user_config_default():

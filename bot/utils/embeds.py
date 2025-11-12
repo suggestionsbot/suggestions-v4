@@ -6,7 +6,7 @@ import hikari
 import logoo
 
 from bot.constants import ErrorCode, ERROR_COLOR
-from bot.tables.mixins.audit import utc_now
+from shared.tables.mixins.audit import utc_now
 
 if typing.TYPE_CHECKING:
     from bot.tables import InternalErrors

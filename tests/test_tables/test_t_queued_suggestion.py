@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock
 
 import hikari
 
-from bot.tables import QueuedSuggestions
+from shared.tables import QueuedSuggestions
 
 
 async def test_as_embed():

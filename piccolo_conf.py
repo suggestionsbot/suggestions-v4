@@ -19,4 +19,9 @@ DB = PostgresEngine(
     },
 )
 
-APP_REGISTRY = AppRegistry(apps=["bot.piccolo_app"])
+APP_REGISTRY = AppRegistry(
+    apps=[
+        "bot.piccolo_app",
+        "shared.piccolo_app",
+    ],
+)

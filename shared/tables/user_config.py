@@ -1,7 +1,7 @@
 from piccolo.table import Table
 from piccolo.columns import BigInt, Boolean
 
-from bot.tables.mixins import AuditMixin
+from shared.tables.mixins import AuditMixin
 
 
 class UserConfigs(AuditMixin, Table):

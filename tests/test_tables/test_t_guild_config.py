@@ -5,8 +5,8 @@ import hikari
 import lightbulb
 from freezegun import freeze_time
 
-from bot.tables import GuildConfigs
-from bot.tables.mixins.audit import utc_now
+from shared.tables import GuildConfigs
+from shared.tables.mixins.audit import utc_now
 
 
 async def test_guild_config_default():

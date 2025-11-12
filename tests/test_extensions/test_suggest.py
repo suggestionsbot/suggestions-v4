@@ -12,9 +12,9 @@ from bot import utils
 from bot.constants import MAX_CONTENT_LENGTH, ErrorCode
 from bot.extensions.suggest import Suggest
 from bot.localisation import Localisation
-from bot.tables import (
+from bot.tables import InternalErrors
+from shared.tables import (
     GuildConfigs,
-    InternalErrors,
     Suggestions,
     UserConfigs,
     QueuedSuggestions,

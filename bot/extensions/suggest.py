@@ -6,11 +6,13 @@ import lightbulb
 import logoo
 from hikari.impl import MessageActionRowBuilder
 
+import shared
 from bot import utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MessageTooLong, MissingQueueChannel
 from bot.localisation import Localisation
-from bot.tables import GuildConfigs, InternalErrors, UserConfigs, QueuedSuggestions
+from bot.tables import InternalErrors
+from shared.tables import GuildConfigs, UserConfigs, QueuedSuggestions
 
 loader = lightbulb.Loader()
 logger = logoo.Logger(__name__)
@@ -147,7 +149,7 @@ class Suggest(
                 )
                 return None
 
-            image_url = await utils.upload_file_to_r2(
+            image_url = await shared.utils.upload_file_to_r2(
                 file_name=self.image.filename,
                 file_data=await self.image.read(),
                 guild_id=ctx.guild_id,

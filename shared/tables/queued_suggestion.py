@@ -15,8 +15,8 @@ from piccolo.columns.indexes import IndexMethod
 from piccolo.table import Table
 
 from bot.constants import EMBED_COLOR
-from bot.tables import GuildConfigs, UserConfigs
-from bot.tables.mixins import AuditMixin
+from shared.tables import GuildConfigs, UserConfigs
+from shared.tables.mixins import AuditMixin
 from bot.utils import generate_id
 
 
@@ -57,7 +57,7 @@ class QueuedSuggestions(Table, AuditMixin):
     related_suggestion = ForeignKey(
         LazyTableReference(
             table_class_name="Suggestions",
-            app_name="bot",
+            app_name="shared",
         ),
         default=None,
         null=True,

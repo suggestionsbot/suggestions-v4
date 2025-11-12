@@ -4,7 +4,7 @@ from piccolo.columns import Serial, ForeignKey, BigInt, Varchar, LazyTableRefere
 from piccolo.columns.indexes import IndexMethod
 from piccolo.table import Table
 
-from bot.tables.mixins import AuditMixin
+from shared.tables.mixins import AuditMixin
 
 
 class SuggestionsVoteTypeEnum(Enum):
@@ -21,7 +21,7 @@ class SuggestionsVote(Table, AuditMixin):
     suggestion = ForeignKey(
         LazyTableReference(
             table_class_name="Suggestions",
-            app_name="bot",
+            app_name="shared",
         ),
         index=True,
     )

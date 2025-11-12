@@ -15,4 +15,9 @@ DB = PostgresEngine(
         "port": int(INFISICAL_SDK.get_secret("POSTGRES_PORT")),
     },
 )
-APP_REGISTRY = AppRegistry(apps=["bot.piccolo_app"])
+APP_REGISTRY = AppRegistry(
+    apps=[
+        "bot.piccolo_app",
+        "shared.piccolo_app",
+    ]
+)

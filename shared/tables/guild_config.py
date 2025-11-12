@@ -3,9 +3,9 @@ import lightbulb
 from piccolo.columns import BigInt, Boolean, Array, ForeignKey, LazyTableReference
 from piccolo.table import Table
 
-from bot.tables import PremiumGuildConfigs
-from bot.tables.mixins import AuditMixin
-from bot.tables.mixins.audit import utc_now
+from shared.tables import PremiumGuildConfigs
+from shared.tables.mixins import AuditMixin
+from shared.tables.mixins.audit import utc_now
 
 
 class GuildConfigs(AuditMixin, Table):
@@ -81,7 +81,7 @@ class GuildConfigs(AuditMixin, Table):
     premium: PremiumGuildConfigs = ForeignKey(
         LazyTableReference(
             table_class_name="PremiumGuildConfigs",
-            app_name="bot",
+            app_name="shared",
         ),
         index=True,
     )

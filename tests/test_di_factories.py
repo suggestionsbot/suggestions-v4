@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 import lightbulb
 
 from bot.bot import create_guild_config, create_user_config
-from bot.tables import GuildConfigs, UserConfigs
+from shared.tables import GuildConfigs, UserConfigs
 
 
 # noinspection PyPropertyAccess

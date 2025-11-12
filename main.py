@@ -11,7 +11,7 @@ from logoo import PrimaryLogger
 
 from bot import create_bot
 from bot.constants import INFISICAL_SDK, VERSION
-from bot.tables import GuildConfigs
+from shared.tables import GuildConfigs
 
 load_dotenv()
 

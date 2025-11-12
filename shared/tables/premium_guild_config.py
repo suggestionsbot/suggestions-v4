@@ -4,7 +4,7 @@ from enum import Enum
 from piccolo.columns import Serial, Text, Integer, BigInt
 from piccolo.table import Table
 
-from bot.tables.mixins import AuditMixin
+from shared.tables.mixins import AuditMixin
 
 
 class CooldownPeriod(str, Enum):

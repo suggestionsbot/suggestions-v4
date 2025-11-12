@@ -8,7 +8,7 @@ import logoo
 from lightbulb import DictLocalizationProvider
 
 from bot.exceptions import MissingTranslation
-from bot.tables import GuildConfigs
+from shared.tables import GuildConfigs
 
 logger = logoo.Logger(__name__)
 

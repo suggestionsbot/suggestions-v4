@@ -7,8 +7,8 @@ from piccolo.columns.indexes import IndexMethod
 from piccolo.table import Table
 
 from bot.constants import REJECTED_COLOR, APPROVED_COLOR, PENDING_COLOR
-from bot.tables import GuildConfigs, UserConfigs
-from bot.tables.mixins import AuditMixin
+from shared.tables import GuildConfigs, UserConfigs
+from shared.tables.mixins import AuditMixin
 from bot.utils import generate_id
 
 
