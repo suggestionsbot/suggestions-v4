@@ -1,0 +1,44 @@
+{% extends 'base.jinja' %}
+{% block title %}Sign Up{% endblock %}
+{% block content %}
+<div class="page page-center">
+      <div class="container container-tight py-4">
+          {% include 'alerts.jinja' %}
+        <div class="text-center mb-4">
+        </div>
+        <form class="card card-md" method="POST" autocomplete="off" novalidate>
+            {{ csrf_input | safe }}
+          <div class="card-body">
+            <h2 class="card-title text-center mb-4">Create new account</h2>
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <input name="username" type="text" class="form-control" placeholder="Enter username" autocomplete="username">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email address</label>
+              <input name="email" type="email" class="form-control" placeholder="Enter email" autocomplete="off">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <div class="input-group input-group-flat">
+                <input name="password" type="password" class="form-control"  placeholder="Password"  autocomplete="new-password">
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirm Password</label>
+              <div class="input-group input-group-flat">
+                <input name="confirm_password" type="password" class="form-control"  placeholder="Password Again"  autocomplete="new-password">
+              </div>
+            </div>
+              {{ insert_cf_turnstile() }}
+            <div class="form-footer">
+              <button type="submit" class="btn btn-primary w-100">Create new account</button>
+            </div>
+          </div>
+        </form>
+        <div class="text-center text-secondary mt-3">
+          Already have account? <a href="{{url_for('sign_in')}}" tabindex="-1">Sign in</a>
+        </div>
+      </div>
+    </div>
+{% endblock %}

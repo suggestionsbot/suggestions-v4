@@ -1,0 +1,46 @@
+{% extends 'base.jinja' %}
+{% block title %}Sign In{% endblock %}
+{% block content %}
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4">Get a link to Sign In</h2>
+                    <form method="POST" autocomplete="off" novalidate>
+                        {% if csrftoken and csrf_cookie_name %}
+                            <input type="hidden" name="{{ csrf_cookie_name }}" value="{{ csrftoken }}"/>
+                        {% endif %}
+                        <div>
+                            <small class="form-hint">
+                                We'll email you a sign-in link that provides access to the website.
+                            </small>
+                        </div>
+                        <br>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input name="email" type="text" class="form-control" placeholder="Your email address"
+                                   autocomplete="email">
+                        </div>
+
+                        {{ insert_cf_turnstile() }}
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary w-100">Get Sign In Link</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="text-center text-secondary mt-3">
+                <p>
+                    Got a password? <a href="{{ url_for('sign_in') }}?next_route={{ next_route }}" tabindex="-1">Sign in
+                    here</a>
+                </p>
+                {% if has_registration %}
+                    <p>Want to create an account with a password? <a href="{{ url_for('sign_up') }}?next_route={{ next_route }}"
+                                                  tabindex="-1">Click Here</a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'base.jinja' %}
+{% block title %}Delete MFA{% endblock %}
+{% block content %}
+    <div class="page">
+        <div class="page-body">
+            <div class="container-xl">
+                {% include 'alerts.jinja' %}
+                <div class="row row-cards">
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">MFA Status</h3>
+                            </div>
+                            <div class="card-body">
+                                You currently have MFA configured.<br><br>
+                                <h6>Note this will always say configured as otherwise it will kick you to the creation
+                                    form.</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Delete MFA</h3>
+                            </div>
+                            <div class="card-body">
+                                <h6>This is a permanent action. If this site requires MFA you will need to reconfigure
+                                    it.</h6>
+                                <a href="#" class="btn btn-outline-danger w-100" data-bs-toggle="modal"
+                                   data-bs-target="#delete-mfa">
+                                    Delete MFA for account
+                                </a>
+                                <div class="modal modal-blur fade" id="delete-mfa" tabindex="-1" role="dialog"
+                                     aria-hidden="true">
+                                    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-body">
+                                                <div class="modal-title">Delete MFA</div>
+                                                <div>Are you sure you want to delete your MFA? If so we need your password to confirm it's
+                                                    really you.
+                                                </div>
+                                                <br>
+                                                <form action="{{ url_for('mfa_totp_delete') }}" method="POST">
+                                                    {{ csrf_input|safe }}
+                                                    <div class="mb-2">
+                                                        <label class="form-label">
+                                                            Password
+                                                        </label>
+                                                        <div class="input-group input-group-flat">
+                                                            <input name="password" type="password" class="form-control"
+                                                                   placeholder="Your password"
+                                                                   autocomplete="current-password">
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-footer">
+                                                        <button type="submit" class="btn btn-danger"
+                                                                data-bs-dismiss="modal">Yes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-link link-secondary me-auto"
+                                                        data-bs-dismiss="modal">Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

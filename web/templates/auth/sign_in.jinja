@@ -1,0 +1,63 @@
+{% extends 'base.jinja' %}
+{% block title %}Sign In{% endblock %}
+{% block content %}
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4">Sign in to your account</h2>
+                    <form method="POST" autocomplete="off" novalidate>
+                        {% if csrftoken and csrf_cookie_name %}
+                            <input type="hidden" name="{{ csrf_cookie_name }}" value="{{ csrftoken }}"/>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input name="username" type="text" class="form-control" placeholder="Your username"
+                                   autocomplete="username">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">
+                                Password
+                            </label>
+                            <div class="input-group input-group-flat">
+                                <input name="password" type="password" class="form-control" placeholder="Your password"
+                                       autocomplete="current-password">
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">
+                                Multi-Factor Authentication (MFA)
+                            </label>
+                            <div class="input-group input-group-flat">
+                                <input name="mfa" type="text" class="form-control" placeholder="Your MFA"
+                                       autocomplete="one-time-code">
+                            </div>
+                            <div>
+                                <small class="form-hint">
+                                    Only provide MFA if you have it configured.
+                                </small>
+                            </div>
+                        </div>
+                        <span class="form-label">
+                          <a href="{{ url_for('forgot_password') }}" tabindex="-1">I forgot my password</a>
+                        </span>
+                        {{ insert_cf_turnstile() }}
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary w-100">Sign in</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="text-center text-secondary mt-3">
+            <p>Want to sign in via email link? <a href="{{ url_for('sign_in_email') }}?next_route={{ next_route }}" tabindex="-1">Click Here</a></p>
+                {% if has_registration %}
+                    <p>Don't have account yet? <a href="{{ url_for('sign_up') }}?next_route={{ next_route }}"
+                                                  tabindex="-1">Sign up</a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

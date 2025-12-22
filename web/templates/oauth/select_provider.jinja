@@ -1,0 +1,27 @@
+{% extends 'base.jinja' %}
+{% block title %}Select Auth Provider{% endblock %}
+{% block content %}
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4">Select your provider</h2>
+                    <div>
+                        {% for provider in providers %}
+                            <p>
+                            <b>{{ provider.0.title() }}</b><br>
+                                <a href="{{ provider.1 }}">Sign in using {{ provider.0.title() }}</a>
+                            </p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="text-center text-secondary mt-3">
+                <p>
+                    <a href="/">Go back</a>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

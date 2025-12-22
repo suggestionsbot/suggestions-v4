@@ -1,0 +1,44 @@
+{% extends 'base.jinja' %}
+{% block title %}Configure MFA{% endblock %}
+{% block content %}
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4">Configure Multi-Factor Authentication (MFA) for your account</h2>
+                    <small>By entering your username and password below we will create MFA for you. This will pop up on a subsequent screen for you to save and then use later.</small>
+                    <br>
+                    <form method="POST" autocomplete="off" novalidate action="{{ url_for('create_totp_mfa') }}">
+                        {% if csrftoken and csrf_cookie_name %}
+                            <input type="hidden" name="{{ csrf_cookie_name }}" value="{{ csrftoken }}"/>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input name="username" type="text" class="form-control" placeholder="Your username"
+                                   autocomplete="username">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">
+                                Password
+                            </label>
+                            <div class="input-group input-group-flat">
+                                <input name="password" type="password" class="form-control" placeholder="Your password"
+                                       autocomplete="current-password">
+                            </div>
+                        </div>
+
+                        {{ insert_cf_turnstile() }}
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary w-100">Create MFA</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        <div class="text-center text-secondary mt-3">
+                    <a href="/" tabindex="-1">Take me home</a>
+                </div>
+        </div>
+    </div>
+{% endblock %}

@@ -4,6 +4,7 @@ x-shared-variables: &common-variables
   POSTGRES_USER: suggestions_db_user
   POSTGRES_PASSWORD: product-defeat-follow-worshiper-swimwear-drown
   POSTGRES_PORT: 2501
+  REDIS_URL: "redis://default:haziness-sloppy-cycle-deduct-superman-undertook@suggestions_redis:2202/0"
 
 services:
   suggestions_db:
@@ -19,6 +20,27 @@ services:
       POSTGRES_PASSWORD: product-defeat-follow-worshiper-swimwear-drown
     volumes:
       - .db:/var/lib/postgresql/data
+  suggestions_saq:
+    build:
+      context: .
+      dockerfile: ./docker/saq/Dockerfile
+    container_name: "suggestions_saq"
+    depends_on:
+      - suggestions_redis
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *common-variables
+      EXTRA_ARGS: "--web --verbose"
+  suggestions_redis:
+    image: redis:7.4-alpine
+    container_name: "suggestions_redis"
+    ports:
+      - '2202:2202'
+    command: redis-server --port 2202 --save 20 1 --loglevel warning --requirepass haziness-sloppy-cycle-deduct-superman-undertook
+    volumes:
+      - cache:/data
+
 
 volumes:
   cache:

@@ -5,17 +5,15 @@ from piccolo.engine.postgres import PostgresEngine
 
 from piccolo.conf.apps import AppRegistry
 
-from bot.constants import INFISICAL_SDK
-
 load_dotenv()
 
 DB = PostgresEngine(
     config={
-        "database": INFISICAL_SDK.get_secret("POSTGRES_DB"),
-        "user": INFISICAL_SDK.get_secret("POSTGRES_USER"),
-        "password": INFISICAL_SDK.get_secret("POSTGRES_PASSWORD"),
-        "host": INFISICAL_SDK.get_secret("POSTGRES_HOST"),
-        "port": int(INFISICAL_SDK.get_secret("POSTGRES_PORT")),
+        "database": os.environ["POSTGRES_DB"],
+        "user": os.environ["POSTGRES_USER"],
+        "password": os.environ["POSTGRES_PASSWORD"],
+        "host": os.environ["POSTGRES_HOST"],
+        "port": int(os.environ["POSTGRES_PORT"]),
     },
 )
 
@@ -23,5 +21,8 @@ APP_REGISTRY = AppRegistry(
     apps=[
         "bot.piccolo_app",
         "shared.piccolo_app",
+        "web.piccolo_app",
+        "piccolo_admin.piccolo_app",
+        "piccolo_api.mfa.authenticator.piccolo_app",
     ],
 )

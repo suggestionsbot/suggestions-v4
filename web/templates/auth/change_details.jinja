@@ -1,0 +1,44 @@
+{% extends 'base.jinja' %}
+{% block title %}Change Details{% endblock %}
+{% block content %}
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            {% include 'alerts.jinja' %}
+            <div class="text-center mb-4">
+            </div>
+            <form class="card card-md" method="POST" autocomplete="off" novalidate>
+                {{ csrf_input | safe }}
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Change your details</h2>
+                    <div class="mb-3">
+                        <label class="form-label" for="name">Your Name</label>
+                        <textarea id="name" name="name" rows="1" class="form-control"
+                        >{{ request.user.name }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="phone">Your Phone Number</label>
+                        <textarea id="phone" name="phone" rows="1" class="form-control"
+                        >{{ request.user.phone_number }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="row">
+                            <span class="col">Newsletter sign up</span>
+                            <span class="col-auto">
+                                      <label class="form-check form-check-single form-switch">
+                                        <input id="newsletter" name="newsletter" class="form-check-input"
+                                               type="checkbox" {% if request.user.signed_up_for_newsletter %}checked=""{% endif %}>
+                                      </label>
+                                    </span>
+                        </label>
+                    </div>
+                    <small>Want to change your registered email? Reach out to us.</small>
+
+
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary w-100">Submit</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

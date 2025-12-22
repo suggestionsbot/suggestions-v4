@@ -1,0 +1,65 @@
+{% extends 'base.jinja' %}
+{% block title %}Select Auth Provider{% endblock %}
+{% block content %}
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4">Select your authentication mechanism</h2>
+                    <div>
+                        <div>
+                            <p><b>Password Authentication</b><br>
+                                Want to sign in with a password? <a
+                                        href="{{ url_for('sign_in') }}?next_route={{ next_route }}" tabindex="-1">
+                                    Click Here
+                                </a>
+                            </p>
+                        </div>
+                        {% if has_magic_link %}
+                            <br>
+                            <div>
+                                <p><b>Email Authentication</b><br>
+                                    Want to sign in via email link? <a
+                                            href="{{ url_for('sign_in_email') }}?next_route={{ next_route }}"
+                                            tabindex="-1">
+                                        Click Here
+                                    </a>
+                                </p>
+                            </div>
+                        {% endif %}
+                        {% if has_oauth %}
+                            <br>
+                            <div>
+                                <p><b>OAuth</b><br>
+                                    Want to sign in OAuth? (GitHub, Discord, etc) <a
+                                            href="{{ url_for('select_oauth_provider') }}?next_route={{ next_route }}"
+                                            tabindex="-1">
+                                        Click Here
+                                    </a>
+                                </p>
+                            </div>
+                        {% endif %}
+                        {% if has_registration %}
+                            <br>
+                            <div>
+                                <p><b>Register Account using Password</b><br>
+                                    Want to create an account with a password? <a
+                                            href="{{ url_for('sign_up') }}?next_route={{ next_route }}"
+                                            tabindex="-1">Sign up here</a>
+                                </p>
+                            </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+            <div class="text-center text-secondary mt-3">
+                <p>
+                    <a href="/">Go back</a>
+                </p>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.jinja" %}
+
+{% block content %}
+    <div class="page">
+        <div class="container py-4">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <h2 class="page-title">
+                                {{ title }}
+                            </h2><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2>Routes</h2>
+                    <p>
+                        The following routes are valid:
+                    </p>
+                    <ul>
+                        {% for route in routes %}
+                            <li><a href="{{ route.url }}">{{ route.name }}</a></li>
+                        {% endfor %}
+                        {% if request.scope.get('user') %}
+                            <li>Look authed text!</li>
+                            {% if request.user.admin %}
+                                <li>You're an admin even!</li>
+                            {% endif %}
+                        {% else %}
+                            <li>You aren't signed in</li>
+                        {% endif %}
+                        <li><a href="/docs">API Docs</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

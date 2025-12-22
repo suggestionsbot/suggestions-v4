@@ -10,8 +10,9 @@ from dotenv import load_dotenv
 from logoo import PrimaryLogger
 
 from bot import create_bot
-from bot.constants import INFISICAL_SDK, VERSION
+from bot.constants import VERSION
 from shared.tables import GuildConfigs
+from web import constants as t_constants
 
 load_dotenv()
 
@@ -27,7 +28,7 @@ async def main():
         exit(1)
 
     bot, client = await create_bot(
-        token=INFISICAL_SDK.get_secret("BOT_TOKEN"),
+        token=t_constants.get_secret("BOT_TOKEN", t_constants.infisical_client),
         base_path=Path("bot"),
     )
 
@@ -38,8 +39,8 @@ async def main():
         stream=(
             "test_bot" if commons.value_to_bool(os.environ.get("DEBUG")) else "prod_bot"
         ),
-        username=INFISICAL_SDK.get_secret("LOGOO_USER"),
-        password=INFISICAL_SDK.get_secret("LOGOO_PASSWORD"),
+        username=t_constants.get_secret("LOGOO_USER", t_constants.infisical_client),
+        password=t_constants.get_secret("LOGOO_PASSWORD", t_constants.infisical_client),
         poll_time=15,
         global_metadata={
             # TODO Readd this later

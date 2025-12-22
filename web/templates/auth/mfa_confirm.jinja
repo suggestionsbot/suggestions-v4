@@ -1,0 +1,65 @@
+{% extends 'base.jinja' %}
+{% block title %}Confirm MFA{% endblock %}
+{% block content %}
+    <div class="page-body">
+        <div class="container-sm">
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4">Confirm Multi-Factor Authentication (MFA) is configured
+                        correctly</h2>
+                    <small>If you see this then MFA is <b>required</b> to authenticate going forward on next sign
+                        in. Please ensure you save these details or you <b>will</b> be locked out.</small><br><br>
+                    <div class="row row-cards">
+                        <div class="col-md-6 col-lg-4">
+                            <p>Use an authenticator app like Google Authenticator, available on <a
+                                    href="https://apps.apple.com/us/app/google-authenticator/id388497605"
+                                    target="_blank">iOS</a> and <a
+                                    href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2"
+                                    target="_blank">Android</a>, to scan this QR code:</p>
+
+                            <div class="col-lg-7">
+                                <div class="card card-sm">
+                                    <img class="card-img-top" src="data:image/png;base64,{{ qrcode_image }}"
+                                         nonce="{{ csp_nonce }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            Copy these recovery codes and keep them safe:
+                            <ul>
+                                {% for recovery_code in recovery_codes %}
+                                    <li> {{ recovery_code }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="col-md-6 col-lg-4">
+                            <form method="POST" autocomplete="off" novalidate
+                                  action="{{ url_for('mfa_totp_confirm') }}">
+                                {% if csrftoken and csrf_cookie_name %}
+                                    <input type="hidden" name="{{ csrf_cookie_name }}" value="{{ csrftoken }}"/>
+                                {% endif %}
+                                <div class="mb-2">
+                                    <label class="form-label">
+                                        Check MFA Token
+                                    </label>
+                                    <div class="input-group input-group-flat">
+                                        <input name="mfa" type="text" class="form-control"
+                                               placeholder="Your new MFA token"
+                                               autocomplete="one-time-code">
+                                    </div>
+                                </div>
+
+                                <div class="form-footer">
+                                    <button type="submit" class="btn btn-primary w-100">Confirm my new MFA is correctly
+                                        setup
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
