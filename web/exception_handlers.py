@@ -50,7 +50,7 @@ def redirect_for_auth(
 ) -> Response[Redirect] | Response[APIRedirectForAuth]:
     """Where auth is required, redirect for it. If its an API just dump an error"""
     next_url = (
-        str(request.url_for("select_auth_provider")).rstrip("?")
+        str(request.url_for("discord_sign_in")).rstrip("?")
         + f"?next_route={exc.next_route}"
     )
     if is_api_route(request):

@@ -149,6 +149,26 @@ class OAuthController(Controller):
             oauth_entry,
         )
 
+    @get("/select_provider", name="select_oauth_provider")
+    async def get_select_provider(
+        self, request: Request, next_route: str = "/"
+    ) -> Template:
+        return html_template(
+            "oauth/select_provider.jinja",
+            {
+                "next_route": next_route,
+                "providers": [
+                    (
+                        k,
+                        request.url_for(
+                            "provider_sign_in", provider=k, next_route=next_route
+                        ),
+                    )
+                    for k in [DISCORD_OAUTH]
+                ],
+            },
+        )
+
     @get("/link_providers", name="link_oauth_accounts", middleware=[EnsureAuth])
     async def get_link_oauth_accounts(self, request: Request) -> Template:
         providers = await OAuthEntry.objects().where(  # type: ignore

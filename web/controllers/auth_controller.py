@@ -782,12 +782,11 @@ class AuthController(Controller):
 
     @get("/sign_up", name="sign_up")
     async def sign_up_get(self, request: Request) -> Template:
-        if not constants.ALLOW_REGISTRATION:
-            alert(
-                request,
-                "Sign ups are disabled. This will do nothing.",
-                level="warning",
-            )
+        alert(
+            request,
+            "Manual sign ups are disabled. This will do nothing.",
+            level="warning",
+        )
         return self._render_template(
             request,
             "auth/sign_up.jinja",
@@ -798,85 +797,4 @@ class AuthController(Controller):
         self,
         request: Request,
     ) -> Template | Redirect:
-        if not constants.ALLOW_REGISTRATION:
-            return Redirect(request.url_for("sign_up"))
-
-        if constants.USE_CF_TURNSTILE:
-            result = await self.do_turnstile_checks(request)
-            if result is not None:
-                return result
-
-        # Some middleware (for example CSRF) has already awaited the request
-        # body, and adds it to the request.
-        body: typing.Any = request.scope.get("form")  # type: ignore
-
-        if not body:
-            try:
-                body = await request.json()
-            except SerializationException:
-                body = await request.form()
-
-        email = body.get("email", None)
-        username = body.get("username", None)
-        password = body.get("password", None)
-        confirm_password = body.get("confirm_password", None)
-
-        if (not username) or (not password) or (not confirm_password) or (not email):
-            error_message = "Please ensure all fields on the form are filled out."
-            alert(request, error_message, level="error")
-            return self._render_template(request, "auth/sign_up.jinja", status_code=400)
-
-        if not constants.SIMPLE_EMAIL_REGEX.match(email):
-            alert(request, "Please enter a valid email.", level="error")
-            return self._render_template(request, "auth/sign_up.jinja", status_code=400)
-
-        if not hmac.compare_digest(password, confirm_password):
-            alert(request, "Passwords do not match.", level="error")
-            return self._render_template(request, "auth/sign_up.jinja", status_code=400)
-
-        if constants.CHECK_PASSWORD_AGAINST_HIBP and await has_password_been_pwned(
-            password
-        ):
-            alert(
-                request,
-                "This password appears in breach databases, "
-                "please pick a unique password.",
-                level="error",
-            )
-            return self._render_template(request, "auth/sign_up.jinja", status_code=422)
-
-        # noinspection PyTypeChecker
-        if await Users.exists().where(
-            Users.username == username,
-        ):
-            alert(
-                request,
-                "This user already exists, consider signing in instead.",
-                level="error",
-            )
-            return self._render_template(request, "auth/sign_up.jinja", status_code=422)
-
-        try:
-            user: Users = await Users.create_user(
-                username, password, email=email, active=True
-            )
-        except ValueError as err:
-            alert(request, str(err), level="error")
-            return self._render_template(request, "auth/sign_up.jinja", status_code=500)
-
-        alert(
-            request,
-            "Thanks for creating an account, you may now sign in.",
-            level="success",
-        )
-        if constants.MAKE_FIRST_USER_ADMIN and await Users.count() == 1:
-            alert(
-                request,
-                "As you are the first user on the system, "
-                "I have also made you an admin user.",
-                level="info",
-            )
-            user.admin = True
-            await user.save()
-
-        return Redirect(request.url_for("sign_in"))
+        return Redirect(request.url_for("sign_up"))

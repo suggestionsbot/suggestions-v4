@@ -35,7 +35,6 @@ class EnsureAuth(AbstractAuthenticationMiddleware):
         token = connection.cookies.get(cls.cookie_name, None)
         if not token:
             if fail_on_not_set:
-                alert(connection, "Please authenticate to view this resource")
                 raise RedirectForAuth(possible_redirect)
 
             return None
@@ -46,7 +45,6 @@ class EnsureAuth(AbstractAuthenticationMiddleware):
 
         if not user_id:
             if fail_on_not_set:
-                alert(connection, "Please authenticate to view this resource")
                 raise RedirectForAuth(possible_redirect)
 
             return None
