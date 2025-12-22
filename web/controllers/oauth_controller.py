@@ -22,17 +22,16 @@ from web.controllers import AuthController
 from web.util.table_mixins import utc_now
 
 logger = logging.getLogger(__name__)
-PROVIDERS = {
-    "discord": DiscordOAuth2(
-        client_id=constants.get_secret(
-            "OAUTH_DISCORD_CLIENT_ID", constants.infisical_client
-        ),
-        client_secret=constants.get_secret(
-            "OAUTH_DISCORD_CLIENT_SECRET", constants.infisical_client
-        ),
-        scopes=["identify", "email", "guilds"],
-    )
-}
+DISCORD_OAUTH = DiscordOAuth2(
+    client_id=constants.get_secret(
+        "OAUTH_DISCORD_CLIENT_ID", constants.infisical_client
+    ),
+    client_secret=constants.get_secret(
+        "OAUTH_DISCORD_CLIENT_SECRET", constants.infisical_client
+    ),
+    scopes=["identify", "email", "guilds"],
+)
+
 # For a full list of providers supported natively please see
 # https://frankie567.github.io/httpx-oauth/reference/httpx_oauth.clients/
 
@@ -150,26 +149,6 @@ class OAuthController(Controller):
             oauth_entry,
         )
 
-    @get("/select_provider", name="select_oauth_provider")
-    async def get_select_provider(
-        self, request: Request, next_route: str = "/"
-    ) -> Template:
-        return html_template(
-            "oauth/select_provider.jinja",
-            {
-                "next_route": next_route,
-                "providers": [
-                    (
-                        k,
-                        request.url_for(
-                            "provider_sign_in", provider=k, next_route=next_route
-                        ),
-                    )
-                    for k in PROVIDERS.keys()
-                ],
-            },
-        )
-
     @get("/link_providers", name="link_oauth_accounts", middleware=[EnsureAuth])
     async def get_link_oauth_accounts(self, request: Request) -> Template:
         providers = await OAuthEntry.objects().where(  # type: ignore
@@ -223,20 +202,12 @@ class OAuthController(Controller):
             },
         )
 
-    @get(path="/{provider:str}/sign_in", name="provider_sign_in")
+    @get(path="/discord/sign_in", name="discord_sign_in")
     async def login_via_provider(
-        self, request: Request, provider: str, next_route: str = "/"
+        self, request: Request, next_route: str = "/"
     ) -> Redirect | Template:
-        if provider not in PROVIDERS:
-            alert(request, f"{provider} not implemented", level="error")
-            return html_template(
-                "oauth/select_provider.jinja",
-                {
-                    "next_route": next_route,
-                },
-            )
-
-        provider_client = PROVIDERS[provider]
+        provider_client = DISCORD_OAUTH
+        provider = "discord"
         redirect_uri = request.url_for(
             f"authorize_{provider}", provider=provider, next_route=next_route
         )
@@ -281,7 +252,7 @@ class OAuthController(Controller):
             return html_template("oauth/select_provider.jinja")
 
         try:
-            provider_client: DiscordOAuth2 = PROVIDERS["discord"]
+            provider_client: DiscordOAuth2 = DISCORD_OAUTH
             redirect_uri = request.url_for("authorize_discord")
 
             # returns an OAuth2Token
