@@ -1,0 +1,34 @@
+{% extends "base.jinja" %}
+
+{% block content %}
+    <div class="page">
+        <div class="container py-4">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <h2 class="page-title">
+                                {{ title }}
+                            </h2><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <i>Dumps all data for the currently authed oauth user</i><br><br>
+                    <h2>Profile</h2>
+                    <p>
+                        {{ profile }}
+                    </p>
+                    <h2>Guilds</h2>
+                    <p>Can see {{ guilds|length }} guilds</p>
+                    <p>
+                        {{ guilds }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

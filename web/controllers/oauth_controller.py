@@ -7,6 +7,7 @@ import commons
 import httpx
 from httpx_oauth.clients.discord import DiscordOAuth2
 from httpx_oauth.clients.github import GitHubOAuth2
+from httpx_oauth.exceptions import GetProfileError
 from httpx_oauth.oauth2 import OAuth2
 from litestar import Controller, get, Request, post
 from litestar.enums import RequestEncodingType
@@ -22,7 +23,23 @@ from web.controllers import AuthController
 from web.util.table_mixins import utc_now
 
 logger = logging.getLogger(__name__)
-DISCORD_OAUTH = DiscordOAuth2(
+
+
+class DiscordOAuth(DiscordOAuth2):
+    async def get_user_guilds(self, token):
+        async with self.get_httpx_client() as client:
+            response = await client.get(
+                "https://discord.com/api/v6/users/@me/guilds",
+                headers={**self.request_headers, "Authorization": f"Bearer {token}"},
+            )
+
+            if response.status_code >= 400:
+                raise GetProfileError(response=response)
+
+            return cast(dict[str, Any], response.json())
+
+
+DISCORD_OAUTH = DiscordOAuth(
     client_id=constants.get_secret(
         "OAUTH_DISCORD_CLIENT_ID", constants.infisical_client
     ),

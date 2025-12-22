@@ -7,12 +7,7 @@ from web.util import html_template, alert
 
 @get(path="/", include_in_schema=False)
 async def home() -> Template:
-    return html_template(
-        "home.jinja",
-        {
-            "title": "Landing page",
-        },
-    )
+    return html_template("home.jinja", {"title": "Landing page"})
 
 
 @get(

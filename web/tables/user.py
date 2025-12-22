@@ -17,6 +17,10 @@ from piccolo.table import Table
 from web.constants import IS_PRODUCTION
 from web.util.table_mixins import utc_now, AuditMixin
 
+if TYPE_CHECKING:
+    from web.tables import OAuthEntry
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -251,3 +255,8 @@ class Users(AuditMixin, Table, tablename="users"):
         user = cls(username=username, password=password, **extra_params)
         await user.save()
         return user
+
+    async def get_oauth_entry(self) -> OAuthEntry | None:
+        from web.tables import OAuthEntry
+
+        return await OAuthEntry.objects().get(OAuthEntry.user == self)

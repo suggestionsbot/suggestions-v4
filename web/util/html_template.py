@@ -17,6 +17,7 @@ def html_template(
     csp, nonce = get_csp()
     context["csp_nonce"] = nonce
     context["site_name"] = constants.SITE_NAME
+    context["is_production"] = constants.IS_PRODUCTION
     return Template(
         template_name=template_name,
         context=context,
