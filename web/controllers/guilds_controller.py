@@ -15,7 +15,9 @@ class GuildController(Controller):
     @get(path="/", name="view_guilds")
     async def view_guilds(self, request: Request) -> Template:
         oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
-        guilds = await DISCORD_OAUTH.get_user_guilds(oauth_entry.access_token)
+        guilds = await DISCORD_OAUTH.get_user_guilds(
+            oauth_entry.access_token, user_id=oauth_entry.oauth_id
+        )
         return html_template(
             "guilds/view_guilds.jinja",
             {"guilds": guilds},

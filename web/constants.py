@@ -26,6 +26,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from piccolo_api.encryption.providers import XChaCha20Provider
 from piccolo_api.mfa.authenticator.provider import AuthenticatorProvider
+from redis import asyncio as aioredis
 
 load_dotenv()
 infisical_client = InfisicalSDKClient(host="https://secrets.skelmis.co.nz")
@@ -159,3 +160,4 @@ MFA_TOTP_PROVIDER = AuthenticatorProvider(
     ENCRYPTION_PROVIDER, issuer_name=SITE_NAME, valid_window=1
 )
 MAILGUN_API_KEY = get_secret("MAILGUN_API_KEY", infisical_client)
+REDIS_CLIENT = aioredis.from_url(os.environ["REDIS_URL"])

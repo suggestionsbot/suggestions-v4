@@ -5,6 +5,7 @@ from typing import Annotated, Any, cast
 
 import commons
 import httpx
+import orjson
 from httpx_oauth.clients.discord import DiscordOAuth2
 from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.exceptions import GetProfileError
@@ -25,8 +26,26 @@ from web.util.table_mixins import utc_now
 logger = logging.getLogger(__name__)
 
 
+# noinspection PyMethodMayBeStatic
 class DiscordOAuth(DiscordOAuth2):
-    async def get_user_guilds(self, token):
+    async def cache_set(self, cache_key: str, data: dict | list) -> None:
+        await constants.REDIS_CLIENT.setex(
+            cache_key, timedelta(minutes=5), orjson.dumps(data)
+        )
+
+    async def cache_get(self, cache_key: str) -> dict | list | None:
+        data_raw = await constants.REDIS_CLIENT.get(cache_key)
+        if data_raw is None:
+            return None
+
+        return orjson.loads(data_raw)
+
+    async def get_user_guilds(self, token, *, user_id: str) -> list[dict[str, Any]]:
+        cache_key = f"OAUTH:GUILDS:{user_id}"
+        data = await self.cache_get(cache_key)
+        if data:
+            return data
+
         async with self.get_httpx_client() as client:
             response = await client.get(
                 "https://discord.com/api/v6/users/@me/guilds",
@@ -36,7 +55,10 @@ class DiscordOAuth(DiscordOAuth2):
             if response.status_code >= 400:
                 raise GetProfileError(response=response)
 
-            return cast(dict[str, Any], response.json())
+            data = response.json()
+            data: list[dict[str, Any]] = sorted(data, key=lambda k: k["name"])
+            await self.cache_set(cache_key, data)
+            return data
 
 
 DISCORD_OAUTH = DiscordOAuth(
@@ -241,7 +263,7 @@ class OAuthController(Controller):
 
     @get(path="/discord/sign_in", name="discord_sign_in")
     async def login_via_provider(
-        self, request: Request, next_route: str = "/"
+        self, request: Request, next_route: str = "/guilds"
     ) -> Redirect | Template:
         provider_client = DISCORD_OAUTH
         provider = "discord"
