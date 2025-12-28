@@ -23,7 +23,7 @@
                         {{ profile }}
                     </p>
                     <h2>Guilds</h2>
-                    <p>Can see {{ guilds|length }} guilds</p>
+                    <p>Can see {{ guilds|length }} guilds. Guild data was a cached: {% if guild_cache_hit == 1 %}Yes{% else %}No{% endif %}</p>
                     <p>
                         {{ guilds }}
                     </p>
