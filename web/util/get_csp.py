@@ -1,12 +1,13 @@
 import secrets
 
 
-def get_csp() -> tuple[str, str]:
+def get_csp(*, csp_allow_discord_cdn_in_images: bool = False) -> tuple[str, str]:
     nonce = secrets.token_urlsafe(16)
     text = (
-        "default-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; script-src 'nonce-{}' "
-        "'strict-dynamic'; style-src 'nonce-{}'; require-trusted-types-for 'script'; "
-        "img-src 'nonce-{}' data: 'self'; script-src-attr 'nonce-{}'; frame-src https://challenges.cloudflare.com;"
+        "default-src 'none'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; "
+        f"script-src 'nonce-{nonce}' "
+        f"'strict-dynamic'; style-src 'nonce-{nonce}'; require-trusted-types-for 'script'; "
+        f"img-src 'nonce-{nonce}' data: 'self'{' https://cdn.discordapp.com' if csp_allow_discord_cdn_in_images else ''}; "
+        f"script-src-attr 'nonce-{nonce}'; frame-src https://challenges.cloudflare.com;"
     )
-    text = text.format(nonce, nonce, nonce, nonce)
     return text, nonce

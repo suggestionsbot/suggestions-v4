@@ -1,0 +1,50 @@
+{% extends "base.jinja" %}
+
+{% block content %}
+    <div class="page">
+        <div class="container py-4">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <h2 class="page-title">
+                                Guilds
+                            </h2>
+                            <p>View all of the Guilds you are currently in.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="row row-cards">
+                    {% for guild in guilds %}
+                        <div class="col-md-3">
+                            <div class="card-body">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">{{ guild.name }}</h3>
+                                        <div class="card-actions">
+                                            <a href="#" class="btn btn-outline btn-primary btn-3">
+                                                Manage
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if guild.icon %}
+                                            <img src="https://cdn.discordapp.com/icons/{{ guild.id }}/{{ guild.icon }}.png?size=256"
+                                                 nonce="{{ csp_nonce }}" width="256px" height="256px">
+                                        {% else %}
+                                            <img src="/static/suggestion_icon.png" nonce="{{ csp_nonce }}" width="256px" height="256px">
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

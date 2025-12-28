@@ -28,7 +28,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from web import constants
 from web.admin_portal import configure_piccolo_admin
 from web.constants import IS_PRODUCTION
-from web.controllers import AuthController, DebugController
+from web.controllers import AuthController, DebugController, GuildController
 from web.controllers.api import APIAlertController, APIAuthTokenController
 from web.endpoints import (
     home,
@@ -198,7 +198,7 @@ routes = [
     AuthController,
     APIAlertController,
     APIAuthTokenController,
-    OAuthController,
+    OAuthController,GuildController
 ]
 if not constants.IS_PRODUCTION:
     routes.append(DebugController)
