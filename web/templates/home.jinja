@@ -3,40 +3,106 @@
 {% block content %}
     <div class="page">
         <div class="container py-4">
-            <div class="page-header d-print-none">
-                <div class="container-xl">
-                    <div class="row g-2 align-items-center">
-                        <div class="col">
-                            <h2 class="page-title">
-                                {{ title }}
-                            </h2><br>
+            <br>
+            {% include 'alerts.jinja' %}
+            <div class="justify-content-center">
+                <header class="hero pb-0">
+                    <div class="container">
+                        <h1 class="hero-title">Manage your community feedback with Suggestions</h1>
+                        <p class="hero-description mt-4">
+                            The only suggestions bot you'll ever need. Simple usage and management of suggestions for
+                            public and staff use.
+                        </p>
+                        <div class="my-5">
+                            <div class="row g-3">
+                                <div class="col-auto">
+                                    <a href="https://docs.suggestions.gg/docs/commands" class="btn btn-lg">See features</a>
+                                </div>
+                                <div class="col-auto">
+                                    <a href="https://suggestions.gg/invite" target="_blank" class="btn btn-lg">Invite
+                                        Bot</a>
+                                </div>
+                                <div class="col-auto">
+                                    <a href="{{ url_for('discord_sign_in') }}" class="btn btn-lg btn-primary">
+                                    Access Dashboard
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hero-img img-overlap-margin">
+                            <picture>
+                                <img src="/static/dash.png"
+                                     alt="" class="img-fluid" width="1040" height="760" nonce="{{ csp_nonce }}">
+                            </picture>
                         </div>
                     </div>
-                </div>
+                </header>
+                <br><br>
+                <section class="section section-light">
+                    <div class="container">
+                        <div class="row justify-content-lg-left">
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="text-center">
+                                    <h2 class="display-5 m-0 fw-bold">85k+</h2>
+                                    <p class="text-secondary m-0">Guilds</p>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="text-center">
+                                    <h2 class="display-5 m-0 fw-bold">Millions</h2>
+                                    <p class="text-secondary m-0">of managed Suggestions</p>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="text-center">
+                                    <h2 class="display-5 m-0 fw-bold">Unlimited</h2>
+                                    <p class="text-secondary m-0">community ideas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <br><br>
+                <br><br>
+                <section class="section section-light">
+                    <div class="container">
+                        <div class="row g-xl-6">
+                            <div class="col-lg-4">
+                                <div class="section-header text-start sticky-top">
+                                    <h2 class="section-title">Frequently asked questions</h2>
+                                    <p class="section-description">Can’t find the answer you’re looking for? Reach out
+                                        to
+                                        our support team.
+                                    </p>
+                                    <p><a href="https://suggestions.gg/invite">Click here for support.</a></p>
+                                </div>
+                            </div>
+                            <div class="col-lg">
+                                <div class="space-y-5">
+                                    <div>
+                                        <div class="h3 mb-1">Where can I get help?</div>
+                                        <div class="text-secondary">
+                                            We maintain a documentation base for you to browse which is available for
+                                            everyone at <a href="https://docs.suggestions.gg/">https://docs.suggestions.gg</a>.
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="h3 mb-1">How do I get notified of new versions and features?</div>
+                                        <div class="text-secondary">We have a <i>changelog</i> channel in our Discord
+                                            where we post
+                                            new versions and relevant features.
+                                            This channel can also be followed to receive updates directly in your own
+                                            discords.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
-            {% include 'alerts.jinja' %}
-            <div class="card card-md">
-                <div class="card-body">
-                    <h2>Routes</h2>
-                    <p>
-                        The following routes are valid:
-                    </p>
-                    <ul>
-                        {% for route in routes %}
-                            <li><a href="{{ route.url }}">{{ route.name }}</a></li>
-                        {% endfor %}
-                        {% if request.scope.get('user') %}
-                            <li>Look authed text!</li>
-                            {% if request.user.admin %}
-                                <li>You're an admin even!</li>
-                            {% endif %}
-                        {% else %}
-                            <li>You aren't signed in</li>
-                        {% endif %}
-                        <li><a href="/docs">API Docs</a></li>
-                    </ul>
-                </div>
-            </div>
+
+
         </div>
     </div>
 {% endblock content %}

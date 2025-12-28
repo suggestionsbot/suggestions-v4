@@ -312,6 +312,7 @@ class OAuthController(Controller):
                 return redirect
 
             oauth_entry.access_token = access_token
+            oauth_entry.refresh_token = oauth2_token["refresh_token"]
             await oauth_entry.save()
 
         except Exception as e:

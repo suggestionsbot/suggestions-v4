@@ -214,7 +214,7 @@ app = Litestar(
     route_handlers=routes,
     template_config=template_config,
     static_files_config=[
-        StaticFilesConfig(directories=["static"], path="/static/"),
+        StaticFilesConfig(directories=["web/static"], path="/static/"),
     ],
     on_startup=[open_database_connection_pool],
     on_shutdown=[close_database_connection_pool],
