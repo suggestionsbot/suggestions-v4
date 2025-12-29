@@ -18,7 +18,7 @@ from tenacity import retry, stop_after_attempt, wait_random, retry_if_not_except
 
 from web import constants
 from web.middleware import EnsureAuth
-from web.tables import MagicLinks, Users, AuthenticationAttempts
+from web.tables import MagicLinks, Users, AuthenticationAttempts, OAuthEntry
 from web.util import alert, html_template
 from web.util.email import send_email
 from web.util.table_mixins import utc_now
@@ -669,6 +669,11 @@ class AuthController(Controller):
 
     @post("/sign_out")
     async def sign_out_post(self, request: Request) -> Redirect:
+        from web.controllers.oauth_controller import DISCORD_OAUTH
+
+        oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
+        await DISCORD_OAUTH.clear_user_guilds(oauth_entry.oauth_id)
+        await DISCORD_OAUTH.revoke_token(oauth_entry.refresh_token, "refresh_token")
         return await self.logout_current_user(request)
 
     @get("/passwords/forgot", name="forgot_password")

@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote_plus
 
 import jinja2
 from dotenv import load_dotenv
@@ -177,6 +178,7 @@ ENVIRONMENT = jinja2.Environment(
     ),
     autoescape=True,
 )
+ENVIRONMENT.filters["quote_plus"] = lambda u: quote_plus(u)
 template_config = TemplateConfig(
     directory="web/templates",
     engine=JinjaTemplateEngine.from_environment(ENVIRONMENT),
@@ -198,7 +200,8 @@ routes = [
     AuthController,
     APIAlertController,
     APIAuthTokenController,
-    OAuthController,GuildController
+    OAuthController,
+    GuildController,
 ]
 if not constants.IS_PRODUCTION:
     routes.append(DebugController)

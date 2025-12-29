@@ -4,12 +4,9 @@ from datetime import timedelta
 from typing import Annotated, Any, cast
 
 import commons
-import httpx
 import orjson
 from httpx_oauth.clients.discord import DiscordOAuth2
-from httpx_oauth.clients.github import GitHubOAuth2
 from httpx_oauth.exceptions import GetProfileError
-from httpx_oauth.oauth2 import OAuth2
 from litestar import Controller, get, Request, post
 from litestar.enums import RequestEncodingType
 from litestar.params import Parameter, Body
@@ -17,10 +14,10 @@ from litestar.response import Template, Redirect
 from pydantic import BaseModel, Field, model_validator
 
 from web import constants
+from web.controllers import AuthController
 from web.middleware import EnsureAuth
 from web.tables import MagicLinks, Users, OAuthEntry
 from web.util import html_template, alert
-from web.controllers import AuthController
 from web.util.table_mixins import utc_now
 
 logger = logging.getLogger(__name__)
@@ -28,27 +25,57 @@ logger = logging.getLogger(__name__)
 
 # noinspection PyMethodMayBeStatic
 class DiscordOAuth(DiscordOAuth2):
-    async def cache_set(self, cache_key: str, data: dict | list) -> None:
+    async def cache_set(self, cache_key: str, data: bool | dict | list) -> None:
         await constants.REDIS_CLIENT.setex(
             cache_key, timedelta(minutes=5), orjson.dumps(data)
         )
 
-    async def cache_get(self, cache_key: str) -> dict | list | None:
+    async def cache_get(self, cache_key: str) -> dict | bool | list | None:
         data_raw = await constants.REDIS_CLIENT.get(cache_key)
         if data_raw is None:
             return None
 
         return orjson.loads(data_raw)
 
-    async def get_user_guilds(self, token, *, user_id: str) -> list[dict[str, Any]]:
-        cache_key = f"OAUTH:GUILDS:{user_id}"
+    async def clear_is_bot_in_guild(self, guild_id: int) -> None:
+        cache_key = f"OAuth:bot_in_guild:{guild_id}"
+        await constants.REDIS_CLIENT.delete(cache_key)
+
+    async def clear_user_guilds(self, user_id: int) -> None:
+        cache_key = f"OAuth:list_of_user_guilds:{user_id}"
+        await constants.REDIS_CLIENT.delete(cache_key)
+
+    async def is_bot_in_guild(self, guild_id: int, token: str) -> bool:
+        cache_key = f"OAuth:bot_in_guild:{guild_id}"
         data = await self.cache_get(cache_key)
         if data:
             return data
 
         async with self.get_httpx_client() as client:
             response = await client.get(
-                "https://discord.com/api/v6/users/@me/guilds",
+                f"https://discord.com/api/v10/applications/@me",  # /{guild_id}/members/{constants.BOT_USER_ID}",
+                headers={
+                    **self.request_headers,
+                    "Authorization": f"Bearer ODQ2MzI0NzA2Mzg5Nzg2Njc2.GmTj1n.7InIGG4c1xNtqQJcGmXrnY46QnF4mYbVSR__VA",
+                },
+            )
+
+            if response.status_code >= 400 < 500:
+                await self.cache_set(cache_key, False)
+                return False
+
+            await self.cache_set(cache_key, True)
+            return True
+
+    async def get_user_guilds(self, token, *, user_id: str) -> list[dict[str, Any]]:
+        cache_key = f"OAuth:list_of_user_guilds:{user_id}"
+        data = await self.cache_get(cache_key)
+        if data:
+            return data
+
+        async with self.get_httpx_client() as client:
+            response = await client.get(
+                "https://discord.com/api/v10/users/@me/guilds",
                 headers={**self.request_headers, "Authorization": f"Bearer {token}"},
             )
 
@@ -68,7 +95,11 @@ DISCORD_OAUTH = DiscordOAuth(
     client_secret=constants.get_secret(
         "OAUTH_DISCORD_CLIENT_SECRET", constants.infisical_client
     ),
-    scopes=["identify", "email", "guilds"],
+    scopes=[
+        "identify",
+        "email",
+        "guilds",
+    ],
 )
 
 # For a full list of providers supported natively please see
