@@ -2,7 +2,11 @@ import logging
 
 import commons
 from litestar import MediaType
-from litestar.exceptions import InternalServerException, NotFoundException
+from litestar.exceptions import (
+    InternalServerException,
+    NotFoundException,
+    PermissionDeniedException,
+)
 from litestar.response import Redirect, Response
 from pydantic import BaseModel, Field
 from starlette.requests import Request
@@ -93,3 +97,20 @@ def handle_404(request: Request, exc: NotFoundException) -> Response:
         request.scope["user"] = None  # Needs something
 
     return html_template("codes/404.jinja", status_code=404)
+
+
+def handle_403(request: Request, exc: PermissionDeniedException) -> Response:
+    if is_api_route(request):
+        return Response(
+            APIErrorModel(
+                status_code=403,
+                detail="Permission Denied",
+                extra={"requested_url": str(request.url)},
+            ).model_dump_json(),
+            status_code=403,
+        )
+
+    if "user" not in request.scope:
+        request.scope["user"] = None  # Needs something
+
+    return html_template("codes/403.jinja", status_code=403)

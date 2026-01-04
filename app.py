@@ -9,7 +9,7 @@ from litestar.config.csrf import CSRFConfig
 from litestar.contrib.jinja import JinjaTemplateEngine
 from litestar.contrib.opentelemetry import OpenTelemetryPlugin, OpenTelemetryConfig
 from litestar.datastructures import ResponseHeader, State
-from litestar.exceptions import NotFoundException
+from litestar.exceptions import NotFoundException, PermissionDeniedException
 from litestar.middleware.rate_limit import RateLimitConfig
 from litestar.middleware.session.client_side import CookieBackendConfig
 from litestar.openapi import OpenAPIConfig
@@ -39,6 +39,7 @@ from web.exception_handlers import (
     RedirectForAuth,
     handle_500,
     handle_404,
+    handle_403,
 )
 from web.filters import format_datetime, precise_delta
 from web.middleware import EnsureAuth
@@ -193,6 +194,7 @@ session_config = CookieBackendConfig(secret=constants.SESSION_KEY)
 exception_handlers: dict[..., ...] = {
     RedirectForAuth: redirect_for_auth,
     NotFoundException: handle_404,
+    PermissionDeniedException: handle_403,
 }
 if IS_PRODUCTION:
     exception_handlers[HTTP_500_INTERNAL_SERVER_ERROR] = handle_500
