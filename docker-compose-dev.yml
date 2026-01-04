@@ -33,7 +33,7 @@ services:
       <<: *common-variables
       EXTRA_ARGS: "--web --verbose"
   suggestions_redis:
-    image: redis:7.4-alpine
+    image: redis:8.4.0-alpine
     container_name: "suggestions_redis"
     ports:
       - '2202:2202'
