@@ -41,12 +41,7 @@ class GuildController(Controller):
         self, request: Request, guild_id: int, guild_name: str
     ) -> Template:
         guild_name = unquote_plus(guild_name)
-        oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
-        is_bot_in_guild = await DISCORD_OAUTH.is_bot_in_guild(
-            guild_id, oauth_entry.access_token
-        )
-        # TODO This check doesnt work as expected yet and requires
-        #       reworking the underlying data source
+        is_bot_in_guild = await DISCORD_OAUTH.is_bot_in_guild(guild_id)
         if not is_bot_in_guild:
             return html_template(
                 "guilds/not_in_guild.jinja",
