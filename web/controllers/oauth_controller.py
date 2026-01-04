@@ -74,7 +74,15 @@ class DiscordOAuth(DiscordOAuth2):
             return True
         return False
 
-    async def get_user_guilds(self, token, *, user_id: str) -> list[dict[str, Any]]:
+    async def is_user_in_guild(self, token, *, user_id: int, guild_id: int) -> bool:
+        user_guilds = await self.get_user_guilds(token, user_id=user_id)
+        for guild in user_guilds:
+            if guild["id"] == str(guild_id):
+                return True
+
+        return False
+
+    async def get_user_guilds(self, token, *, user_id: int) -> list[dict[str, Any]]:
         cache_key = f"OAuth:list_of_user_guilds:{user_id}"
         data = await self.cache_get(cache_key)
         if data:

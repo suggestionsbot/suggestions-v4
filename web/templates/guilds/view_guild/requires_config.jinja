@@ -1,0 +1,29 @@
+<div class="col-12 col-sm d-flex flex-column">
+    <h3 class="h2">Welcome back, {{ user_name }}</h3>
+    <p class="text-muted">
+        In order to use the bot you need to set it up.
+    </p>
+    <p class="text-muted">
+        Please click on "Start Onboarding" below to go
+        through the process.
+    </p>
+    <div class="row g-5 mt-auto">
+        <div class="col-auto">
+            <a class="btn btn-animate-icon btn-animate-icon-rotate"
+               href="{{ url_for('guild_onboarding', guild_id=guild_id, guild_name=guild_name|quote_plus) }}">
+                <!-- Download SVG icon from http://tabler.io/icons/icon/plus -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                     height="24" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     class="icon icon-1">
+                    <path d="M12 5l0 14"></path>
+                    <path d="M5 12l14 0"></path>
+                </svg>
+                Start Onboarding</a>
+        </div>
+    </div>
+</div>
+<div class="col-12 col-sm-auto d-flex justify-content-center">
+    {% include 'guilds/view_guild/svg/todo.jinja' %}
+</div>

@@ -5,7 +5,7 @@ from shared.tables.mixins import AuditMixin
 
 
 class UserConfigs(AuditMixin, Table):
-    id = BigInt(
+    user_id = BigInt(
         primary_key=True,
         unique=True,
         index=True,

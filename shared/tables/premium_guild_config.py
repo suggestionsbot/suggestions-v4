@@ -30,7 +30,7 @@ class CooldownPeriod(str, Enum):
 
 
 class PremiumGuildConfigs(AuditMixin, Table):
-    id = BigInt(
+    guild_id = BigInt(
         primary_key=True,
         unique=True,
         index=True,

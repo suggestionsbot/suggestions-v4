@@ -116,11 +116,11 @@ class QueuedSuggestions(Table, AuditMixin):
 
     @property
     def guild_id(self) -> int:
-        return self.guild_configuration.id
+        return self.guild_configuration.guild_id
 
     @property
     def author_id(self) -> int:
-        return self.user_configuration.id
+        return self.user_configuration.user_id
 
     async def as_embed(self, bot: hikari.RESTBot | hikari.GatewayBot) -> hikari.Embed:
         user: hikari.User = await bot.rest.fetch_user(self.author_id)

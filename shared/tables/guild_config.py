@@ -9,7 +9,7 @@ from shared.tables.mixins.audit import utc_now
 
 
 class GuildConfigs(AuditMixin, Table):
-    id = BigInt(
+    guild_id = BigInt(
         primary_key=True,
         unique=True,
         index=True,

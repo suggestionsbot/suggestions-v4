@@ -7,31 +7,17 @@ from hikari.impl import CacheSettings, config
 
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs, UserConfigs, PremiumGuildConfigs
+from shared.utils import configs
 
 logger = logoo.Logger(__name__)
 
 
 async def create_guild_config(ctx: lightbulb.Context) -> GuildConfigs:
-    pgc: PremiumGuildConfigs = await PremiumGuildConfigs.objects().get_or_create(
-        PremiumGuildConfigs.id == ctx.guild_id  # type: ignore
-    )
-    gc: GuildConfigs = await GuildConfigs.objects().get_or_create(
-        (GuildConfigs.id == ctx.guild_id) & (GuildConfigs.premium == pgc)  # type: ignore
-    )
-    if gc._was_created:
-        logger.debug("Created new GuildConfig for %s", ctx.guild_id)
-
-    return gc
+    return await configs.ensure_guild_config(ctx.guild_id)
 
 
 async def create_user_config(ctx: lightbulb.Context) -> UserConfigs:
-    uc: UserConfigs = await UserConfigs.objects().get_or_create(
-        UserConfigs.id == ctx.user.id  # type: ignore
-    )
-    if uc._was_created:
-        logger.debug("Created new UserConfig for %s", ctx.user.id)
-
-    return uc
+    return await configs.ensure_user_config(ctx.user.id)
 
 
 async def create_bot(token, base_path: Path) -> (hikari.GatewayBot, lightbulb.Client):
