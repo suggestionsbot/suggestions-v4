@@ -1,0 +1,28 @@
+{% extends "base.jinja" %}
+
+{% block content %}
+    <div class="page">
+        <div class="container py-4">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <h2 class="page-title">
+                                SigNoz Data
+                            </h2><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <i>Dumps all data for the signoz queries</i><br><br>
+                    <p>Unique users: {{ users }} </p>
+                    <p>Unique guilds: {{ guilds }} </p>
+                    <br><i>Timescale: {{ timescale|precise_delta }}</i>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

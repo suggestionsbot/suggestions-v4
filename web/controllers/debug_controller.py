@@ -1,3 +1,6 @@
+import datetime
+
+import httpx
 from litestar import Controller, get, Request
 from litestar.response import Template
 
@@ -5,7 +8,7 @@ from web import constants
 from web.controllers.oauth_controller import DISCORD_OAUTH
 from web.middleware import EnsureAdmin
 from web.tables import OAuthEntry
-from web.util import html_template
+from web.util import html_template, signoz_querying
 
 
 class DebugController(Controller):
@@ -31,4 +34,32 @@ class DebugController(Controller):
                 "guilds": guilds,
                 "guild_cache_hit": guild_cache_hit,
             },
+        )
+
+    @get(path="/signoz/data", name="debug_signoz_data")
+    async def list_signoz(self, request: Request) -> Template:
+        """List all signoz query data"""
+        timescale: datetime.timedelta = datetime.timedelta(days=-1)
+        # TODO Expose this functionality via the file itself and also wrap in redis cache
+        async with httpx.AsyncClient(
+            headers=signoz_querying.HEADERS, base_url=signoz_querying.BASE_URL
+        ) as client:
+            users_resp = await client.post(
+                "/v5/query_range",
+                json=signoz_querying.build_trace_query(
+                    signoz_querying.UNIQUE_GLOBAL_USERS_QUERY, timescale
+                ),
+            )
+            users = users_resp.json()["data"]["data"]["results"][0]["data"][0][0]
+            guilds_resp = await client.post(
+                "/v5/query_range",
+                json=signoz_querying.build_trace_query(
+                    signoz_querying.UNIQUE_GLOBAL_GUILDS_QUERY, timescale
+                ),
+            )
+            guilds = guilds_resp.json()["data"]["data"]["results"][0]["data"][0][0]
+
+        return html_template(
+            "debug/signoz_data.jinja",
+            {"users": users, "timescale": timescale, "guilds": guilds},
         )

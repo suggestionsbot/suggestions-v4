@@ -40,6 +40,7 @@ from web.exception_handlers import (
     handle_500,
     handle_404,
 )
+from web.filters import format_datetime, precise_delta
 from web.middleware import EnsureAuth
 from web.tables import (
     APIToken,
@@ -179,6 +180,8 @@ ENVIRONMENT = jinja2.Environment(
     autoescape=True,
 )
 ENVIRONMENT.filters["quote_plus"] = lambda u: quote_plus(u)
+ENVIRONMENT.filters["fmt"] = format_datetime
+ENVIRONMENT.filters["precise_delta"] = precise_delta
 template_config = TemplateConfig(
     directory="web/templates",
     engine=JinjaTemplateEngine.from_environment(ENVIRONMENT),

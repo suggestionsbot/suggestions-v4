@@ -14,6 +14,7 @@ dependencies = [
     "hikari[speedups]>=2.3.3",
     "httpx-oauth>=0.16.1",
     "httpx-retries>=0.4.5",
+    "humanize>=4.15.0",
     "infisicalsdk>=1.0.8",
     "litestar[cryptography,opentelemetry]>=2.19.0",
     "logoo>=1.6.0",

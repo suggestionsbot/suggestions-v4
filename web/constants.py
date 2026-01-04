@@ -167,3 +167,5 @@ BOT_USER_ID = (
     else 846324706389786676  # Localized Stats
 )
 BOT_INVITE_URL = f"https://discord.com/oauth2/authorize?client_id={BOT_USER_ID}&permissions=395137379328&integration_type=0&scope=bot+applications.commands"
+SIGNOZ_API_KEY = get_secret("SIGNOZ_API_KEY", infisical_client)
+SIGNOZ_API_URL = get_secret("SIGNOZ_API_URL", infisical_client)
