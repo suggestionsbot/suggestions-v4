@@ -43,7 +43,12 @@ class DiscordOAuth(DiscordOAuth2):
         invite the bot to the guild.
 
         Given it takes a few minutes for the bot to update on its side,
-        this allows us to have a seamless 'you can edit the bot'
+        this allows us to have a seamless 'you can edit the bot'.
+
+        Notes
+        -----
+        Its fine to edit guilds the bot isnt in. There should
+        be no harm no foul, this just helps the onboarding process
         """
         cache_key = f"oauth:guilds:directed_to_invite:{guild_id}"
         timeout = timedelta(minutes=5)  # Enough for the bot to update
