@@ -21,51 +21,53 @@ from web.util import html_template, alert
 from web.util.table_mixins import utc_now
 
 logger = logging.getLogger(__name__)
+CACHE_TYPES = bool | dict | int | list
 
 
 # noinspection PyMethodMayBeStatic
 class DiscordOAuth(DiscordOAuth2):
-    async def cache_set(self, cache_key: str, data: bool | dict | list) -> None:
+    async def cache_set(self, cache_key: str, data: CACHE_TYPES) -> None:
         await constants.REDIS_CLIENT.setex(
             cache_key, timedelta(minutes=5), orjson.dumps(data)
         )
 
-    async def cache_get(self, cache_key: str) -> dict | bool | list | None:
+    async def cache_get(self, cache_key: str) -> CACHE_TYPES | None:
         data_raw = await constants.REDIS_CLIENT.get(cache_key)
         if data_raw is None:
             return None
 
         return orjson.loads(data_raw)
 
-    async def clear_is_bot_in_guild(self, guild_id: int) -> None:
-        cache_key = f"OAuth:bot_in_guild:{guild_id}"
-        await constants.REDIS_CLIENT.delete(cache_key)
+    async def set_tmp_bot_joining_guild(self, guild_id: int) -> None:
+        """Sets a tmp key to denote that we have told the user to go
+        invite the bot to the guild.
+
+        Given it takes a few minutes for the bot to update on its side,
+        this allows us to have a seamless 'you can edit the bot'
+        """
+        cache_key = f"oauth:guilds:directed_to_invite:{guild_id}"
+        timeout = timedelta(minutes=5)  # Enough for the bot to update
+        await constants.REDIS_CLIENT.set(
+            cache_key, orjson.dumps(guild_id), ex=int(timeout.total_seconds())
+        )
 
     async def clear_user_guilds(self, user_id: int) -> None:
         cache_key = f"OAuth:list_of_user_guilds:{user_id}"
         await constants.REDIS_CLIENT.delete(cache_key)
 
-    async def is_bot_in_guild(self, guild_id: int, token: str) -> bool:
-        cache_key = f"OAuth:bot_in_guild:{guild_id}"
+    async def is_bot_in_guild(self, guild_id: int) -> bool:
+        tmp_cache_key = f"oauth:guilds:directed_to_invite:{guild_id}"
+        data = await self.cache_get(tmp_cache_key)
+        if data:
+            # Good enough, they have been directed
+            # to invite recently
+            return True
+
+        cache_key = f"bot:guilds:is_in:{guild_id}"
         data = await self.cache_get(cache_key)
         if data:
-            return data
-
-        async with self.get_httpx_client() as client:
-            response = await client.get(
-                f"https://discord.com/api/v10/applications/@me",  # /{guild_id}/members/{constants.BOT_USER_ID}",
-                headers={
-                    **self.request_headers,
-                    "Authorization": f"Bearer ODQ2MzI0NzA2Mzg5Nzg2Njc2.GmTj1n.7InIGG4c1xNtqQJcGmXrnY46QnF4mYbVSR__VA",
-                },
-            )
-
-            if response.status_code >= 400 < 500:
-                await self.cache_set(cache_key, False)
-                return False
-
-            await self.cache_set(cache_key, True)
             return True
+        return False
 
     async def get_user_guilds(self, token, *, user_id: str) -> list[dict[str, Any]]:
         cache_key = f"OAuth:list_of_user_guilds:{user_id}"

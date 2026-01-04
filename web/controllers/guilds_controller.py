@@ -30,7 +30,7 @@ class GuildController(Controller):
     @get(path="/guilds/{guild_id:int}/generate_invite", name="generate_guild_invite")
     async def generate_guild_invite(self, guild_id: int) -> Redirect:
         # Exists so we can clear to guild cache
-        await DISCORD_OAUTH.clear_is_bot_in_guild(guild_id)
+        await DISCORD_OAUTH.set_tmp_bot_joining_guild(guild_id)
         return Redirect(
             f"{constants.BOT_INVITE_URL}&guild_id={guild_id}",
             status_code=302,
