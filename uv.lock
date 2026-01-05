@@ -1057,7 +1057,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -1810,20 +1810,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3f/b9/7e296aa1adada25cce8e5f89a996b0e38d852d93b1b656a2058226c542a2/litestar_htmx-0.5.0.tar.gz", hash = "sha256:e02d1a3a92172c874835fa3e6749d65ae9fc626d0df46719490a16293e2146fb", size = 119755, upload-time = "2025-06-11T21:19:45.573Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f2/24/8d99982f0aa9c1cd82073c6232b54a0dbe6797c7d63c0583a6c68ee3ddf2/litestar_htmx-0.5.0-py3-none-any.whl", hash = "sha256:92833aa47e0d0e868d2a7dbfab75261f124f4b83d4f9ad12b57b9a68f86c50e6", size = 9970, upload-time = "2025-06-11T21:19:44.465Z" },
-]
-
-[[package]]
-name = "logoo"
-version = "1.6.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "httpx" },
-    { name = "orjson" },
-    { name = "skelmis-commons" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/88/9f/3261f7d07dc77dcba7ea8437ca5e20dace348abb8a0eebfe8762f2c87593/logoo-1.6.0.tar.gz", hash = "sha256:82a7a5ad83edb86f2b634cc7590d047df39a9ae32633dc1f054eb5827455a543", size = 5670, upload-time = "2025-06-01T10:33:01.891Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/7b/61/b1e1541da1a113c5295d15a862c012a01c63bbf3c30c41f2d701e8723c3b/logoo-1.6.0-py3-none-any.whl", hash = "sha256:99190de17a781a1f0890664920e5d82389783b4a56afa16348cc1ace2278c7b5", size = 6393, upload-time = "2025-06-01T10:33:00.478Z" },
 ]
 
 [[package]]
@@ -3287,7 +3273,6 @@ dependencies = [
     { name = "aiobotocore" },
     { name = "arrow" },
     { name = "fastnanoid" },
-    { name = "freezegun" },
     { name = "function-cooldowns" },
     { name = "hikari", extra = ["speedups"] },
     { name = "hikari-lightbulb" },
@@ -3296,7 +3281,6 @@ dependencies = [
     { name = "humanize" },
     { name = "infisicalsdk" },
     { name = "litestar", extra = ["cryptography", "opentelemetry"] },
-    { name = "logoo" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-sdk" },
@@ -3316,34 +3300,33 @@ dependencies = [
 dev = [
     { name = "black" },
     { name = "fakeredis" },
+    { name = "freezegun" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "aiobotocore", specifier = ">=2.22.0" },
+    { name = "aiobotocore", specifier = ">=3.1.0" },
     { name = "arrow", specifier = ">=1.4.0" },
-    { name = "fastnanoid", specifier = ">=0.4.1" },
-    { name = "freezegun", specifier = ">=1.5.2" },
+    { name = "fastnanoid", specifier = ">=0.4.3" },
     { name = "function-cooldowns", specifier = ">=2.2.0" },
-    { name = "hikari", extras = ["speedups"], specifier = ">=2.3.3" },
-    { name = "hikari-lightbulb", specifier = ">=3.0.0a25" },
+    { name = "hikari", extras = ["speedups"], specifier = ">=2.5.0" },
+    { name = "hikari-lightbulb", specifier = ">=3.2.3" },
     { name = "httpx-oauth", specifier = ">=0.16.1" },
     { name = "httpx-retries", specifier = ">=0.4.5" },
     { name = "humanize", specifier = ">=4.15.0" },
     { name = "infisicalsdk", specifier = ">=1.0.8" },
     { name = "litestar", extras = ["cryptography", "opentelemetry"], specifier = ">=2.19.0" },
-    { name = "logoo", specifier = ">=1.6.0" },
     { name = "opentelemetry-api", specifier = ">=1.39.1" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.39.1" },
     { name = "opentelemetry-sdk", specifier = ">=1.39.1" },
-    { name = "orjson", specifier = ">=3.10.18" },
+    { name = "orjson", specifier = ">=3.11.5" },
     { name = "piccolo", extras = ["all", "postgres"], specifier = ">=1.26.0" },
     { name = "piccolo-admin", specifier = ">=1.12.0" },
     { name = "piccolo-api", extras = ["authenticator", "pynacl"], specifier = ">=1.7.0" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
-    { name = "redis", extras = ["hiredis"], specifier = ">=6.2.0" },
+    { name = "redis", extras = ["hiredis"], specifier = ">=7.1.0" },
     { name = "saq", extras = ["hiredis", "web"], specifier = ">=0.26.0" },
     { name = "skelmis-commons", specifier = ">=1.6.1" },
     { name = "tenacity", specifier = ">=9.1.2" },
@@ -3352,10 +3335,11 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "black", specifier = ">=25.1.0" },
+    { name = "black", specifier = ">=25.12.0" },
     { name = "fakeredis", specifier = ">=2.27.0" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "pytest-asyncio", specifier = ">=0.25.3" },
+    { name = "freezegun", specifier = ">=1.5.5" },
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pytest-asyncio", specifier = ">=1.3.0" },
 ]
 
 [[package]]
