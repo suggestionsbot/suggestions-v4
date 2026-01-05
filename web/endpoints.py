@@ -6,7 +6,8 @@ from web.util import html_template, alert
 
 
 @get(path="/", include_in_schema=False)
-async def home() -> Template:
+async def home(request: Request) -> Template:
+    alert(request, "Onboarding page doesnt exist yet", level="warning")
     return html_template("home.jinja", {"title": "Landing page"})
 
 

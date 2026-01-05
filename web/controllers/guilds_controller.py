@@ -7,7 +7,7 @@ from shared.tables import GuildConfigs, Suggestions, QueuedSuggestions
 from shared.utils import configs
 from web import constants
 from web.controllers.oauth_controller import DISCORD_OAUTH
-from web.guards import ensure_user_is_in_guild
+from web.guards import ensure_user_is_in_guild, ensure_user_has_manage_permissions
 from web.middleware import EnsureAdmin, EnsureAuth
 from web.tables import OAuthEntry
 from web.util import html_template, alert
@@ -30,7 +30,11 @@ class GuildController(Controller):
             csp_allow_discord_cdn_in_images=True,
         )
 
-    @get(path="/guilds/{guild_id:int}/generate_invite", name="generate_guild_invite")
+    @get(
+        path="/{guild_id:int}/generate_invite",
+        name="generate_guild_invite",
+        guards=[ensure_user_is_in_guild],
+    )
     async def generate_guild_invite(self, guild_id: int) -> Redirect:
         # Exists so we can clear to guild cache
         await DISCORD_OAUTH.set_tmp_bot_joining_guild(guild_id)
@@ -40,8 +44,9 @@ class GuildController(Controller):
         )
 
     @get(
-        path="/guilds/{guild_id:int}/{guild_name:str}/onboarding",
+        path="/{guild_id:int}/{guild_name:str}/onboarding",
         name="guild_onboarding",
+        guards=[ensure_user_has_manage_permissions],
     )
     async def guild_onboarding(
         self, request: Request, guild_id: int, guild_name: str
@@ -55,8 +60,9 @@ class GuildController(Controller):
         )
 
     @get(
-        path="/guilds/{guild_id:int}/{guild_name:str}/settings",
+        path="/{guild_id:int}/{guild_name:str}/settings",
         name="guild_settings",
+        guards=[ensure_user_has_manage_permissions],
     )
     async def guild_settings(
         self, request: Request, guild_id: int, guild_name: str
@@ -72,9 +78,7 @@ class GuildController(Controller):
     @get(
         path="/{guild_id:str}/{guild_name:str}",
         name="view_guild",
-        guards=[  # type:ignore
-            ensure_user_is_in_guild,
-        ],
+        guards=[ensure_user_is_in_guild],
     )
     async def view_guild(
         self, request: Request, guild_id: int, guild_name: str
@@ -92,7 +96,9 @@ class GuildController(Controller):
                 )
 
         oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
-        profile = await DISCORD_OAUTH.get_profile(oauth_entry.access_token)
+        profile = await DISCORD_OAUTH.get_profile(
+            oauth_entry.access_token, oauth_entry.oauth_id
+        )
         guild_config: GuildConfigs = await configs.ensure_guild_config(guild_id)
         requires_config = guild_config.suggestions_channel_id is None
         requires_config = False

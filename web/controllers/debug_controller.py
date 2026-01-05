@@ -20,7 +20,9 @@ class DebugController(Controller):
     async def list_oauth(self, request: Request) -> Template:
         """List all oauth raw data"""
         oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
-        profile = await DISCORD_OAUTH.get_profile(oauth_entry.access_token)
+        profile = await DISCORD_OAUTH.get_profile(
+            oauth_entry.access_token, oauth_entry.oauth_id
+        )
         cache_key = f"OAUTH:GUILDS:{oauth_entry.oauth_id}"
         guild_cache_hit = await constants.REDIS_CLIENT.exists(cache_key)
         guilds = await DISCORD_OAUTH.get_user_guilds(

@@ -74,13 +74,32 @@ class DiscordOAuth(DiscordOAuth2):
             return True
         return False
 
-    async def is_user_in_guild(self, token, *, user_id: int, guild_id: int) -> bool:
+    async def get_user_data_in_guild(
+        self, token, *, user_id: int, guild_id: int
+    ) -> dict | None:
         user_guilds = await self.get_user_guilds(token, user_id=user_id)
         for guild in user_guilds:
             if guild["id"] == str(guild_id):
-                return True
+                return guild
 
-        return False
+        return None
+
+    async def is_user_in_guild(self, token, *, user_id: int, guild_id: int) -> bool:
+        result = await self.get_user_data_in_guild(
+            token, user_id=user_id, guild_id=guild_id
+        )
+        return result is not None
+
+    # noinspection PyMethodOverriding
+    async def get_profile(self, token: str, user_id: int) -> dict[str, Any]:
+        cache_key = f"oauth:user:profile:{user_id}"
+        data = await self.cache_get(cache_key)
+        if data:
+            return data
+
+        result = await super().get_profile(token)
+        await self.cache_set(cache_key, result)
+        return result
 
     async def get_user_guilds(self, token, *, user_id: int) -> list[dict[str, Any]]:
         cache_key = f"OAuth:list_of_user_guilds:{user_id}"
@@ -171,6 +190,7 @@ class OAuthController(Controller):
         *,
         name: str = None,
     ) -> tuple[Users | None, Redirect | None, OAuthEntry | None]:
+        oauth_id: int = int(oauth_id)  # Discord is ints and we only use discord
         oauth_entry: OAuthEntry | None = (
             await OAuthEntry.objects()
             .where(OAuthEntry.provider == provider)  # type: ignore

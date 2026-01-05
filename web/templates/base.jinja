@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
     <title>{% block title %}{{ site_name }}{% endblock %}</title>
+    <link rel="icon" href="/static/favicon.ico" nonce="{{ csp_nonce }}">
     <!-- CSS files -->
     <script
             src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" nonce="{{ csp_nonce }}">

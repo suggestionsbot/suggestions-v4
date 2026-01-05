@@ -1813,6 +1813,20 @@ wheels = [
 ]
 
 [[package]]
+name = "logoo"
+version = "1.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "orjson" },
+    { name = "skelmis-commons" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/88/9f/3261f7d07dc77dcba7ea8437ca5e20dace348abb8a0eebfe8762f2c87593/logoo-1.6.0.tar.gz", hash = "sha256:82a7a5ad83edb86f2b634cc7590d047df39a9ae32633dc1f054eb5827455a543", size = 5670, upload-time = "2025-06-01T10:33:01.891Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/61/b1e1541da1a113c5295d15a862c012a01c63bbf3c30c41f2d701e8723c3b/logoo-1.6.0-py3-none-any.whl", hash = "sha256:99190de17a781a1f0890664920e5d82389783b4a56afa16348cc1ace2278c7b5", size = 6393, upload-time = "2025-06-01T10:33:00.478Z" },
+]
+
+[[package]]
 name = "markdown-it-py"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3281,6 +3295,7 @@ dependencies = [
     { name = "humanize" },
     { name = "infisicalsdk" },
     { name = "litestar", extra = ["cryptography", "opentelemetry"] },
+    { name = "logoo" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-sdk" },
@@ -3318,6 +3333,7 @@ requires-dist = [
     { name = "humanize", specifier = ">=4.15.0" },
     { name = "infisicalsdk", specifier = ">=1.0.8" },
     { name = "litestar", extras = ["cryptography", "opentelemetry"], specifier = ">=2.19.0" },
+    { name = "logoo", specifier = ">=1.6.0" },
     { name = "opentelemetry-api", specifier = ">=1.39.1" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.39.1" },
     { name = "opentelemetry-sdk", specifier = ">=1.39.1" },

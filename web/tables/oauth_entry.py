@@ -7,6 +7,7 @@ from piccolo.columns import (
     Text,
     LazyTableReference,
     Timestamptz,
+    BigInt,
 )
 from piccolo.columns.column_types import Serial, ForeignKey
 from piccolo.columns.indexes import IndexMethod
@@ -20,7 +21,7 @@ class OAuthEntry(AuditMixin, Table, tablename="oauth_entry"):
     if TYPE_CHECKING:
         id: Serial
 
-    oauth_id = Text(
+    oauth_id = BigInt(
         help_text="The ID of this person in OAuth land",
         index=True,
         index_method=IndexMethod.hash,
