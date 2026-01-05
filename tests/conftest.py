@@ -42,8 +42,6 @@ async def configure_testing():
 
         # Set up DB
         await create_db_tables(*tables)
-        yield
-        await drop_db_tables(*tables)
 
 
 @pytest.fixture
@@ -63,6 +61,8 @@ def context() -> lightbulb.Context:
 @pytest.fixture(scope="module")
 def localisation(request) -> Localisation:
     base_dir = Path(request.fspath).parent
+    if base_dir.name != "tests":
+        base_dir = base_dir.parent
     if base_dir.name != "tests":
         base_dir = base_dir.parent
     return Localisation(base_dir / "../bot")

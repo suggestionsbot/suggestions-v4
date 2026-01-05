@@ -10,8 +10,8 @@ from shared.tables.mixins.audit import utc_now
 
 
 async def test_guild_config_default():
-    r_1: GuildConfigs = GuildConfigs(id=123)
-    assert r_1.id == 123
+    r_1: GuildConfigs = GuildConfigs(guild_id=123)
+    assert r_1.guild_id == 123
     assert r_1.keep_logs is False
     assert r_1.dm_messages_disabled is False
     assert r_1.log_channel_id is None
@@ -31,7 +31,7 @@ async def test_guild_config_default():
 
 @freeze_time("2025-01-20")
 def test_premium_is_enabled():
-    gc: GuildConfigs = GuildConfigs(id=123)
+    gc: GuildConfigs = GuildConfigs(guild_id=123)
     r_1: lightbulb.Context = AsyncMock(spec=lightbulb.Context)
     r_1_1: hikari.Entitlement = AsyncMock(spec=hikari.Entitlement)
     r_1_1.is_deleted = True

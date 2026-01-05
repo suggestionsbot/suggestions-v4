@@ -72,10 +72,10 @@ async def invoke_suggest(
     bot: hikari.GatewayBot = None,
 ) -> (lightbulb.Context, GuildConfigs, UserConfigs, Localisation, hikari.GatewayBot):
     if guild_config is None:
-        guild_config = GuildConfigs(id=guild_id)
+        guild_config = GuildConfigs(guild_id=guild_id)
 
     if user_config is None:
-        user_config = UserConfigs(id=user_id)
+        user_config = UserConfigs(user_id=user_id)
 
     await user_config.save()
     await guild_config.save()
