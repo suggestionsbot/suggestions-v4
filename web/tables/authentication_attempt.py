@@ -37,9 +37,7 @@ class AuthenticationAttempts(
         required=True,
         help_text="When this attempt was made.",
     )
-    attempt_made_via = Text(
-        help_text="What auth provider called this", null=False, required=True
-    )
+    attempt_made_via = Text(help_text="What auth provider called this", null=False, required=True)
 
     @classmethod
     async def create_via_email(cls, email: str, provider: str) -> None:
@@ -82,13 +80,9 @@ class AuthenticationAttempts(
         return None
 
     @classmethod
-    async def has_exceeded_limits(
-        cls, user_detail: str, limit: int, period: timedelta
-    ) -> bool:
+    async def has_exceeded_limits(cls, user_detail: str, limit: int, period: timedelta) -> bool:
         """Return true if user has more attempts made during period then limit allows"""
-        from_time = (
-            arrow.get(utc_now()).shift(seconds=(period.total_seconds() * -1)).datetime
-        )
+        from_time = arrow.get(utc_now()).shift(seconds=(period.total_seconds() * -1)).datetime
         count = (
             await AuthenticationAttempts.count()
             .where(

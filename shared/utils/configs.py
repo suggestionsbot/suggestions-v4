@@ -19,9 +19,7 @@ async def ensure_guild_config(guild_id: int) -> GuildConfigs:
 
 
 async def ensure_user_config(user_id: int) -> UserConfigs:
-    uc: UserConfigs = await UserConfigs.objects().get_or_create(
-        UserConfigs.user_id == user_id
-    )
+    uc: UserConfigs = await UserConfigs.objects().get_or_create(UserConfigs.user_id == user_id)
     if uc._was_created:
         logger.debug("Created new UserConfig for %s", user_id)
 

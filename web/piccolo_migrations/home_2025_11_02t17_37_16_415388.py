@@ -7,9 +7,7 @@ DESCRIPTION = ""
 
 
 async def forwards():
-    manager = MigrationManager(
-        migration_id=ID, app_name="home", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="home", description=DESCRIPTION)
 
     manager.drop_column(
         table_class_name="Users",

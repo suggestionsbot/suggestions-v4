@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from piccolo.columns import (
-    Timestamp,
     Text,
     LazyTableReference,
     Timestamptz,

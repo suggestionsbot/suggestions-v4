@@ -5,7 +5,6 @@ from pathlib import Path
 import commons
 import hikari
 import lightbulb
-import logoo
 from dotenv import load_dotenv
 from logoo import PrimaryLogger
 
@@ -36,9 +35,7 @@ async def main():
         __name__,
         base_url="https://logs.suggestions.gg",
         org="default",
-        stream=(
-            "test_bot" if commons.value_to_bool(os.environ.get("DEBUG")) else "prod_bot"
-        ),
+        stream=("test_bot" if commons.value_to_bool(os.environ.get("DEBUG")) else "prod_bot"),
         username=t_constants.get_secret("LOGOO_USER", t_constants.infisical_client),
         password=t_constants.get_secret("LOGOO_PASSWORD", t_constants.infisical_client),
         poll_time=15,

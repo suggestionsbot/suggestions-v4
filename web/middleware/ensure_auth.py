@@ -11,7 +11,6 @@ from piccolo_api.session_auth.tables import SessionsBase
 
 from web.exception_handlers import RedirectForAuth
 from web.tables import Users, APIToken
-from web.util import alert
 
 
 class EnsureAuth(AbstractAuthenticationMiddleware):
@@ -39,9 +38,7 @@ class EnsureAuth(AbstractAuthenticationMiddleware):
 
             return None
 
-        user_id = await cls.session_table.get_user_id(
-            token, increase_expiry=cls.increase_expiry
-        )
+        user_id = await cls.session_table.get_user_id(token, increase_expiry=cls.increase_expiry)
 
         if not user_id:
             if fail_on_not_set:
@@ -56,9 +53,7 @@ class EnsureAuth(AbstractAuthenticationMiddleware):
             .run()
         )
 
-    async def authenticate_request(
-        self, connection: ASGIConnection
-    ) -> AuthenticationResult:
+    async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
         if not self.requires_auth:
             return AuthenticationResult(user=None, auth=None)
 
@@ -67,9 +62,7 @@ class EnsureAuth(AbstractAuthenticationMiddleware):
             if connection.url.query
             else connection.url.path
         )
-        piccolo_user = await self.get_user_from_connection(
-            connection, possible_redirect
-        )
+        piccolo_user = await self.get_user_from_connection(connection, possible_redirect)
 
         if not piccolo_user:
             raise NotAuthorizedException("That user doesn't exist")
@@ -96,9 +89,7 @@ class EnsureSuperUser(EnsureAdmin):
 
 # noinspection PyMethodMayBeStatic
 class UserFromAPIKey(AbstractAuthenticationMiddleware):
-    async def authenticate_request(
-        self, connection: ASGIConnection
-    ) -> AuthenticationResult:
+    async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
         raw_token = connection.headers.get("X-API-KEY")
         if not raw_token:
             raise NotAuthorizedException("This route requires an API Token")

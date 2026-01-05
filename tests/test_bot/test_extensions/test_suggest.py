@@ -1,7 +1,7 @@
 import io
 from functools import partial
 from typing import Sequence
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, AsyncMock
 
 import hikari
 import lightbulb
@@ -106,7 +106,8 @@ async def test_suggestion_too_long(localisation):
     ctx.respond.assert_called_once_with(
         embed=utils.error_embed(
             "Command Failed",
-            f"Your content was too long, please limit it to {MAX_CONTENT_LENGTH} characters or less.\n\n"
+            f"Your content was too long, please limit it to "
+            f"{MAX_CONTENT_LENGTH} characters or less.\n\n"
             "I have attached a file containing your content to save rewriting it entirely.",
             error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
             internal_error_reference=internal_error,
@@ -128,9 +129,7 @@ async def test_anonymous_when_disabled(localisation):
     """Asserts that when anon suggestions are disabled that they cant be used"""
     options = create_options("test", anon=True)
     ctx, _, _, _, _ = await invoke_suggest(options, localisations=localisation)
-    ctx.respond.assert_called_once_with(
-        "Your guild does not allow anonymous suggestions."
-    )
+    ctx.respond.assert_called_once_with("Your guild does not allow anonymous suggestions.")
 
 
 async def test_images_when_disabled(localisation):
@@ -144,9 +143,7 @@ async def test_images_when_disabled(localisation):
         guild_config=gc,
         image=hikari.files.Bytes(io.StringIO("test"), "content.txt"),
     )
-    ctx.respond.assert_called_once_with(
-        "Your guild does not allow images in suggestions."
-    )
+    ctx.respond.assert_called_once_with("Your guild does not allow images in suggestions.")
 
 
 @pytest.mark.xfail(reason="Suggestions are not fully implemented yet")
@@ -161,9 +158,7 @@ async def test_anonymous_suggestion(localisation):
         user_id=1,
         guild_config=gc,
     )
-    suggestion: Suggestions = await Suggestions.objects(
-        Suggestions.user_configuration
-    ).first()
+    suggestion: Suggestions = await Suggestions.objects(Suggestions.user_configuration).first()
     assert suggestion.author_id == 1
     assert suggestion.author_display_name == "Anonymous"
 
@@ -174,9 +169,7 @@ async def test_image_in_suggestion(localisation):
 
     with patch(
         "bot.utils.upload_file_to_r2",
-        new_callable=partial(
-            AsyncMock, return_value="https://example.com/fake_image_url"
-        ),
+        new_callable=partial(AsyncMock, return_value="https://example.com/fake_image_url"),
     ) as mock:
         options = create_options("test", image=True)
         ctx, _, _, _, _ = await invoke_suggest(
@@ -200,9 +193,7 @@ async def test_queued_suggestion_missing_queue_channel_config(localisation):
     gc = GuildConfigs()
     gc.uses_suggestions_queue = True
     gc.virtual_suggestions_queue = False
-    ctx, _, _, _, _ = await invoke_suggest(
-        options, localisations=localisation, guild_config=gc
-    )
+    ctx, _, _, _, _ = await invoke_suggest(options, localisations=localisation, guild_config=gc)
     internal_error = await InternalErrors.objects().first()
     ctx.respond.assert_called_once()
     ctx.respond.assert_called_once_with(
@@ -238,7 +229,9 @@ async def test_queued_suggestion_missing_queue_channel(localisation):
     ctx.respond.assert_called_once_with(
         embed=utils.error_embed(
             "Command Failed",
-            "The bot does not have permissions to interact with the queue channel.\nPlease contact an administrator and ask them to ensure the channel exists and that the bot can see it.",
+            "The bot does not have permissions to interact with the "
+            "queue channel.\nPlease contact an administrator and ask them to "
+            "ensure the channel exists and that the bot can see it.",
             error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
         ),
     )
@@ -255,7 +248,9 @@ async def test_queued_suggestion_missing_queue_channel(localisation):
     ctx.respond.assert_called_once_with(
         embed=utils.error_embed(
             "Command Failed",
-            "The bot does not have permissions to interact with the queue channel.\nPlease contact an administrator and ask them to ensure the channel exists and that the bot can see it.",
+            "The bot does not have permissions to interact with the "
+            "queue channel.\nPlease contact an administrator and ask them to "
+            "ensure the channel exists and that the bot can see it.",
             error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
         ),
     )

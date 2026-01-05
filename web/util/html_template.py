@@ -15,9 +15,7 @@ def html_template(
     if context is None:
         context = {}
 
-    csp, nonce = get_csp(
-        csp_allow_discord_cdn_in_images=csp_allow_discord_cdn_in_images
-    )
+    csp, nonce = get_csp(csp_allow_discord_cdn_in_images=csp_allow_discord_cdn_in_images)
     context["csp_nonce"] = nonce
     context["site_name"] = constants.SITE_NAME
     context["is_production"] = constants.IS_PRODUCTION

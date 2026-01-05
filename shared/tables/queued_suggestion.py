@@ -83,7 +83,8 @@ class QueuedSuggestions(Table, AuditMixin):
         null=True,
         default=None,
         required=False,
-        help_text="If the state is approved or rejected, did they add a message to the closing state?",
+        help_text="If the state is approved or rejected, did they add a "
+        "message to the closing state?",
     )
     resolved_at = Timestamptz(
         null=True,

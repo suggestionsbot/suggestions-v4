@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import traceback
 
-from piccolo.columns import Text, Varchar, BigInt, Integer, Boolean
+from piccolo.columns import Text, Varchar, BigInt, Boolean
 from piccolo.table import Table
 
 from shared.tables.mixins import AuditMixin

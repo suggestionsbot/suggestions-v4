@@ -56,9 +56,7 @@ class APIToken(AuditMixin, Table, tablename="api_token"):
         session = cls(
             token=token,
             user=user,
-            expiry_date=arrow.get(utc_now())
-            .shift(seconds=expiry_date.total_seconds())
-            .datetime,
+            expiry_date=arrow.get(utc_now()).shift(seconds=expiry_date.total_seconds()).datetime,
             max_expiry_date=arrow.get(utc_now())
             .shift(seconds=max_expiry_date.total_seconds())
             .datetime,
@@ -66,9 +64,7 @@ class APIToken(AuditMixin, Table, tablename="api_token"):
         await session.save().run()
         return session
 
-    async def token_expires_within_window(
-        self, increase_window: datetime.timedelta
-    ) -> bool:
+    async def token_expires_within_window(self, increase_window: datetime.timedelta) -> bool:
         """Returns true if the token cannot be increased by window without expiring."""
         return commons.timing.is_within_next_(
             self.expiry_date, self.max_expiry_date, increase_window
@@ -77,12 +73,7 @@ class APIToken(AuditMixin, Table, tablename="api_token"):
     @classmethod
     async def validate_token_is_valid(cls, token: str) -> bool:
         """Return true if the provided token is still valid"""
-        return (
-            await cls.exists()
-            .where(cls.token == token)
-            .where(utc_now() < cls.expiry_date)
-            .run()
-        )
+        return await cls.exists().where(cls.token == token).where(utc_now() < cls.expiry_date).run()
 
     @classmethod
     async def get_instance_from_token(cls, token) -> APIToken | None:
@@ -128,8 +119,7 @@ class APIToken(AuditMixin, Table, tablename="api_token"):
         if not await api_token.token_expires_within_window(increase_window):
             # Token is fine to expand
             api_token.expiry_date = (
-                cast(datetime.datetime, cast(object, api_token.expiry_date))
-                + increase_window
+                cast(datetime.datetime, cast(object, api_token.expiry_date)) + increase_window
             )
             await api_token.save()
             return api_token

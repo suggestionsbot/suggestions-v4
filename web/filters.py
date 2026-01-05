@@ -3,9 +3,7 @@ import datetime
 from humanize import precisedelta
 
 
-def format_datetime(
-    value: datetime.datetime | datetime.date | datetime.time, fmt="medium"
-):
+def format_datetime(value: datetime.datetime | datetime.date | datetime.time, fmt="medium"):
     if fmt == "full":
         fmt = "%I:%M%p, %a %d %b %Y"
     elif fmt == "medium":

@@ -1,7 +1,5 @@
 import logging
 import os
-import string
-import textwrap
 
 import httpx
 from dotenv import load_dotenv

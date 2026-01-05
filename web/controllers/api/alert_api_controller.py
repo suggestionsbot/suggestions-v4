@@ -21,7 +21,6 @@ from web.crud.controller import (
     SearchModel,
     QueryT,
 )
-from web.guards import ensure_api_token
 from web.middleware import UserFromAPIKey
 from web.tables import Alerts, AlertLevels, Users, APIToken
 
@@ -47,9 +46,7 @@ class AlertOutModel(NewAlertModel):
 
 
 class AlertPatchModel(BaseModel):
-    has_been_shown: bool = Field(
-        default=None, description="Has the user seen this yet?"
-    )
+    has_been_shown: bool = Field(default=None, description="Has the user seen this yet?")
     was_shown_at: datetime.datetime | None = Field(
         default=None, description="The time the user was shown the alert"
     )
@@ -68,9 +65,7 @@ crud_meta = CRUDMeta(
                 SearchTableModel(
                     column=Alerts.target, column_name="target", expected_value_type=int
                 ),
-                SearchTableModel(
-                    column=Alerts.level, column_name="level", expected_value_type=str
-                ),
+                SearchTableModel(column=Alerts.level, column_name="level", expected_value_type=str),
                 SearchTableModel(
                     column=Alerts.has_been_shown,
                     column_name="has_been_shown",
@@ -135,9 +130,7 @@ class APIAlertController[AlertOutModel](CRUDController):
         ),
         next_cursor: str | None = Parameter(query="_next_cursor", required=False),
     ) -> GetAllResponseModel[AlertOutModel]:
-        return await super().get_all_records(
-            request, page_size=page_size, next_cursor=next_cursor
-        )
+        return await super().get_all_records(request, page_size=page_size, next_cursor=next_cursor)
 
     @get(
         "/{primary_key:uuid}",
@@ -218,9 +211,7 @@ class APIAlertController[AlertOutModel](CRUDController):
         )
 
     @get("/meta/search/filters")
-    async def get_available_search_filters(
-        self, request: Request
-    ) -> SearchRequestModel:
+    async def get_available_search_filters(self, request: Request) -> SearchRequestModel:
         return await super().get_available_search_filters(request)
 
     @post("/search", responses=CRUD_BASE_OPENAPI_RESPONSES, status_code=200)

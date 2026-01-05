@@ -6,7 +6,7 @@ import logoo
 from hikari.impl import CacheSettings, config
 
 from bot.localisation import Localisation
-from shared.tables import GuildConfigs, UserConfigs, PremiumGuildConfigs
+from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
 
 logger = logoo.Logger(__name__)

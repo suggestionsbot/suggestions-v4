@@ -1,7 +1,7 @@
 from datetime import timedelta
 from enum import Enum
 
-from piccolo.columns import Serial, Text, Integer, BigInt
+from piccolo.columns import Text, Integer, BigInt
 from piccolo.table import Table
 
 from shared.tables.mixins import AuditMixin

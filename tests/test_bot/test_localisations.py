@@ -6,9 +6,7 @@ from bot.localisation import Localisation
 
 
 def test_expected_lookup(localisation: Localisation, context: lightbulb.Context):
-    assert (
-        localisation.get_localized_string("commands.suggest.name", context) == "suggest"
-    )
+    assert localisation.get_localized_string("commands.suggest.name", context) == "suggest"
 
 
 def test_unexpected_lookup(localisation: Localisation, context: lightbulb.Context):

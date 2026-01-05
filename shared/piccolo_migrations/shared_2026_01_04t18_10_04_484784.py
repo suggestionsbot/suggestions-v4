@@ -79,9 +79,7 @@ DESCRIPTION = ""
 
 
 async def forwards():
-    manager = MigrationManager(
-        migration_id=ID, app_name="shared", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="shared", description=DESCRIPTION)
 
     manager.add_table(
         class_name="QueuedSuggestions",

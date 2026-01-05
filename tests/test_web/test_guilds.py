@@ -5,7 +5,6 @@ import httpx
 import pytest
 from litestar import Litestar
 from litestar.testing import AsyncTestClient
-from piccolo.utils.sync import run_sync
 
 from tests.conftest import BaseGiven, BaseWhen
 
@@ -86,9 +85,7 @@ async def test_guild_access_as_non_guild_member(
     redis_client: aioredis.Redis,
 ):
     """Tests if non guild members can access items"""
-    session_cookie = Given.user(
-        "test@suggestions.gg", admin=dashboard_admin
-    ).session_cookie
+    session_cookie = Given.user("test@suggestions.gg", admin=dashboard_admin).session_cookie
     When.bot_is_in_guild(12345, redis_client)
     When.patches_discord_get_requests(patch_discord_get)
     When.user_discord_oauth.has_profile()

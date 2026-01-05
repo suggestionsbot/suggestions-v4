@@ -13,10 +13,6 @@ def generate_id(
 ) -> str:
     """Returns a unique ID."""
     if include_sep:
-        return (
-            generate(alphabet, unique_length // 2)
-            + "-"
-            + generate(alphabet, unique_length // 2)
-        )
+        return generate(alphabet, unique_length // 2) + "-" + generate(alphabet, unique_length // 2)
 
     return generate(alphabet, unique_length)

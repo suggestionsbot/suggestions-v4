@@ -92,9 +92,7 @@ class CRUDClient(Generic[MODEL_IN, MODEL_PATCH_IN, MODEL_OUT]):
             data.extend(entry)
         return data
 
-    async def get_all_records(
-        self, page_size: int = 500
-    ) -> AsyncGenerator[list[MODEL_OUT], None]:
+    async def get_all_records(self, page_size: int = 500) -> AsyncGenerator[list[MODEL_OUT], None]:
         result = await self.get_record_page(page_size)
         yield result.data
 
@@ -136,7 +134,7 @@ class CRUDClient(Generic[MODEL_IN, MODEL_PATCH_IN, MODEL_OUT]):
         return self.dto_out(**resp.json())
 
     async def get_search_filters(self) -> SearchRequestModel:
-        resp = await self.client.get(f"/meta/search/filters")
+        resp = await self.client.get("/meta/search/filters")
         self._raise_for_status(resp)
         return SearchRequestModel(**resp.json())
 

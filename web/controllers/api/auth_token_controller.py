@@ -9,7 +9,7 @@ from web.di import retrieve_api_key
 from web.exception_handlers import APIRedirectForAuth
 from web.guards import ensure_api_token
 from web.middleware import EnsureAuth
-from web.tables import Users, APIToken
+from web.tables import APIToken
 
 
 class TokenInModel(BaseModel):
@@ -18,9 +18,7 @@ class TokenInModel(BaseModel):
 
 class TokenOutModel(BaseModel):
     token: str = Field(description="Your current API Token")
-    expiry_date: datetime.datetime = Field(
-        description="When this token is scheduled to expire"
-    )
+    expiry_date: datetime.datetime = Field(description="When this token is scheduled to expire")
     max_expiry_date: datetime.datetime = Field(
         description="The maximum time that this token validity can be extended until"
     )

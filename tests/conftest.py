@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import asyncio
 import datetime
-from functools import partial
 from pathlib import Path
-from typing import Sequence, TypeVar, Type, Any, Self, AsyncIterator, Generator, cast
+from typing import Sequence, TypeVar, Type, Any, Self, AsyncIterator, cast
 from unittest import mock
-from unittest.mock import AsyncMock, Mock, MagicMock
+from unittest.mock import AsyncMock, Mock
 
 import httpx
 import redis.asyncio as aioredis

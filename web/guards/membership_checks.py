@@ -4,7 +4,7 @@ import hikari
 from litestar import Request
 from litestar.connection import ASGIConnection
 from litestar.datastructures import State
-from litestar.exceptions import NotAuthorizedException, PermissionDeniedException
+from litestar.exceptions import PermissionDeniedException
 from litestar.handlers import BaseRouteHandler
 
 from web.controllers.oauth_controller import DISCORD_OAUTH
@@ -13,9 +13,7 @@ from web.tables import Users, OAuthEntry
 from web.util import alert
 
 
-async def ensure_user_is_in_guild(
-    request: ASGIConnection, route_handler: BaseRouteHandler
-) -> None:
+async def ensure_user_is_in_guild(request: ASGIConnection, route_handler: BaseRouteHandler) -> None:
     request = cast(Request[Users, None, State], request)
     if not request.user or request.user is None:
         raise RedirectForAuth(str(request.url))
@@ -82,9 +80,7 @@ async def ensure_user_has_manage_permissions(
         return None
 
     perms = hikari.Permissions(guild_data["permissions"])
-    if (
-        (perms & hikari.Permissions.MANAGE_GUILD) == hikari.Permissions.MANAGE_GUILD
-    ) or (
+    if ((perms & hikari.Permissions.MANAGE_GUILD) == hikari.Permissions.MANAGE_GUILD) or (
         (perms & hikari.Permissions.ADMINISTRATOR) == hikari.Permissions.ADMINISTRATOR
     ):
         return None

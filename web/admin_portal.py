@@ -47,9 +47,7 @@ def configure_piccolo_admin():
         menu_group="User Management",
         hooks=[
             Hook(hook_type=HookType.pre_save, callable=post_validate_password_changes),
-            Hook(
-                hook_type=HookType.pre_patch, callable=patch_validate_password_changes
-            ),
+            Hook(hook_type=HookType.pre_patch, callable=patch_validate_password_changes),
         ],
     )
     oauth_entry_tc = TableConfig(OAuthEntry, menu_group="User Management")

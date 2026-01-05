@@ -30,13 +30,9 @@ DESCRIPTION = ""
 
 
 async def forwards():
-    manager = MigrationManager(
-        migration_id=ID, app_name="home", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="home", description=DESCRIPTION)
 
-    manager.add_table(
-        class_name="APIToken", tablename="api_token", schema=None, columns=None
-    )
+    manager.add_table(class_name="APIToken", tablename="api_token", schema=None, columns=None)
 
     manager.add_column(
         table_class_name="APIToken",

@@ -18,7 +18,8 @@ UNIQUE_GLOBAL_USERS_QUERY = [
             "signal": "traces",
             "aggregations": [{"expression": "count_distinct(interaction.author.id)"}],
             "filter": {
-                "expression": 'service.name = "suggestions-bot-v3" and deployment.environment = "Production"'
+                "expression": 'service.name = "suggestions-bot-v3" and '
+                'deployment.environment = "Production"'
             },
         },
     }
@@ -31,7 +32,8 @@ UNIQUE_GLOBAL_GUILDS_QUERY = [
             "signal": "traces",
             "aggregations": [{"expression": "count_distinct(interaction.guild.id)"}],
             "filter": {
-                "expression": 'service.name = "suggestions-bot-v3" and deployment.environment = "Production"'
+                "expression": 'service.name = "suggestions-bot-v3" and '
+                'deployment.environment = "Production"'
             },
         },
     }
@@ -40,10 +42,7 @@ UNIQUE_GLOBAL_GUILDS_QUERY = [
 
 def build_trace_query(query, timespan: timedelta) -> dict:
     return {
-        "start": int(
-            arrow.utcnow().shift(seconds=timespan.total_seconds()).float_timestamp
-            * 1000
-        ),
+        "start": int(arrow.utcnow().shift(seconds=timespan.total_seconds()).float_timestamp * 1000),
         "end": int(arrow.utcnow().float_timestamp * 1000),
         "requestType": "scalar",
         "compositeQuery": {"queries": query},
@@ -58,8 +57,8 @@ async def main():
     data = all_dashboards.json()["data"]["data"]
     print("Dashboard entries", data)
 
-    widgets = data["widgets"]
-    print(f"Attempting for users")
+    data["widgets"]
+    print("Attempting for users")
     query_result: httpx.Response = httpx.post(
         f"{BASE_URL}/v5/query_range",
         headers=HEADERS,

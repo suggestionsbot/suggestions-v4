@@ -114,9 +114,7 @@ async def inject_alerts_on_ui_view(request: Request) -> dict[str, str] | None:
                 request.scope["auth"] = api_token
 
         else:
-            user = await EnsureAuth.get_user_from_connection(
-                request, fail_on_not_set=False
-            )
+            user = await EnsureAuth.get_user_from_connection(request, fail_on_not_set=False)
             request.scope["user"] = user
 
     if "user" in request.scope and request.scope["user"] is not None:

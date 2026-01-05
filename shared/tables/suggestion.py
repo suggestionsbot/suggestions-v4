@@ -36,9 +36,7 @@ class Suggestions(Table, AuditMixin):
     guild_configuration = ForeignKey(GuildConfigs, index=True)
     # Secret as if anon we don't want to reveal
     user_configuration = ForeignKey(UserConfigs, index=True, secret=True)
-    state = Varchar(
-        help_text="The current state of this suggestion", choices=SuggestionStateEnum
-    )
+    state = Varchar(help_text="The current state of this suggestion", choices=SuggestionStateEnum)
     moderator_note = Text(
         null=True,
         required=False,
@@ -49,7 +47,8 @@ class Suggestions(Table, AuditMixin):
         null=True,
         default=None,
         required=False,
-        help_text="How should we display the moderator who added the note? Either name or <Anonymous>",
+        help_text="How should we display the moderator who added the note? "
+        "Either name or <Anonymous>",
     )
     channel_id = BigInt(
         null=True,
@@ -88,7 +87,8 @@ class Suggestions(Table, AuditMixin):
         null=True,
         default=None,
         required=False,
-        help_text="If the state is approved or rejected, did they add a message to the closing state?",
+        help_text="If the state is approved or rejected, did they add a "
+        "message to the closing state?",
     )
     resolved_at = Timestamptz(
         null=True,

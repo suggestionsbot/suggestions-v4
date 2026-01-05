@@ -128,14 +128,9 @@ class Suggest(
         if len(self.suggestion) > MAX_CONTENT_LENGTH:
             raise MessageTooLong(self.suggestion)
 
-        if (
-            self.anonymously is True
-            and guild_config.can_have_anonymous_suggestions is False
-        ):
+        if self.anonymously is True and guild_config.can_have_anonymous_suggestions is False:
             await ctx.respond(
-                localisations.get_localized_string(
-                    "values.suggest.no_anonymous_suggestions", ctx
-                )
+                localisations.get_localized_string("values.suggest.no_anonymous_suggestions", ctx)
             )
             return None
 
@@ -179,9 +174,7 @@ class Suggest(
             user_configuration=user_config,
             suggestion=self.suggestion,
             image_url=image_url,
-            author_display_name=(
-                f"<@{ctx.user.id}>" if self.anonymously is False else "Anonymous"
-            ),
+            author_display_name=(f"<@{ctx.user.id}>" if self.anonymously is False else "Anonymous"),
         )
 
         if guild_config.virtual_suggestions_queue is False:
@@ -190,9 +183,7 @@ class Suggest(
                 raise MissingQueueChannel
 
             try:
-                channel = await bot.rest.fetch_channel(
-                    guild_config.queued_suggestion_channel_id
-                )
+                channel = await bot.rest.fetch_channel(guild_config.queued_suggestion_channel_id)
                 channel = cast(hikari.GuildTextChannel, channel)
             except (hikari.ForbiddenError, hikari.NotFoundError):
                 await ctx.respond(
@@ -221,14 +212,14 @@ class Suggest(
                     MessageActionRowBuilder()
                     .add_interactive_button(
                         hikari.ButtonStyle.SUCCESS,
-                        f"queue_approve|",
+                        "queue_approve|",
                         label=localisations.get_localized_string(
                             "values.suggest.queue_approve", ctx
                         ),
                     )
                     .add_interactive_button(
                         hikari.ButtonStyle.DANGER,
-                        f"queue_reject|",
+                        "queue_reject|",
                         label=localisations.get_localized_string(
                             "values.suggest.queue_reject", ctx
                         ),
@@ -245,8 +236,7 @@ class Suggest(
             await qs.save()
 
         logger.debug(
-            f"User {ctx.user.id} created new queued"
-            f" suggestion in guild {ctx.guild_id}",
+            f"User {ctx.user.id} created new queued" f" suggestion in guild {ctx.guild_id}",
             extra_metadata={
                 "author_id": ctx.user.id,
                 "guild_id": ctx.guild_id,

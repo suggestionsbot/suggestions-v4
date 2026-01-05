@@ -1,4 +1,3 @@
-import hikari
 import lightbulb
 from piccolo.columns import BigInt, Boolean, Array, ForeignKey, LazyTableReference
 from piccolo.table import Table
@@ -57,7 +56,8 @@ class GuildConfigs(AuditMixin, Table):
     )
     uses_suggestions_queue = Boolean(
         default=False,
-        help_text="If True, suggestions go to a queue for review instead of to the suggestions channel",
+        help_text="If True, suggestions go to a queue for review instead "
+        "of to the suggestions channel",
     )
     virtual_suggestions_queue = Boolean(
         default=True, help_text="If True, the suggestions queue is virtual"
