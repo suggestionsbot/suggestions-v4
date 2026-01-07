@@ -169,6 +169,7 @@ async def prepare_command(
 
     cls_instance: T = cls()
     cls_instance._set_context(ctx)  # noqa
+    await cls_instance._resolve_options()
 
     return cls_instance, ctx
 
