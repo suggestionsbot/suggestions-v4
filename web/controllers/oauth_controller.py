@@ -85,14 +85,16 @@ class DiscordOAuth(DiscordOAuth2):
         return result is not None
 
     # noinspection PyMethodOverriding
-    async def get_profile(self, token: str, user_id: int) -> dict[str, Any]:
-        cache_key = f"oauth:user:profile:{user_id}"
-        data = await self.cache_get(cache_key)
-        if data:
-            return data
+    async def get_profile(self, token: str, user_id: int | None = None) -> dict[str, Any]:
+        if user_id is not None:
+            cache_key = f"oauth:user:profile:{user_id}"
+            data = await self.cache_get(cache_key)
+            if data:
+                return data
 
         result = await super().get_profile(token)
-        await self.cache_set(cache_key, result)
+        if user_id is not None:
+            await self.cache_set(cache_key, result)
         return result
 
     async def get_user_guilds(self, token, *, user_id: int) -> list[dict[str, Any]]:
@@ -361,7 +363,7 @@ class OAuthController(Controller):
             return html_template("oauth/select_provider.jinja")
 
         try:
-            provider_client: DiscordOAuth2 = DISCORD_OAUTH
+            provider_client: DiscordOAuth = DISCORD_OAUTH
             redirect_uri = request.url_for("authorize_discord")
 
             # returns an OAuth2Token
