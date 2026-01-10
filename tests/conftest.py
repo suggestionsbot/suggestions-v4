@@ -246,6 +246,9 @@ class BaseGiven:
 class BaseWhen:
     data: dict[str, Any] = {}
 
+    def __init__(self):
+        self.data = {}
+
     @property
     def db(self) -> Self:
         return self
@@ -258,17 +261,16 @@ class BaseWhen:
         run_sync(redis.set(f"bot:guilds:is_in:{guild_id}", orjson.dumps(guild_id)))
         return self
 
-    @classmethod
-    async def _patched_discord_get(cls, url: str, **kwargs: Any) -> Mock:
+    async def _patched_discord_get(self, url: str, **kwargs: Any) -> Mock:
         data = Mock()
         if url == "https://discord.com/api/v10/users/@me/guilds":
             data.status_code = 200
-            data.json.return_value = cls.data.get("users/@me/guilds", [])
+            data.json.return_value = self.data.get("users/@me/guilds", [])
             return data
 
         elif url == "https://discord.com/api/users/@me":
             data.status_code = 200
-            data.json.return_value = cls.data["users/@me"]
+            data.json.return_value = self.data["users/@me"]
             return data
 
         raise ValueError("Missing mocked route")
@@ -308,7 +310,7 @@ class BaseWhen:
         }
         return self
 
-    def contains_guild(self, guild_id: int) -> Self:
+    def contains_guild(self, guild_id: int, *, permissions: int = 1095564657024577) -> Self:
         if "users/@me/guilds" not in self.data:
             self.data["users/@me/guilds"] = []
 
@@ -321,7 +323,7 @@ class BaseWhen:
                 "banner": "48a0dca9a28cff6b3badc213b1329053",
                 "owner": False,
                 # Unsure on perms but it aint admin or manage server thats for sure
-                "permissions": "1095564657024577",
+                "permissions": f"{permissions}",
             }
         )
 

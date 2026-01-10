@@ -54,6 +54,14 @@ async def ensure_user_has_manage_permissions(
         raise RedirectForAuth(str(request.url))
 
     guild_id = request.path_params.get("guild_id")
+    if request.user.admin:
+        alert(
+            request,
+            "As a dashboard admin I am letting you in",
+            level="info",
+        )
+        return None
+
     oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
     guild_data = await DISCORD_OAUTH.get_user_data_in_guild(
         oauth_entry.access_token,
@@ -61,14 +69,6 @@ async def ensure_user_has_manage_permissions(
         guild_id=guild_id,
     )
     if guild_data is None:
-        if request.user.admin:
-            alert(
-                request,
-                "I am only letting you into this page because you are dashboard admin.",
-                level="info",
-            )
-            return None
-
         alert(
             request,
             "You must be in the guild with sufficient permissions.",
