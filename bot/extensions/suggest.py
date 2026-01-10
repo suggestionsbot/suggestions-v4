@@ -1,9 +1,9 @@
 import io
+import logging
 from typing import cast
 
 import hikari
 import lightbulb
-import logoo
 from hikari.impl import MessageActionRowBuilder
 
 import shared
@@ -15,7 +15,7 @@ from bot.tables import InternalErrors
 from shared.tables import GuildConfigs, UserConfigs, QueuedSuggestions
 
 loader = lightbulb.Loader()
-logger = logoo.Logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def handle_suggestions_errors(func):
@@ -237,9 +237,9 @@ class Suggest(
 
         logger.debug(
             f"User {ctx.user.id} created new queued" f" suggestion in guild {ctx.guild_id}",
-            extra_metadata={
-                "author_id": ctx.user.id,
-                "guild_id": ctx.guild_id,
+            extra={
+                "interaction.user.id": ctx.user.id,
+                "interaction.guild.id": ctx.guild_id,
             },
         )
         await ctx.respond(

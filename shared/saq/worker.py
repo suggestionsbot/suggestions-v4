@@ -58,7 +58,7 @@ async def after_process(ctx):
 
 async def startup(_):
     # Ensure logger is started in SAQ process
-    constants.configure_otel()
+    constants.configure_otel(constants.DASHBOARD_SERVICE_NAME)
     await SAQ_QUEUE.enqueue("log_current_valid_sessions")
     await SAQ_QUEUE.enqueue("log_current_api_tokens")
 

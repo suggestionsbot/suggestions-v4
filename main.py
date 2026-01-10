@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 from pathlib import Path
 
@@ -6,7 +7,6 @@ import commons
 import hikari
 import lightbulb
 from dotenv import load_dotenv
-from logoo import PrimaryLogger
 
 from bot import create_bot
 from bot.constants import VERSION
@@ -14,6 +14,8 @@ from shared.tables import GuildConfigs
 from web import constants as t_constants
 
 load_dotenv()
+logger = logging.getLogger(__name__)
+t_constants.configure_otel(t_constants.BOT_SERVICE_NAME)
 
 
 async def main():
@@ -31,30 +33,14 @@ async def main():
         base_path=Path("bot"),
     )
 
-    logger: PrimaryLogger = PrimaryLogger(
-        __name__,
-        base_url="https://logs.suggestions.gg",
-        org="default",
-        stream=("test_bot" if commons.value_to_bool(os.environ.get("DEBUG")) else "prod_bot"),
-        username=t_constants.get_secret("LOGOO_USER", t_constants.infisical_client),
-        password=t_constants.get_secret("LOGOO_PASSWORD", t_constants.infisical_client),
-        poll_time=15,
-        global_metadata={
-            # TODO Readd this later
-            # "cluster": bot.cluster_id,
-            "bot_version": VERSION,
-        },
-    )
-    await logger.start_consumer()
-
     @client.error_handler
     async def handler(
         exc: lightbulb.exceptions.ExecutionPipelineFailedException,
     ) -> bool:
         logger.critical(
             "Unhandled error encountered",
-            extra_metadata={
-                "error_name": exc.causes[0].__class__.__name__,
+            extra={
+                "error.name": exc.causes[0].__class__.__name__,
                 "traceback": commons.exception_as_string(exc.causes[0]),
             },
         )

@@ -130,10 +130,10 @@ async def inject_alerts_on_ui_view(request: Request) -> dict[str, str] | None:
 
 logging_config = None
 if constants.IS_PRODUCTION:
-    constants.configure_otel()
+    constants.configure_otel(constants.DASHBOARD_SERVICE_NAME)
 
 elif constants.ENFORCE_OTEL:
-    constants.configure_otel()
+    constants.configure_otel(constants.DASHBOARD_SERVICE_NAME)
 
 else:
     # Just print logs locally during dev

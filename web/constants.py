@@ -36,11 +36,10 @@ infisical_client.auth.universal_auth.login(
 )
 
 
-def configure_otel():
+def configure_otel(service_name: str):
     host = get_secret("OTEL_HOST", infisical_client)
     endpoint = get_secret("OTEL_ENDPOINT", infisical_client)
     bearer_token = get_secret("OTEL_BEARER", infisical_client)
-    service_name = get_secret("OTEL_SERVICE_NAME", infisical_client)
     deployment_environment: Literal["Production", "Development", "Staging"] = cast(
         Literal["Production", "Development", "Staging"],
         get_secret("OTEL_DEPLOYMENT_ENVIRONMENT", infisical_client),
@@ -88,6 +87,10 @@ def get_secret(secret_name: str, infisical_client: InfisicalSDKClient) -> str:
         secret_path="/",
         view_secret_value=True,
     ).secretValue
+
+
+BOT_SERVICE_NAME = get_secret("OTEL_BOT_SERVICE_NAME", infisical_client)
+DASHBOARD_SERVICE_NAME = get_secret("OTEL_DASHBOARD_SERVICE_NAME", infisical_client)
 
 
 SITE_NAME: str = os.environ.get("SITE_NAME", "Template Website")

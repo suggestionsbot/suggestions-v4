@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import logging
 import typing
 
 import hikari
-import logoo
 
 from bot.constants import ErrorCode, ERROR_COLOR
 from shared.tables.mixins.audit import utc_now
@@ -11,7 +11,7 @@ from shared.tables.mixins.audit import utc_now
 if typing.TYPE_CHECKING:
     from bot.tables import InternalErrors
 
-logger = logoo.Logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def error_embed(

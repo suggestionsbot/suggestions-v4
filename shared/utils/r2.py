@@ -1,14 +1,14 @@
 import hashlib
+import logging
 import mimetypes
 import os
 import secrets
 
 from aiobotocore.session import get_session
-from logoo import Logger
 
 from bot.exceptions import InvalidFileType
 
-logger = Logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 async def upload_file_to_r2(
@@ -55,11 +55,11 @@ async def upload_file_to_r2(
             "User %s in guild %s uploaded an image",
             user_id,
             guild_id,
-            extra_metadata={
-                "author_id": user_id,
-                "guild_id": guild_id,
-                "original_image_name": file_name,
-                "uploaded_to": key,
+            extra={
+                "interaction.user.id": user_id,
+                "interaction.guild.id": guild_id,
+                "r2.original_image_name": file_name,
+                "r2.uploaded_to": key,
             },
         )
 

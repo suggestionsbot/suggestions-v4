@@ -1,16 +1,16 @@
 import json
+import logging
 from pathlib import Path
 from string import Template
 
 import hikari
 import lightbulb
-import logoo
 from lightbulb import DictLocalizationProvider
 
 from bot.exceptions import MissingTranslation
 from shared.tables import GuildConfigs
 
-logger = logoo.Logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Localisation:

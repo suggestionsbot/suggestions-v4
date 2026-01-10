@@ -1,15 +1,15 @@
+import logging
 from pathlib import Path
 
 import hikari
 import lightbulb
-import logoo
 from hikari.impl import CacheSettings, config
 
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
 
-logger = logoo.Logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 async def create_guild_config(ctx: lightbulb.Context) -> GuildConfigs:
