@@ -47,7 +47,7 @@ class InternalErrors(AuditMixin, Table):
         *,
         command_name: str,
         guild_id: int,
-        author_id: int,
+        user_id: int,
     ) -> InternalErrors:
         internal_error = cls(
             id=generate_id(),
@@ -55,7 +55,7 @@ class InternalErrors(AuditMixin, Table):
             error_name=exception.__class__.__name__,
             command_name=command_name,
             guild_id=guild_id,
-            user_id=author_id,
+            user_id=user_id,
         )
         await internal_error.save()
         return internal_error

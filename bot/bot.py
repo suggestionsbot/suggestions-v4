@@ -4,7 +4,11 @@ from pathlib import Path
 import hikari
 import lightbulb
 from hikari.impl import CacheSettings, config
+from opentelemetry import trace
+from opentelemetry.trace import Status, StatusCode
 
+from bot import overrides, utils
+from bot.constants import OTEL_TRACER
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
@@ -27,7 +31,8 @@ async def create_bot(token, base_path: Path) -> (hikari.GatewayBot, lightbulb.Cl
         intents=hikari.Intents.NONE,
     )
     localisations = Localisation(base_path)
-    client = lightbulb.client_from_app(
+
+    client = overrides.client_from_app(
         bot,
         default_locale=hikari.Locale.EN_GB,
         localization_provider=localisations.lightbulb_provider,
@@ -47,8 +52,9 @@ async def create_bot(token, base_path: Path) -> (hikari.GatewayBot, lightbulb.Cl
         exc: lightbulb.exceptions.ExecutionPipelineFailedException,
         ctx: lightbulb.Context,
     ) -> bool:
-        # TODO Implement
-        await ctx.respond("Something went wrong")
+        with utils.start_error_span(exc.causes[0], "global error handler") as child:
+            # TODO Implement
+            await ctx.respond("Something went wrong")
         return False
 
     return bot, client

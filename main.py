@@ -33,19 +33,6 @@ async def main():
         base_path=Path("bot"),
     )
 
-    @client.error_handler
-    async def handler(
-        exc: lightbulb.exceptions.ExecutionPipelineFailedException,
-    ) -> bool:
-        logger.critical(
-            "Unhandled error encountered",
-            extra={
-                "error.name": exc.causes[0].__class__.__name__,
-                "traceback": commons.exception_as_string(exc.causes[0]),
-            },
-        )
-        return False
-
     @bot.listen(hikari.StartingEvent)
     async def on_starting(_: hikari.StartingEvent) -> None:
         await client.load_extensions(

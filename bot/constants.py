@@ -3,6 +3,7 @@ from __future__ import annotations
 from enum import IntEnum
 
 from hikari import Color
+from opentelemetry import trace
 
 
 VERSION = "4.0"
@@ -12,6 +13,7 @@ REJECTED_COLOR = Color.of((207, 0, 15))
 APPROVED_COLOR = Color.of((0, 230, 64))
 PENDING_COLOR = Color.of((255, 214, 99))
 EMBED_COLOR = Color.of((255, 214, 99))
+OTEL_TRACER = trace.get_tracer(__name__)
 
 
 class ErrorCode(IntEnum):

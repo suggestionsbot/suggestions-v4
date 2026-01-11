@@ -28,6 +28,7 @@ dependencies = [
     "saq[hiredis,web]>=0.26.0",
     "skelmis-commons>=1.6.1",
     "tenacity>=9.1.2",
+    "tracer>=2.0.0",
     "uvloop>=0.22.1",
 ]
 

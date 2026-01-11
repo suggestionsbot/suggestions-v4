@@ -1,3 +1,4 @@
+import asyncio
 import io
 import logging
 from typing import cast
@@ -39,50 +40,53 @@ def handle_suggestions_errors(func):
                 localisations=localisations,
             )
         except Exception as exception:
-            internal_error: InternalErrors = await InternalErrors.persist_error(
-                exception,
-                command_name="suggest",
-                guild_id=ctx.guild_id,
-                author_id=ctx.user.id,
-            )
+            this_will_handle: tuple[type[Exception], ...] = (MessageTooLong, MissingQueueChannel)
+            if isinstance(exception, this_will_handle):
+                with utils.start_error_span(exception, "command error handler"):
+                    internal_error: InternalErrors = await InternalErrors.persist_error(
+                        exception,
+                        command_name="suggest",
+                        guild_id=ctx.guild_id,
+                        user_id=ctx.user.id,
+                    )
 
-            if isinstance(exception, MessageTooLong):
-                await ctx.respond(
-                    embed=utils.error_embed(
-                        localisations.get_localized_string(
-                            "errors.suggest.content_too_long.title",
-                            ctx=ctx,
-                        ),
-                        localisations.get_localized_string(
-                            "errors.suggest.content_too_long.description",
-                            ctx=ctx,
-                            extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
-                        ),
-                        error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
-                        internal_error_reference=internal_error,
-                    ),
-                    attachment=hikari.files.Bytes(
-                        io.StringIO(exception.message_text), "content.txt"
-                    ),
-                )
-                return None
+                    if isinstance(exception, MessageTooLong):
+                        await ctx.respond(
+                            embed=utils.error_embed(
+                                localisations.get_localized_string(
+                                    "errors.suggest.content_too_long.title",
+                                    ctx=ctx,
+                                ),
+                                localisations.get_localized_string(
+                                    "errors.suggest.content_too_long.description",
+                                    ctx=ctx,
+                                    extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
+                                ),
+                                error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
+                                internal_error_reference=internal_error,
+                            ),
+                            attachment=hikari.files.Bytes(
+                                io.StringIO(exception.message_text), "content.txt"
+                            ),
+                        )
+                        return None
 
-            elif isinstance(exception, MissingQueueChannel):
-                await ctx.respond(
-                    embed=utils.error_embed(
-                        localisations.get_localized_string(
-                            "errors.suggest.missing_queue_channel.title",
-                            ctx=ctx,
-                        ),
-                        localisations.get_localized_string(
-                            "errors.suggest.missing_queue_channel.description",
-                            ctx=ctx,
-                        ),
-                        error_code=ErrorCode.MISSING_QUEUE_CHANNEL,
-                        internal_error_reference=internal_error,
-                    ),
-                )
-                return None
+                    elif isinstance(exception, MissingQueueChannel):
+                        await ctx.respond(
+                            embed=utils.error_embed(
+                                localisations.get_localized_string(
+                                    "errors.suggest.missing_queue_channel.title",
+                                    ctx=ctx,
+                                ),
+                                localisations.get_localized_string(
+                                    "errors.suggest.missing_queue_channel.description",
+                                    ctx=ctx,
+                                ),
+                                error_code=ErrorCode.MISSING_QUEUE_CHANNEL,
+                                internal_error_reference=internal_error,
+                            ),
+                        )
+                        return None
 
             raise
 
@@ -157,6 +161,7 @@ class Suggest(
             )
 
         # TODO Implement more
+        await asyncio.sleep(5)
         raise ValueError("Who knows")
 
     async def handle_queued_suggestion(
