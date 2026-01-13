@@ -19,6 +19,7 @@ from shared.tables import (
     UserConfigs,
     QueuedSuggestions,
 )
+from shared.utils import configs
 from tests.conftest import prepare_command
 
 USER_ID = 12345
@@ -72,10 +73,10 @@ async def invoke_suggest(
     bot: hikari.GatewayBot = None,
 ) -> (lightbulb.Context, GuildConfigs, UserConfigs, Localisation, hikari.GatewayBot):
     if guild_config is None:
-        guild_config = GuildConfigs(guild_id=guild_id)
+        guild_config = await configs.ensure_guild_config(guild_id)
 
     if user_config is None:
-        user_config = UserConfigs(user_id=user_id)
+        user_config = await configs.ensure_user_config(user_id)
 
     await user_config.save()
     await guild_config.save()
@@ -127,9 +128,14 @@ async def test_newline_handling(localisation):
 
 async def test_anonymous_when_disabled(localisation):
     """Asserts that when anon suggestions are disabled that they cant be used"""
+    gc = await configs.ensure_guild_config(GUILD_ID)
+    gc.can_have_anonymous_suggestions = False
+    await gc.save()
     options = create_options("test", anon=True)
     ctx, _, _, _, _ = await invoke_suggest(options, localisations=localisation)
-    ctx.respond.assert_called_once_with("Your guild does not allow anonymous suggestions.")
+    ctx.respond.assert_called_once_with(
+        "Your guild does not allow anonymous suggestions."
+    )
 
 
 async def test_images_when_disabled(localisation):
@@ -143,7 +149,9 @@ async def test_images_when_disabled(localisation):
         guild_config=gc,
         image=hikari.files.Bytes(io.StringIO("test"), "content.txt"),
     )
-    ctx.respond.assert_called_once_with("Your guild does not allow images in suggestions.")
+    ctx.respond.assert_called_once_with(
+        "Your guild does not allow images in suggestions."
+    )
 
 
 @pytest.mark.xfail(reason="Suggestions are not fully implemented yet")
@@ -158,7 +166,9 @@ async def test_anonymous_suggestion(localisation):
         user_id=1,
         guild_config=gc,
     )
-    suggestion: Suggestions = await Suggestions.objects(Suggestions.user_configuration).first()
+    suggestion: Suggestions = await Suggestions.objects(
+        Suggestions.user_configuration
+    ).first()
     assert suggestion.author_id == 1
     assert suggestion.author_display_name == "Anonymous"
 
@@ -169,7 +179,9 @@ async def test_image_in_suggestion(localisation):
 
     with patch(
         "bot.utils.upload_file_to_r2",
-        new_callable=partial(AsyncMock, return_value="https://example.com/fake_image_url"),
+        new_callable=partial(
+            AsyncMock, return_value="https://example.com/fake_image_url"
+        ),
     ) as mock:
         options = create_options("test", image=True)
         ctx, _, _, _, _ = await invoke_suggest(
@@ -193,7 +205,9 @@ async def test_queued_suggestion_missing_queue_channel_config(localisation):
     gc = GuildConfigs()
     gc.uses_suggestions_queue = True
     gc.virtual_suggestions_queue = False
-    ctx, _, _, _, _ = await invoke_suggest(options, localisations=localisation, guild_config=gc)
+    ctx, _, _, _, _ = await invoke_suggest(
+        options, localisations=localisation, guild_config=gc
+    )
     internal_error = await InternalErrors.objects().first()
     ctx.respond.assert_called_once()
     ctx.respond.assert_called_once_with(

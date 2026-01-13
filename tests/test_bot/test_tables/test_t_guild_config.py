@@ -18,7 +18,7 @@ async def test_guild_config_default():
     assert r_1.queued_suggestion_log_channel_id is None
     assert r_1.threads_for_suggestions is True
     assert r_1.suggestions_channel_id is None
-    assert r_1.can_have_anonymous_suggestions is False
+    assert r_1.can_have_anonymous_suggestions is True
     assert r_1.auto_archive_threads is False
     assert r_1.uses_suggestions_queue is False
     assert r_1.virtual_suggestions_queue is True
