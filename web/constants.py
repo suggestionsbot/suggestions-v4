@@ -56,7 +56,9 @@ def configure_otel(service_name: str):
     trace_provider = TracerProvider(resource=resource)
     trace.set_tracer_provider(trace_provider)
     trace_provider.add_span_processor(
-        BatchSpanProcessor(OTLPSpanExporter(endpoint=f"{endpoint}/v1/traces", headers=headers))
+        BatchSpanProcessor(
+            OTLPSpanExporter(endpoint=f"{endpoint}/v1/traces", headers=headers)
+        )
     )
 
     reader = PeriodicExportingMetricReader(
@@ -77,6 +79,9 @@ def configure_otel(service_name: str):
     handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
     logging.getLogger().addHandler(handler)
     logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger("bot").setLevel(logging.DEBUG)
+    logging.getLogger("shared").setLevel(logging.DEBUG)
+    logging.getLogger("web").setLevel(logging.DEBUG)
 
 
 def get_secret(secret_name: str, infisical_client: InfisicalSDKClient) -> str:
@@ -108,7 +113,9 @@ ALLOW_REGISTRATION: bool = value_to_bool(os.environ.get("ALLOW_REGISTRATION", Tr
 SERVING_DOMAIN: list[str] = os.environ.get("SERVING_DOMAIN", "localhost").split(",")
 """The domain this site will run on. Used for cookies etc."""
 
-CHECK_PASSWORD_AGAINST_HIBP: bool = not value_to_bool(os.environ.get("DISABLE_HIBP", False))
+CHECK_PASSWORD_AGAINST_HIBP: bool = not value_to_bool(
+    os.environ.get("DISABLE_HIBP", False)
+)
 """If True, checks passwords against Have I Been Pwned"""
 
 SIMPLE_EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
@@ -136,7 +143,9 @@ HAS_IMPLEMENTED_OAUTH = value_to_bool(os.environ.get("HAS_IMPLEMENTED_OAUTH", Fa
 TRUSTED_PROXIES = value_to_bool(os.environ.get("TRUSTED_PROXIES", False))
 """Trust proxy headers"""
 
-HAS_IMPLEMENTED_MAGIC_LINK = value_to_bool(os.environ.get("HAS_IMPLEMENTED_MAGIC_LINK", False))
+HAS_IMPLEMENTED_MAGIC_LINK = value_to_bool(
+    os.environ.get("HAS_IMPLEMENTED_MAGIC_LINK", False)
+)
 """Set to True if emails are configured to work."""
 
 # CloudFlare Turnstile configuration items
@@ -157,7 +166,9 @@ MFA_TOTP_PROVIDER = AuthenticatorProvider(
 MAILGUN_API_KEY = get_secret("MAILGUN_API_KEY", infisical_client)
 REDIS_CLIENT = aioredis.from_url(os.environ["REDIS_URL"])
 BOT_USER_ID = (
-    474051954998509571 if IS_PRODUCTION else 846324706389786676  # Suggestions  # Localized Stats
+    474051954998509571
+    if IS_PRODUCTION
+    else 846324706389786676  # Suggestions  # Localized Stats
 )
 BOT_INVITE_URL = f"https://discord.com/oauth2/authorize?client_id={BOT_USER_ID}&permissions=395137379328&integration_type=0&scope=bot+applications.commands"
 SIGNOZ_API_KEY = get_secret("SIGNOZ_API_KEY", infisical_client)

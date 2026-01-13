@@ -27,12 +27,16 @@ async def create_user_config(ctx: lightbulb.Context) -> UserConfigs:
     return await configs.ensure_user_config(ctx.user.id)
 
 
-async def create_bot(token, base_path: Path) -> (hikari.GatewayBot, lightbulb.Client):
+async def create_bot(
+    token, base_path: Path, *, log_conf: str | None = "INFO"
+) -> (hikari.GatewayBot, lightbulb.Client):
     bot = hikari.GatewayBot(
         token=token,
+        logs=log_conf,
         cache_settings=CacheSettings(components=config.CacheComponents.NONE),
         intents=hikari.Intents.NONE,
     )
+    logger.debug(f"Test with {repr(log_conf)}")
     localisations = Localisation(base_path)
 
     default_enabled_guilds = ()

@@ -15,11 +15,15 @@ from shared.tables import GuildConfigs
 from web import constants as t_constants
 
 load_dotenv()
+
+log_conf = "INFO"
 logger = logging.getLogger(__name__)
 if t_constants.IS_PRODUCTION:
+    log_conf = None
     t_constants.configure_otel(t_constants.BOT_SERVICE_NAME)
 
 elif t_constants.ENFORCE_OTEL:
+    log_conf = None
     t_constants.configure_otel(t_constants.BOT_SERVICE_NAME)
 
 
@@ -36,6 +40,7 @@ async def main():
     bot, client = await create_bot(
         token=t_constants.get_secret("BOT_TOKEN", t_constants.infisical_client),
         base_path=Path("bot"),
+        log_conf=log_conf,
     )
     bot = cast(hikari.GatewayBot, bot)
     client = cast(lightbulb.Client, client)
