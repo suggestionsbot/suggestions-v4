@@ -38,23 +38,26 @@ class GuildConfigurationMenus:
                 )
             },
         )
-        if id_data == "suggestions_channel":
+        if id_data in ("suggestions_channel_id", "log_channel_id", "update_channel_id"):
             if len(event_values) == 0:
                 return await ctx.respond(
                     localisations.get_localized_string(
-                        "menus.guild_configuration.responses.suggestion_channel.empty",
+                        f"menus.guild_configuration.responses.{id_data}.empty",
                         ctx,
                     )
                 )
 
             else:
-                guild_config.suggestions_channel_id = int(event_values[0])
+                setattr(guild_config, id_data, int(event_values[0]))
+                if id_data == "log_channel_id":
+                    guild_config.keep_logs = False
+
                 await guild_config.save()
                 return await ctx.respond(
                     localisations.get_localized_string(
-                        "menus.guild_configuration.responses.suggestion_channel.set",
+                        f"menus.guild_configuration.responses.{id_data}.set",
                         ctx,
-                        extras={"CHANNEL": f"<#{guild_config.suggestions_channel_id}>"},
+                        extras={"CHANNEL": f"<#{getattr(guild_config, id_data)}>"},
                     )
                 )
 
@@ -92,13 +95,126 @@ class GuildConfigurationMenus:
                 )
             )
 
+        elif id_data == "primary_language":
+            guild_config.primary_language_raw = event_values[0]
+            await guild_config.save()
+            return await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.responses.primary_language",
+                    ctx,
+                    extras={"LANGUAGE": guild_config.primary_language_as_word},
+                )
+            )
+
+        elif id_data == "log_channel":
+            if event_values[0] == "same_channel":
+                guild_config.keep_logs = True
+                await guild_config.save()
+                return await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.responses.keep_logs.set",
+                        ctx,
+                    )
+                )
+
+            else:
+                # We need to pick a channel
+                return await ctx.respond(
+                    components=await cls.build_log_channel_components(
+                        ctx=ctx, localisations=localisations, guild_config=guild_config
+                    )
+                )
+
+        elif id_data == "view_page_2":
+            return await ctx.respond(
+                components=await cls.build_base_components_page_2(
+                    ctx=ctx, localisations=localisations, guild_config=guild_config
+                )
+            )
+        elif id_data == "view_page_1":
+            return await ctx.respond(
+                components=await cls.build_base_components_page_2(
+                    ctx=ctx, localisations=localisations, guild_config=guild_config
+                )
+            )
+
         raise SuggestionException(f"Unknown gcm interaction -> {repr(id_data)}")
 
     @classmethod
-    async def build_base_components(
+    async def build_queue_components(
         cls,
         *,
-        ctx: lightbulb.Context,
+        ctx: lightbulb.components.MenuContext | lightbulb.Context,
+        guild_config: GuildConfigs,
+        localisations: Localisation,
+    ) -> Sequence[special_endpoints.ComponentBuilder]:
+        pass
+
+    @classmethod
+    async def build_log_channel_components(
+        cls,
+        *,
+        ctx: lightbulb.components.MenuContext | lightbulb.Context,
+        guild_config: GuildConfigs,
+        localisations: Localisation,
+    ) -> Sequence[special_endpoints.ComponentBuilder]:
+        current_channel_placeholder: str | None = None
+        if guild_config.suggestions_channel_id:
+            cache_key = (
+                f"guilds:{ctx.guild_id}:channel_names:{guild_config.log_channel_id}"
+            )
+            current_channel_placeholder: bytes | None = (
+                await t_constants.REDIS_CLIENT.get(cache_key)
+            )
+            if current_channel_placeholder is not None:
+                try:
+                    current_channel_placeholder: str = current_channel_placeholder.decode(
+                        "utf-8"
+                    )
+                except UnicodeDecodeError:
+                    pass
+
+            elif current_channel_placeholder is None:
+                try:
+                    channel = await ctx.client.rest.fetch_channel(
+                        guild_config.log_channel_id
+                    )
+                    current_channel_placeholder: str = f"#{channel.name}"
+                    await t_constants.REDIS_CLIENT.set(
+                        cache_key,
+                        current_channel_placeholder.encode("utf-8"),
+                        ex=timedelta(minutes=15),
+                    )
+                except (hikari.errors.HikariError, UnicodeEncodeError):
+                    pass
+        return [
+            hikari.impl.ContainerComponentBuilder(
+                components=[
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.log_menu.log_channel_id", ctx
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.ChannelSelectMenuBuilder(
+                                custom_id="gcm:log_channel_id",
+                                channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
+                                placeholder=current_channel_placeholder,
+                                min_values=1,
+                                max_values=1,
+                            ),  # type: ignore
+                        ]
+                    ),
+                ]
+            )
+        ]
+
+    @classmethod
+    async def build_base_components_page_1(
+        cls,
+        *,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
         guild_config: GuildConfigs,
         localisations: Localisation,
     ) -> Sequence[special_endpoints.ComponentBuilder]:
@@ -143,13 +259,14 @@ class GuildConfigurationMenus:
                 components=[
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
-                            "menus.guild_configuration.base_menu.suggestion_name", ctx
+                            "menus.guild_configuration.base_menu.suggestions_channel_id",
+                            ctx,
                         )
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.ChannelSelectMenuBuilder(
-                                custom_id="gcm:suggestions_channel",
+                                custom_id="gcm:suggestions_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
                                 placeholder=current_channel_placeholder,
                                 min_values=1,
@@ -407,6 +524,52 @@ class GuildConfigurationMenus:
             )
         )
 
+        # Pagination
+        components.append(
+            hikari.impl.MessageActionRowBuilder(
+                components=[
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.PRIMARY,
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.responses.pagination.view_next",
+                            ctx,
+                        ),
+                        custom_id="gcm:view_page_2",
+                    ),
+                ]
+            ),
+        )
+
+        # Docs for extra info
+        components.append(
+            hikari.impl.MessageActionRowBuilder(
+                components=[
+                    hikari.impl.LinkButtonBuilder(
+                        url="https://docs.suggestions.gg/docs/configuration",
+                        label="View the documentation here",
+                    ),
+                ]
+            )
+        )
+
+        return components
+
+    @classmethod
+    async def build_base_components_page_2(
+        cls,
+        *,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        guild_config: GuildConfigs,
+        localisations: Localisation,
+    ) -> Sequence[special_endpoints.ComponentBuilder]:
+        components: list[special_endpoints.ComponentBuilder] = [
+            hikari.impl.TextDisplayComponentBuilder(
+                content=localisations.get_localized_string(
+                    "menus.guild_configuration.base_menu.overall_description", ctx
+                )
+            )
+        ]
+
         # Add queue container
         no_queue_is_default = not guild_config.uses_suggestions_queue
         virtual_is_default = False
@@ -465,6 +628,35 @@ class GuildConfigurationMenus:
         )
 
         # Add misc container
+        current_update_channel_placeholder: str | None = None
+        if guild_config.update_channel_id:
+            cache_key = (
+                f"guilds:{ctx.guild_id}:channel_names:{guild_config.update_channel_id}"
+            )
+            current_update_channel_placeholder: bytes | None = (
+                await t_constants.REDIS_CLIENT.get(cache_key)
+            )
+            if current_update_channel_placeholder is not None:
+                try:
+                    current_update_channel_placeholder: str = (
+                        current_update_channel_placeholder.decode("utf-8")
+                    )
+                except UnicodeDecodeError:
+                    pass
+
+            elif current_update_channel_placeholder is None:
+                try:
+                    channel = await ctx.client.rest.fetch_channel(
+                        guild_config.update_channel_id
+                    )
+                    current_update_channel_placeholder: str = f"#{channel.name}"
+                    await t_constants.REDIS_CLIENT.set(
+                        cache_key,
+                        current_update_channel_placeholder.encode("utf-8"),
+                        ex=timedelta(minutes=15),
+                    )
+                except (hikari.errors.HikariError, UnicodeEncodeError):
+                    pass
         components.append(
             hikari.impl.ContainerComponentBuilder(
                 components=[
@@ -501,8 +693,70 @@ class GuildConfigurationMenus:
                             ),
                         ]
                     ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.primary_language",
+                            ctx,
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.TextSelectMenuBuilder(
+                                custom_id="gcm:primary_language",
+                                options=[
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=k,
+                                        value=v,
+                                        is_default=guild_config.primary_language_raw == v,
+                                    )
+                                    for k, v in {
+                                        "Danish": "da",
+                                        "English, UK": "en-GB",
+                                        "English, US": "en-US",
+                                        "French": "fr",
+                                        "German": "de",
+                                        "Portuguese, Brazilian": "pt-BR",
+                                    }.items()
+                                ],
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ]
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.update_channel_id",
+                            ctx,
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.ChannelSelectMenuBuilder(
+                                custom_id="gcm:update_channel_id",
+                                channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
+                                placeholder=current_update_channel_placeholder,
+                                min_values=0,
+                                max_values=1,
+                            ),  # type: ignore
+                        ]
+                    ),
                 ]
             )
+        )
+        # Pagination
+        components.append(
+            hikari.impl.MessageActionRowBuilder(
+                components=[
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.PRIMARY,
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.responses.pagination.view_previous",
+                            ctx,
+                        ),
+                        custom_id="gcm:view_page_1",
+                    ),
+                ]
+            ),
         )
 
         # Docs for extra info

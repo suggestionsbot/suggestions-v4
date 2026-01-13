@@ -12,6 +12,9 @@ class MessageTooLong(SuggestionException):
 class MissingTranslation(SuggestionException):
     """The en_GB translation file is missing a translation."""
 
+    def __init__(self, missing_key: str):
+        self.missing_key = missing_key
+
 
 class InvalidFileType(SuggestionException):
     """The attempted image upload was invalid."""

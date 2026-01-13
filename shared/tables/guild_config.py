@@ -47,6 +47,11 @@ class GuildConfigs(AuditMixin, Table):
         null=True,
         help_text="The channel to send suggestions to",
     )
+    update_channel_id = BigInt(
+        default=None,
+        null=True,
+        help_text="A channel the bot can send updates to about new features, supported languages, etc",
+    )
     can_have_anonymous_suggestions = Boolean(
         default=False,
         help_text="Is this guild allowed to make suggestions anonymously?",
@@ -79,7 +84,7 @@ class GuildConfigs(AuditMixin, Table):
         default=True,
         help_text="Ping the suggestions author in the suggestions thread",
     )
-    primary_language = Text(
+    primary_language_raw = Text(
         default=hikari.Locale.EN_GB.value,
         choices=hikari.Locale,
         help_text="The language to use when translating non ephemeral messages",
@@ -91,6 +96,47 @@ class GuildConfigs(AuditMixin, Table):
         ),
         index=True,
     )
+
+    @property
+    def primary_language(self) -> hikari.Locale:
+        return hikari.Locale(self.primary_language_raw)
+
+    @property
+    def primary_language_as_word(self) -> str:
+        return {
+            "bg": "Bulgarian",
+            "cs": "Czech",
+            "da": "Danish",
+            "de": "German",
+            "el": "Greek",
+            "en-GB": "English, UK",
+            "en-US": "English, US",
+            "es-ES": "Spanish",
+            "es-419": "Spanish, LATAM",
+            "fi": "Finnish",
+            "fr": "French",
+            "hi": "Hindi",
+            "hr": "Croatian",
+            "hu": "Hungarian",
+            "id": "Indonesian",
+            "it": "Italian",
+            "ja": "Japanese",
+            "ko": "Korean",
+            "lt": "Lithuanian",
+            "nl": "Dutch",
+            "no": "Norwegian",
+            "pl": "Polish",
+            "pt-BR": "Portuguese, Brazilian",
+            "ro": "Romanian",
+            "ru": "Russian",
+            "sv-SE": "Swedish",
+            "th": "Thai",
+            "tr": "Turkish",
+            "uk": "Ukrainian",
+            "vi": "Vietnamese",
+            "zh-CN": "Chinese, China",
+            "zh-TW": "Chinese, Taiwan",
+        }[self.primary_language_raw]
 
     def premium_is_enabled(self, ctx: lightbulb.Context) -> bool:
         """Returns true if this guild is considered to have active premium"""

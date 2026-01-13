@@ -41,7 +41,7 @@ class Localisation:
             ].get(key, None)
             if fallback_value is None:
                 logger.critical(f"Could not find base translation for {key}")
-                raise MissingTranslation
+                raise MissingTranslation(key)
 
             return fallback_value
 
