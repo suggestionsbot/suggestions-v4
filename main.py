@@ -17,10 +17,10 @@ from web import constants as t_constants
 load_dotenv()
 logger = logging.getLogger(__name__)
 if t_constants.IS_PRODUCTION:
-    t_constants.configure_otel(t_constants.DASHBOARD_SERVICE_NAME)
+    t_constants.configure_otel(t_constants.BOT_SERVICE_NAME)
 
 elif t_constants.ENFORCE_OTEL:
-    t_constants.configure_otel(t_constants.DASHBOARD_SERVICE_NAME)
+    t_constants.configure_otel(t_constants.BOT_SERVICE_NAME)
 
 
 async def main():
