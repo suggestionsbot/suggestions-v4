@@ -30,7 +30,7 @@ class GuildConfigurationMenus:
         await ctx.defer(ephemeral=True)
         event_values: Sequence[str] = event.interaction.values
         log.debug(
-            "Editing guild setting %s",
+            "Processing GCM component %s",
             id_data,
             extra={
                 "setting.new_value": (
