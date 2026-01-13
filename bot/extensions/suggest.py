@@ -99,6 +99,7 @@ class Suggest(
     name="commands.suggest.name",
     description="commands.suggest.description",
     localize=True,
+    contexts=[hikari.ApplicationContextType.GUILD],
 ):
     suggestion = lightbulb.string(
         "commands.suggest.options.suggestion.name",

@@ -42,10 +42,10 @@ dev = [
 ]
 
 [tool.ruff]
-line-length = 100
+line-length = 90
 
 [tool.black]
-line-length = 100
+line-length = 90
 
 [tool.isort]
 profile = "black"

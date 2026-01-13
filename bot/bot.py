@@ -12,6 +12,7 @@ from bot.constants import OTEL_TRACER
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
+from web import constants as t_constants
 
 logger = logging.getLogger(__name__)
 
@@ -32,8 +33,12 @@ async def create_bot(token, base_path: Path) -> (hikari.GatewayBot, lightbulb.Cl
     )
     localisations = Localisation(base_path)
 
+    default_enabled_guilds = ()
+    if not t_constants.IS_PRODUCTION:
+        default_enabled_guilds = (737166408525283348,)
     client = overrides.client_from_app(
         bot,
+        default_enabled_guilds=default_enabled_guilds,
         default_locale=hikari.Locale.EN_GB,
         localization_provider=localisations.lightbulb_provider,
     )
