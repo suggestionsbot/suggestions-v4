@@ -31,7 +31,6 @@ class CooldownPeriod(str, Enum):
 
 class PremiumGuildConfigs(AuditMixin, Table):
     guild_id = BigInt(
-        primary_key=True,
         unique=True,
         index=True,
         help_text="The discord guild id",

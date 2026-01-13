@@ -59,6 +59,10 @@ async def create_bot(token, base_path: Path) -> (hikari.GatewayBot, lightbulb.Cl
         exc: lightbulb.exceptions.ExecutionPipelineFailedException,
         ctx: lightbulb.Context,
     ) -> bool:
+        if not ctx.initial_response_sent.is_set():
+            # If we have yet to send some form of response
+            await ctx.defer(ephemeral=True)
+
         with utils.start_error_span(exc.causes[0], "global error handler") as child:
             # TODO Implement
             await ctx.respond("Something went wrong")
@@ -81,6 +85,7 @@ async def create_bot(token, base_path: Path) -> (hikari.GatewayBot, lightbulb.Cl
     async def on_component_interaction(
         event: hikari.ComponentInteractionCreateEvent,
     ) -> None:
+        # TODO Wrap these events in a component error handler
         ctx = build_ctx(event.interaction)
         custom_id: str = event.interaction.custom_id
 

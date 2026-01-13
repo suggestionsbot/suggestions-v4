@@ -10,13 +10,15 @@ from piccolo.columns.indexes import IndexMethod
 from shared.tables.mixins.audit import utc_now
 
 
-ID = "2025-11-12T13:02:48:024892"
-VERSION = "1.26.1"
+ID = "2026-01-13T22:10:18:780780"
+VERSION = "1.30.0"
 DESCRIPTION = ""
 
 
 async def forwards():
-    manager = MigrationManager(migration_id=ID, app_name="bot", description=DESCRIPTION)
+    manager = MigrationManager(
+        migration_id=ID, app_name="bot", description=DESCRIPTION
+    )
 
     manager.add_table(
         class_name="InternalErrors",

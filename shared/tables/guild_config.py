@@ -10,7 +10,6 @@ from shared.tables.mixins.audit import utc_now
 
 class GuildConfigs(AuditMixin, Table):
     guild_id = BigInt(
-        primary_key=True,
         unique=True,
         index=True,
         help_text="The discord guild id",
@@ -53,7 +52,7 @@ class GuildConfigs(AuditMixin, Table):
         help_text="A channel the bot can send updates to about new features, supported languages, etc",
     )
     can_have_anonymous_suggestions = Boolean(
-        default=False,
+        default=True,
         help_text="Is this guild allowed to make suggestions anonymously?",
     )
     auto_archive_threads = Boolean(

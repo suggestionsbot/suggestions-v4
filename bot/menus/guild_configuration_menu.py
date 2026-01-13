@@ -38,7 +38,13 @@ class GuildConfigurationMenus:
                 )
             },
         )
-        if id_data in ("suggestions_channel_id", "log_channel_id", "update_channel_id"):
+        if id_data in (
+            "suggestions_channel_id",
+            "log_channel_id",
+            "update_channel_id",
+            "queued_suggestion_channel_id",
+            "queued_suggestion_log_channel_id",
+        ):
             if len(event_values) == 0:
                 return await ctx.respond(
                     localisations.get_localized_string(
@@ -51,6 +57,13 @@ class GuildConfigurationMenus:
                 setattr(guild_config, id_data, int(event_values[0]))
                 if id_data == "log_channel_id":
                     guild_config.keep_logs = False
+
+                elif id_data in (
+                    "queued_suggestion_channel_id",
+                    "queued_suggestion_log_channel_id",
+                ):
+                    guild_config.uses_suggestions_queue = True
+                    guild_config.virtual_suggestions_queue = False
 
                 await guild_config.save()
                 return await ctx.respond(
@@ -138,30 +151,51 @@ class GuildConfigurationMenus:
                 )
             )
 
+        elif id_data == "suggestions_queue":
+            value = event_values[0]
+            if value == "none":
+                guild_config.uses_suggestions_queue = False
+                await guild_config.save()
+                return await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.responses.suggestion_queue.none", ctx
+                    )
+                )
+
+            elif value == "virtual":
+                guild_config.uses_suggestions_queue = True
+                guild_config.virtual_suggestions_queue = True
+                guild_config.queued_suggestion_channel_id = None
+                guild_config.queued_suggestion_log_channel_id = None
+                await guild_config.save()
+                return await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.responses.suggestion_queue.virtual",
+                        ctx,
+                    )
+                )
+
+            elif value == "channel":
+                return await ctx.respond(
+                    components=await cls.build_queue_components(
+                        ctx=ctx, localisations=localisations, guild_config=guild_config
+                    )
+                )
+
         raise SuggestionException(f"Unknown gcm interaction -> {repr(id_data)}")
 
     @classmethod
-    async def build_queue_components(
+    async def get_channel_name(
         cls,
+        field: str,
         *,
         ctx: lightbulb.components.MenuContext | lightbulb.Context,
         guild_config: GuildConfigs,
-        localisations: Localisation,
-    ) -> Sequence[special_endpoints.ComponentBuilder]:
-        pass
-
-    @classmethod
-    async def build_log_channel_components(
-        cls,
-        *,
-        ctx: lightbulb.components.MenuContext | lightbulb.Context,
-        guild_config: GuildConfigs,
-        localisations: Localisation,
-    ) -> Sequence[special_endpoints.ComponentBuilder]:
+    ) -> str:
         current_channel_placeholder: str | None = None
-        if guild_config.suggestions_channel_id:
+        if getattr(guild_config, field):
             cache_key = (
-                f"guilds:{ctx.guild_id}:channel_names:{guild_config.log_channel_id}"
+                f"guilds:{ctx.guild_id}:channel_names:{getattr(guild_config, field)}"
             )
             current_channel_placeholder: bytes | None = (
                 await t_constants.REDIS_CLIENT.get(cache_key)
@@ -177,7 +211,7 @@ class GuildConfigurationMenus:
             elif current_channel_placeholder is None:
                 try:
                     channel = await ctx.client.rest.fetch_channel(
-                        guild_config.log_channel_id
+                        getattr(guild_config, field)
                     )
                     current_channel_placeholder: str = f"#{channel.name}"
                     await t_constants.REDIS_CLIENT.set(
@@ -187,6 +221,90 @@ class GuildConfigurationMenus:
                     )
                 except (hikari.errors.HikariError, UnicodeEncodeError):
                     pass
+
+        return current_channel_placeholder
+
+    @classmethod
+    async def build_queue_components(
+        cls,
+        *,
+        ctx: lightbulb.components.MenuContext | lightbulb.Context,
+        guild_config: GuildConfigs,
+        localisations: Localisation,
+    ) -> Sequence[special_endpoints.ComponentBuilder]:
+        components = [
+            hikari.impl.TextDisplayComponentBuilder(
+                content=localisations.get_localized_string(
+                    "menus.guild_configuration.queue_menu.overall_description", ctx
+                )
+            ),
+            hikari.impl.ContainerComponentBuilder(
+                components=[
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.queue_menu.queued_suggestion_channel_id",
+                            ctx,
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.ChannelSelectMenuBuilder(
+                                custom_id="gcm:queued_suggestion_channel_id",
+                                channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
+                                placeholder=await cls.get_channel_name(
+                                    "queued_suggestion_channel_id",
+                                    ctx=ctx,
+                                    guild_config=guild_config,
+                                ),
+                                min_values=1,
+                                max_values=1,
+                            ),  # type: ignore
+                        ]
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.queue_menu.queued_suggestion_log_channel_id",
+                            ctx,
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.ChannelSelectMenuBuilder(
+                                custom_id="gcm:queued_suggestion_log_channel_id",
+                                channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
+                                placeholder=await cls.get_channel_name(
+                                    "queued_suggestion_log_channel_id",
+                                    ctx=ctx,
+                                    guild_config=guild_config,
+                                ),
+                                min_values=1,
+                                max_values=1,
+                            ),  # type: ignore
+                        ]
+                    ),
+                ]
+            ),
+            hikari.impl.MessageActionRowBuilder(
+                components=[
+                    hikari.impl.LinkButtonBuilder(
+                        url="https://docs.suggestions.gg/docs/queue",
+                        label="View queue documentation here for more information",
+                    ),
+                ]
+            ),
+        ]
+
+        # Docs for extra info
+        return components
+
+    @classmethod
+    async def build_log_channel_components(
+        cls,
+        *,
+        ctx: lightbulb.components.MenuContext | lightbulb.Context,
+        guild_config: GuildConfigs,
+        localisations: Localisation,
+    ) -> Sequence[special_endpoints.ComponentBuilder]:
         return [
             hikari.impl.ContainerComponentBuilder(
                 components=[
@@ -200,7 +318,11 @@ class GuildConfigurationMenus:
                             hikari.impl.ChannelSelectMenuBuilder(
                                 custom_id="gcm:log_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
-                                placeholder=current_channel_placeholder,
+                                placeholder=await cls.get_channel_name(
+                                    "log_channel_id",
+                                    ctx=ctx,
+                                    guild_config=guild_config,
+                                ),
                                 min_values=1,
                                 max_values=1,
                             ),  # type: ignore
@@ -226,34 +348,6 @@ class GuildConfigurationMenus:
             )
         ]
         # Add suggestions container
-        current_channel_placeholder: str | None = None
-        if guild_config.suggestions_channel_id:
-            cache_key = f"guilds:{ctx.guild_id}:channel_names:{guild_config.suggestions_channel_id}"
-            current_channel_placeholder: bytes | None = (
-                await t_constants.REDIS_CLIENT.get(cache_key)
-            )
-            if current_channel_placeholder is not None:
-                try:
-                    current_channel_placeholder: str = current_channel_placeholder.decode(
-                        "utf-8"
-                    )
-                except UnicodeDecodeError:
-                    pass
-
-            elif current_channel_placeholder is None:
-                try:
-                    channel = await ctx.client.rest.fetch_channel(
-                        guild_config.suggestions_channel_id
-                    )
-                    current_channel_placeholder: str = f"#{channel.name}"
-                    await t_constants.REDIS_CLIENT.set(
-                        cache_key,
-                        current_channel_placeholder.encode("utf-8"),
-                        ex=timedelta(minutes=15),
-                    )
-                except (hikari.errors.HikariError, UnicodeEncodeError):
-                    pass
-
         components.append(
             hikari.impl.ContainerComponentBuilder(
                 components=[
@@ -268,7 +362,11 @@ class GuildConfigurationMenus:
                             hikari.impl.ChannelSelectMenuBuilder(
                                 custom_id="gcm:suggestions_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
-                                placeholder=current_channel_placeholder,
+                                placeholder=await cls.get_channel_name(
+                                    "suggestions_channel_id",
+                                    ctx=ctx,
+                                    guild_config=guild_config,
+                                ),
                                 min_values=1,
                                 max_values=1,
                             ),  # type: ignore
@@ -579,6 +677,7 @@ class GuildConfigurationMenus:
                 virtual_is_default = True
             else:
                 channel_is_default = True
+
         components.append(
             hikari.impl.ContainerComponentBuilder(
                 components=[
@@ -628,35 +727,6 @@ class GuildConfigurationMenus:
         )
 
         # Add misc container
-        current_update_channel_placeholder: str | None = None
-        if guild_config.update_channel_id:
-            cache_key = (
-                f"guilds:{ctx.guild_id}:channel_names:{guild_config.update_channel_id}"
-            )
-            current_update_channel_placeholder: bytes | None = (
-                await t_constants.REDIS_CLIENT.get(cache_key)
-            )
-            if current_update_channel_placeholder is not None:
-                try:
-                    current_update_channel_placeholder: str = (
-                        current_update_channel_placeholder.decode("utf-8")
-                    )
-                except UnicodeDecodeError:
-                    pass
-
-            elif current_update_channel_placeholder is None:
-                try:
-                    channel = await ctx.client.rest.fetch_channel(
-                        guild_config.update_channel_id
-                    )
-                    current_update_channel_placeholder: str = f"#{channel.name}"
-                    await t_constants.REDIS_CLIENT.set(
-                        cache_key,
-                        current_update_channel_placeholder.encode("utf-8"),
-                        ex=timedelta(minutes=15),
-                    )
-                except (hikari.errors.HikariError, UnicodeEncodeError):
-                    pass
         components.append(
             hikari.impl.ContainerComponentBuilder(
                 components=[
@@ -734,7 +804,11 @@ class GuildConfigurationMenus:
                             hikari.impl.ChannelSelectMenuBuilder(
                                 custom_id="gcm:update_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
-                                placeholder=current_update_channel_placeholder,
+                                placeholder=await cls.get_channel_name(
+                                    "update_channel_id",
+                                    ctx=ctx,
+                                    guild_config=guild_config,
+                                ),
                                 min_values=0,
                                 max_values=1,
                             ),  # type: ignore
