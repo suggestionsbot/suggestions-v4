@@ -1,17 +1,99 @@
+import logging
 from datetime import timedelta
 from typing import Sequence
 
+import commons
 import hikari
 import lightbulb
 import orjson
 from hikari.api import special_endpoints
 
+from bot.exceptions import SuggestionException
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs
 from web import constants as t_constants
 
+log = logging.getLogger(__name__)
+
 
 class GuildConfigurationMenus:
+    @classmethod
+    async def handle_interaction(
+        cls,
+        id_data,
+        *,
+        ctx: lightbulb.components.MenuContext,
+        localisations: Localisation,
+        guild_config: GuildConfigs,
+        event: hikari.ComponentInteractionCreateEvent,
+    ):
+        await ctx.defer(ephemeral=True)
+        event_values: Sequence[str] = event.interaction.values
+        log.debug(
+            "Editing guild setting %s",
+            id_data,
+            extra={
+                "setting.new_value": (
+                    event_values[0] if len(event_values) == 1 else event_values
+                )
+            },
+        )
+        if id_data == "suggestions_channel":
+            if len(event_values) == 0:
+                return await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.responses.suggestion_channel.empty",
+                        ctx,
+                    )
+                )
+
+            else:
+                guild_config.suggestions_channel_id = int(event_values[0])
+                await guild_config.save()
+                return await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.responses.suggestion_channel.set",
+                        ctx,
+                        extras={"CHANNEL": f"<#{guild_config.suggestions_channel_id}>"},
+                    )
+                )
+
+        elif id_data in (
+            "threads_for_suggestions",
+            "auto_archive_threads",
+            "can_have_anonymous_suggestions",
+            "can_have_images_in_suggestions",
+            "ping_on_thread_creation",
+            "anonymous_resolutions",
+        ):
+            # These are all bool answers so is fine to do as is
+            result = commons.value_to_bool(event_values[0])
+            setattr(guild_config, id_data, result)
+            await guild_config.save()
+            key = "enabled" if getattr(guild_config, id_data) else "disabled"
+            return await ctx.respond(
+                localisations.get_localized_string(
+                    f"menus.guild_configuration.responses.{id_data}.{key}",
+                    ctx,
+                )
+            )
+
+        elif id_data in ("dm_messages_disabled",):
+            # Flipped for legacy purposes to maintain translations
+            # These are all bool answers so is fine to do as is
+            result = not commons.value_to_bool(event_values[0])
+            setattr(guild_config, id_data, result)
+            await guild_config.save()
+            key = "enabled" if not getattr(guild_config, id_data) else "disabled"
+            return await ctx.respond(
+                localisations.get_localized_string(
+                    f"menus.guild_configuration.responses.{id_data}.{key}",
+                    ctx,
+                )
+            )
+
+        raise SuggestionException(f"Unknown gcm interaction -> {repr(id_data)}")
+
     @classmethod
     async def build_base_components(
         cls,
@@ -70,6 +152,8 @@ class GuildConfigurationMenus:
                                 custom_id="gcm:suggestions_channel",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
                                 placeholder=current_channel_placeholder,
+                                min_values=1,
+                                max_values=1,
                             ),  # type: ignore
                         ]
                     ),
@@ -101,6 +185,8 @@ class GuildConfigurationMenus:
                                         is_default=not guild_config.threads_for_suggestions,
                                     ),
                                 ],
+                                min_values=1,
+                                max_values=1,
                             ),
                         ]
                     ),
@@ -132,6 +218,41 @@ class GuildConfigurationMenus:
                                         is_default=not guild_config.auto_archive_threads,
                                     ),
                                 ],
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ]
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.ping_on_thread_creation",
+                            ctx,
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.TextSelectMenuBuilder(
+                                custom_id="gcm:ping_on_thread_creation",
+                                options=[
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.yes",
+                                            ctx,
+                                        ),
+                                        value="yes",
+                                        is_default=guild_config.ping_on_thread_creation,
+                                    ),
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.no",
+                                            ctx,
+                                        ),
+                                        value="no",
+                                        is_default=not guild_config.ping_on_thread_creation,
+                                    ),
+                                ],
+                                min_values=1,
+                                max_values=1,
                             ),
                         ]
                     ),
@@ -163,6 +284,8 @@ class GuildConfigurationMenus:
                                         is_default=not guild_config.can_have_anonymous_suggestions,
                                     ),
                                 ],
+                                min_values=1,
+                                max_values=1,
                             ),
                         ]
                     ),
@@ -194,6 +317,8 @@ class GuildConfigurationMenus:
                                         is_default=not guild_config.can_have_images_in_suggestions,
                                     ),
                                 ],
+                                min_values=1,
+                                max_values=1,
                             ),
                         ]
                     ),
@@ -240,6 +365,41 @@ class GuildConfigurationMenus:
                                         ),
                                     ),
                                 ],
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ]
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.anonymous_resolutions",
+                            ctx,
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.TextSelectMenuBuilder(
+                                custom_id="gcm:anonymous_resolutions",
+                                options=[
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.yes",
+                                            ctx,
+                                        ),
+                                        value="yes",
+                                        is_default=guild_config.anonymous_resolutions,
+                                    ),
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.no",
+                                            ctx,
+                                        ),
+                                        value="no",
+                                        is_default=not guild_config.anonymous_resolutions,
+                                    ),
+                                ],
+                                min_values=1,
+                                max_values=1,
                             ),
                         ]
                     ),
@@ -295,6 +455,49 @@ class GuildConfigurationMenus:
                                         is_default=channel_is_default,
                                     ),
                                 ],
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ]
+                    ),
+                ]
+            )
+        )
+
+        # Add misc container
+        components.append(
+            hikari.impl.ContainerComponentBuilder(
+                components=[
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.dm_messages_disabled",
+                            ctx,
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.TextSelectMenuBuilder(
+                                custom_id="gcm:dm_messages_disabled",
+                                options=[
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.yes",
+                                            ctx,
+                                        ),
+                                        value="yes",
+                                        is_default=not guild_config.dm_messages_disabled,
+                                    ),
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.no",
+                                            ctx,
+                                        ),
+                                        value="no",
+                                        is_default=guild_config.dm_messages_disabled,
+                                    ),
+                                ],
+                                min_values=1,
+                                max_values=1,
                             ),
                         ]
                     ),

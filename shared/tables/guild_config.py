@@ -1,5 +1,6 @@
+import hikari
 import lightbulb
-from piccolo.columns import BigInt, Boolean, Array, ForeignKey, LazyTableReference
+from piccolo.columns import BigInt, Boolean, Array, ForeignKey, LazyTableReference, Text
 from piccolo.table import Table
 
 from shared.tables import PremiumGuildConfigs
@@ -77,6 +78,11 @@ class GuildConfigs(AuditMixin, Table):
     ping_on_thread_creation = Boolean(
         default=True,
         help_text="Ping the suggestions author in the suggestions thread",
+    )
+    primary_language = Text(
+        default=hikari.Locale.EN_GB.value,
+        choices=hikari.Locale,
+        help_text="The language to use when translating non ephemeral messages",
     )
     premium: PremiumGuildConfigs = ForeignKey(
         LazyTableReference(

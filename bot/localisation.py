@@ -36,9 +36,9 @@ class Localisation:
         try:
             return self.lightbulb_provider.localizations[locale][key]
         except KeyError:
-            fallback_value = self.lightbulb_provider.localizations[hikari.Locale.EN_GB].get(
-                key, None
-            )
+            fallback_value = self.lightbulb_provider.localizations[
+                hikari.Locale.EN_GB
+            ].get(key, None)
             if fallback_value is None:
                 logger.critical(f"Could not find base translation for {key}")
                 raise MissingTranslation
@@ -73,12 +73,17 @@ class Localisation:
     def get_localized_string(
         self,
         key: str,
-        ctx: lightbulb.Context,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
         *,
         extras: dict = None,
         guild_config: GuildConfigs | None = None,
+        use_guild_locale: bool = False,
     ):
-        locale = ctx.interaction.locale
+        if use_guild_locale:
+            locale = guild_config.primary_language
+        else:
+            locale = ctx.interaction.locale
+
         if not isinstance(locale, hikari.Locale):
             locale = hikari.Locale(locale)
 
