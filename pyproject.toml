@@ -10,7 +10,8 @@ dependencies = [
     "fastnanoid>=0.4.3",
     "function-cooldowns>=2.2.0",
     "hikari-lightbulb>=3.2.3",
-    "hikari[speedups]>=2.5.0",
+    #    "hikari[speedups]>=2.5.0",
+    "hikari[speedups]",
     "httpx-oauth>=0.16.1",
     "httpx-retries>=0.4.5",
     "humanize>=4.15.0",
@@ -49,3 +50,6 @@ line-length = 90
 
 [tool.isort]
 profile = "black"
+
+[tool.uv.sources]
+hikari = { git = "https://github.com/mplatypus/hikari.git", rev = "feature/modals-v2" }
