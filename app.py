@@ -2,6 +2,7 @@ import os
 from urllib.parse import quote_plus
 
 import jinja2
+import litestar_saq
 from dotenv import load_dotenv
 from litestar import Litestar, asgi, Request
 from litestar.config.cors import CORSConfig
@@ -22,14 +23,23 @@ from litestar.static_files import StaticFilesConfig
 from litestar.status_codes import HTTP_500_INTERNAL_SERVER_ERROR
 from litestar.template import TemplateConfig
 from litestar.types import Receive, Scope, Send, Empty
+from litestar_saq import SAQPlugin, SAQConfig, QueueConfig, CronJob
 from opentelemetry import trace
 from piccolo.engine import engine_finder
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-from web import constants
+from web import constants, guards
+from shared.saq import worker as saq_worker
+from shared.saq import suggestions as suggestions_worker
 from web.admin_portal import configure_piccolo_admin
 from web.constants import IS_PRODUCTION
-from web.controllers import AuthController, DebugController, GuildController
+from web.controllers import (
+    AuthController,
+    DebugController,
+    GuildController,
+    StripeController,
+)
+from web.controllers import OAuthController
 from web.controllers.api import APIAlertController, APIAuthTokenController
 from web.endpoints import (
     home,
@@ -42,13 +52,12 @@ from web.exception_handlers import (
     handle_403,
 )
 from web.filters import format_datetime, precise_delta
-from web.middleware import EnsureAuth
+from web.middleware import EnsureAuth, EnsureAdmin
 from web.tables import (
     APIToken,
     Users,
 )
 from web.util.flash import inject_alerts
-from web.controllers import OAuthController
 
 load_dotenv()
 
@@ -114,7 +123,9 @@ async def inject_alerts_on_ui_view(request: Request) -> dict[str, str] | None:
                 request.scope["auth"] = api_token
 
         else:
-            user = await EnsureAuth.get_user_from_connection(request, fail_on_not_set=False)
+            user = await EnsureAuth.get_user_from_connection(
+                request, fail_on_not_set=False
+            )
             request.scope["user"] = user
 
     if "user" in request.scope and request.scope["user"] is not None:
@@ -127,6 +138,65 @@ async def inject_alerts_on_ui_view(request: Request) -> dict[str, str] | None:
 
     return None
 
+
+from litestar_saq.controllers import build_controller as bc
+
+
+def hook_build_controller(*args, **kwargs):
+    result = bc(*args, **kwargs)
+    result.middleware = [EnsureAdmin]
+    return result
+
+
+litestar_saq.controllers.build_controller = hook_build_controller
+
+saq = SAQPlugin(
+    config=SAQConfig(
+        use_server_lifespan=True,
+        enable_otel=True,
+        web_enabled=True,
+        queue_configs=[
+            QueueConfig(
+                name="shared",
+                dsn=os.environ.get("REDIS_URL"),
+                concurrency=10,
+                startup=saq_worker.startup,
+                before_process=saq_worker.before_process,
+                after_process=saq_worker.after_process,
+                tasks=[
+                    saq_worker.tick,
+                    saq_worker.log_current_api_tokens,
+                    saq_worker.log_current_valid_sessions,
+                    suggestions_worker.edit_suggestion_message,
+                ],
+                # https://crontab.guru
+                scheduled_tasks=[
+                    # run every 30 seconds
+                    # CronJob(tick, cron="* * * * * */30"),
+                    # Once per day, at the top of the day
+                    CronJob(
+                        saq_worker.tick,
+                        cron="0 0 * * */1",
+                        timeout=saq_worker.SAQ_TIMEOUT,
+                        retries=1,
+                    ),
+                    CronJob(
+                        saq_worker.log_current_valid_sessions,
+                        cron="*/5 * * * *",
+                        timeout=saq_worker.SAQ_TIMEOUT,
+                        retries=1,
+                    ),
+                    CronJob(
+                        saq_worker.log_current_api_tokens,
+                        cron="*/5 * * * *",
+                        timeout=saq_worker.SAQ_TIMEOUT,
+                        retries=1,
+                    ),
+                ],
+            )
+        ],
+    )
+)
 
 logging_config = None
 if constants.IS_PRODUCTION:
@@ -157,6 +227,8 @@ csrf_config = CSRFConfig(
     exclude=[
         "/admin/",
         "/auth",
+        # We check the webhook secret
+        "/stripe/webhook"
         # It's manged via Tokens not cookies so is fine
         "/api",
     ],
@@ -205,6 +277,7 @@ routes = [
     APIAuthTokenController,
     OAuthController,
     GuildController,
+    StripeController,
 ]
 if not constants.IS_PRODUCTION:
     routes.append(DebugController)
@@ -286,7 +359,7 @@ app = Litestar(
     csrf_config=csrf_config,
     logging_config=logging_config,
     middleware=middleware,
-    plugins=[flash_plugin, OpenTelemetryPlugin(open_telemetry_config)],
+    plugins=[flash_plugin, OpenTelemetryPlugin(open_telemetry_config), saq],
     response_headers=[
         ResponseHeader(
             name="x-frame-options",

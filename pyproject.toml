@@ -10,11 +10,13 @@ dependencies = [
     "fastnanoid>=0.4.3",
     "function-cooldowns>=2.2.0",
     "hikari-lightbulb>=3.2.3",
-    "hikari[speedups]>=2.5.0",
+    #    "hikari[speedups]>=2.5.0",
+    "hikari[speedups]",
     "httpx-oauth>=0.16.1",
     "httpx-retries>=0.4.5",
     "humanize>=4.15.0",
     "infisicalsdk>=1.0.8",
+    "litestar-saq[otel]>=0.6.3",
     "litestar[cryptography,opentelemetry]>=2.19.0",
     "opentelemetry-api>=1.39.1",
     "opentelemetry-exporter-otlp-proto-http>=1.39.1",
@@ -27,6 +29,7 @@ dependencies = [
     "redis[hiredis]>=7.1.0",
     "saq[hiredis,web]>=0.26.0",
     "skelmis-commons>=1.6.1",
+    "stripe>=14.2.0",
     "tenacity>=9.1.2",
     "tracer>=2.0.0",
     "uvloop>=0.22.1",
@@ -49,3 +52,6 @@ line-length = 90
 
 [tool.isort]
 profile = "black"
+
+[tool.uv.sources]
+hikari = { git = "https://github.com/mplatypus/hikari.git", rev = "feature/modals-v2" }

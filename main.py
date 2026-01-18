@@ -1,16 +1,13 @@
 import asyncio
 import logging
-import os
 from pathlib import Path
 from typing import cast
 
-import commons
 import hikari
 import lightbulb
 from dotenv import load_dotenv
 
 from bot import create_bot
-from bot.constants import VERSION
 from shared.tables import GuildConfigs
 from web import constants as t_constants
 

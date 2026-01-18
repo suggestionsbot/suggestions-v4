@@ -5,6 +5,7 @@ from .magic_links import MagicLinks
 from .oauth_entry import OAuthEntry
 from .authentication_attempt import AuthenticationAttempts
 from .api_tokens import APIToken
+from .stripe import GuildTokens
 
 __all__ = (
     "Alerts",
@@ -14,4 +15,5 @@ __all__ = (
     "OAuthEntry",
     "AuthenticationAttempts",
     "APIToken",
+    "GuildTokens",
 )

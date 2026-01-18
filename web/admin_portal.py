@@ -11,6 +11,7 @@ from web.tables import (
     OAuthEntry,
     Users,
     Alerts,
+    GuildTokens,
 )
 
 
@@ -81,6 +82,14 @@ def configure_piccolo_admin():
             OrderBy(AuthenticatorSecret.id, ascending=False),
         ],
     )
+    guild_tokens_tc = TableConfig(
+        GuildTokens,
+        menu_group="Stripe",
+        exclude_visible_columns=[GuildTokens.checkout_session_id],
+        order_by=[
+            OrderBy(GuildTokens.id, ascending=False),
+        ],
+    )
 
     return create_admin(
         tables=[
@@ -90,6 +99,7 @@ def configure_piccolo_admin():
             magic_links_tc,
             alert_tc,
             auth_attempt_tc,
+            guild_tokens_tc,
         ],
         production=constants.IS_PRODUCTION,
         allowed_hosts=constants.SERVING_DOMAIN,

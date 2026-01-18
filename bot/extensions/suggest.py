@@ -1,14 +1,16 @@
 import asyncio
 import io
 import logging
+import uuid
 from typing import cast
 
 import hikari
 import lightbulb
-from hikari.impl import MessageActionRowBuilder
+from hikari.impl import MessageActionRowBuilder, special_endpoints
+from lightbulb.components import base
 
 import shared
-from bot import utils
+from bot import utils, constants
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MessageTooLong, MissingQueueChannel
 from bot.localisation import Localisation
@@ -40,7 +42,10 @@ def handle_suggestions_errors(func):
                 localisations=localisations,
             )
         except Exception as exception:
-            this_will_handle: tuple[type[Exception], ...] = (MessageTooLong, MissingQueueChannel)
+            this_will_handle: tuple[type[Exception], ...] = (
+                MessageTooLong,
+                MissingQueueChannel,
+            )
             if isinstance(exception, this_will_handle):
                 with utils.start_error_span(exception, "command error handler"):
                     internal_error: InternalErrors = await InternalErrors.persist_error(
@@ -101,158 +106,65 @@ class Suggest(
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
 ):
-    suggestion = lightbulb.string(
-        "commands.suggest.options.suggestion.name",
-        "commands.suggest.options.suggestion.description",
-        localize=True,
-    )
-    image = lightbulb.attachment(
-        "commands.suggest.options.image.name",
-        "commands.suggest.options.image.description",
-        default=None,
-        localize=True,
-    )
-    anonymously = lightbulb.boolean(
-        "commands.suggest.options.anonymously.name",
-        "commands.suggest.options.anonymously.description",
-        default=False,
-        localize=True,
-    )
 
     @lightbulb.invoke
     @handle_suggestions_errors
     async def invoke(
         self,
         ctx: lightbulb.Context,
+        client: lightbulb.Client,
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         localisations: Localisation,
         bot: hikari.RESTBot | hikari.GatewayBot,
     ) -> None:
-        await ctx.defer(ephemeral=True)
-        if len(self.suggestion) > MAX_CONTENT_LENGTH:
-            raise MessageTooLong(self.suggestion)
-
-        if self.anonymously is True and guild_config.can_have_anonymous_suggestions is False:
-            await ctx.respond(
-                localisations.get_localized_string("values.suggest.no_anonymous_suggestions", ctx)
-            )
-            return None
-
-        image_url: str | None = None
-        if self.image is not None:
-            if guild_config.can_have_images_in_suggestions is False:
-                await ctx.respond(
-                    localisations.get_localized_string(
-                        "values.suggest.no_images_in_suggestions", ctx
-                    )
-                )
-                return None
-
-            image_url = await shared.utils.upload_file_to_r2(
-                file_name=self.image.filename,
-                file_data=await self.image.read(),
-                guild_id=ctx.guild_id,
-                user_id=ctx.user.id,
-            )
-
-        if guild_config.uses_suggestions_queue:
-            return await self.handle_queued_suggestion(
-                ctx, guild_config, user_config, localisations, image_url, bot
-            )
-
-        # TODO Implement more
-        await asyncio.sleep(5)
-        raise ValueError("Who knows")
-
-    async def handle_queued_suggestion(
-        self,
-        ctx: lightbulb.Context,
-        guild_config: GuildConfigs,
-        user_config: UserConfigs,
-        localisations: Localisation,
-        image_url: str | None,
-        bot: hikari.RESTBot | hikari.GatewayBot,
-    ):
-        """Specific helper for handling queued suggestions"""
-        qs: QueuedSuggestions = QueuedSuggestions(
-            guild_configuration=guild_config,
-            user_configuration=user_config,
-            suggestion=self.suggestion,
-            image_url=image_url,
-            author_display_name=(f"<@{ctx.user.id}>" if self.anonymously is False else "Anonymous"),
-        )
-
-        if guild_config.virtual_suggestions_queue is False:
-            # Need to send to a channel
-            if guild_config.queued_suggestion_channel_id is None:
-                raise MissingQueueChannel
-
-            try:
-                channel = await bot.rest.fetch_channel(guild_config.queued_suggestion_channel_id)
-                channel = cast(hikari.GuildTextChannel, channel)
-            except (hikari.ForbiddenError, hikari.NotFoundError):
-                await ctx.respond(
-                    embed=utils.error_embed(
-                        localisations.get_localized_string(
-                            "errors.suggest.queue_channel_not_found.title",
-                            ctx=ctx,
-                        ),
-                        localisations.get_localized_string(
-                            "errors.suggest.queue_channel_not_found.description",
-                            ctx=ctx,
-                            extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
-                        ),
-                        error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
+        components = [
+            hikari.impl.LabelComponentBuilder(
+                label="Suggestion",
+                description="Your Suggestion",
+                component=hikari.impl.TextInputBuilder(
+                    custom_id="suggestion",
+                    label="suggestion",
+                    style=hikari.TextInputStyle.PARAGRAPH,
+                    required=True,
+                    min_length=1,
+                    max_length=constants.MAX_CONTENT_LENGTH,
+                ),
+            ),
+        ]
+        if guild_config.can_have_images_in_suggestions:
+            components.append(
+                hikari.impl.LabelComponentBuilder(
+                    label="Images",
+                    description="Upload images to show alongside your suggestion",
+                    component=hikari.impl.FileUploadComponentBuilder(
+                        custom_id="files",
+                        min_values=1,
+                        max_values=5,
+                        is_required=False,
                     ),
                 )
-                return None
+            )
 
-            prefix = (
-                guild_config.premium.queued_suggestions_prefix
-                if guild_config.premium_is_enabled(ctx)
-                else ""
-            )
-            components = [
-                (
-                    MessageActionRowBuilder()
-                    .add_interactive_button(
-                        hikari.ButtonStyle.SUCCESS,
-                        "queue_approve|",
-                        label=localisations.get_localized_string(
-                            "values.suggest.queue_approve", ctx
-                        ),
-                    )
-                    .add_interactive_button(
-                        hikari.ButtonStyle.DANGER,
-                        "queue_reject|",
-                        label=localisations.get_localized_string(
-                            "values.suggest.queue_reject", ctx
-                        ),
-                    )
-                )
-            ]
-            message: hikari.Message = await channel.send(
-                content=prefix,
-                embed=await qs.as_embed(bot),
-                components=components,
-            )
-            qs.channel_id = message.channel_id
-            qs.message_id = message.id
-            await qs.save()
+        if guild_config.can_have_anonymous_suggestions:
+            hikari.impl.LabelComponentBuilder(
+                label="Anonymously",
+                description='Want to show up in the UI as "Anonymous"? Defaults to No',
+                component=hikari.impl.TextSelectMenuBuilder(
+                    custom_id="anonymously",
+                    parent=None,
+                    options=[
+                        hikari.impl.SelectOptionBuilder("no", "No"),
+                        hikari.impl.SelectOptionBuilder("yes", "Yes"),
+                    ],
+                    min_values=1,
+                    max_values=1,
+                    is_required=False,
+                ),
+            ),
 
-        logger.debug(
-            f"User {ctx.user.id} created new queued" f" suggestion in guild {ctx.guild_id}",
-            extra={
-                "interaction.user.id": ctx.user.id,
-                "interaction.guild.id": ctx.guild_id,
-            },
+        await ctx.interaction.create_modal_response(
+            "Create Suggestion",
+            "suggest_modal",
+            components=components,
         )
-        await ctx.respond(
-            localisations.get_localized_string(
-                "values.suggest.sent_to_queue",
-                ctx,
-                guild_config=guild_config,
-            )
-        )
-        return None

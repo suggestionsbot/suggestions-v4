@@ -5,8 +5,7 @@ import saq
 from dotenv import load_dotenv
 from opentelemetry.metrics import get_meter_provider
 from piccolo_api.session_auth.tables import SessionsBase
-from saq import CronJob, Queue
-from saq.types import SettingsDict
+from saq import Queue
 
 from web import constants
 from web.tables import APIToken
@@ -64,37 +63,4 @@ async def startup(_):
 
 
 SAQ_TIMEOUT = int(datetime.timedelta(hours=1).total_seconds())
-SAQ_QUEUE = Queue.from_url(os.environ.get("REDIS_URL"))
-
-SAQ_SETTINGS = SettingsDict(
-    queue=SAQ_QUEUE,
-    functions=[tick, log_current_valid_sessions, log_current_api_tokens],
-    concurrency=10,
-    startup=startup,
-    before_process=before_process,
-    after_process=after_process,
-    # https://crontab.guru
-    cron_jobs=[
-        # run every 30 seconds
-        # CronJob(tick, cron="* * * * * */30"),
-        # Once per day, at the top of the day
-        CronJob(
-            tick,
-            cron="0 0 * * */1",
-            timeout=SAQ_TIMEOUT,
-            retries=1,
-        ),
-        CronJob(
-            log_current_valid_sessions,
-            cron="*/5 * * * *",
-            timeout=SAQ_TIMEOUT,
-            retries=1,
-        ),
-        CronJob(
-            log_current_api_tokens,
-            cron="*/5 * * * *",
-            timeout=SAQ_TIMEOUT,
-            retries=1,
-        ),
-    ],
-)
+SAQ_QUEUE = Queue.from_url(os.environ.get("REDIS_URL"), name="shared")

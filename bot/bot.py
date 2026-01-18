@@ -72,6 +72,14 @@ async def create_bot(
             await ctx.respond("Something went wrong")
         return False
 
+    @bot.listen()
+    async def modal_event(event: hikari.ModalInteractionCreateEvent) -> None:
+        await event.interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_CREATE,
+            f"Completed modal!\n\nInteraction data:\n```\n{event.interaction.components}\n```",
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+
     def build_ctx(
         interaction: hikari.ComponentInteraction,
     ) -> lightbulb.components.MenuContext:
