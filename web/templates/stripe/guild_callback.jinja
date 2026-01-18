@@ -1,0 +1,25 @@
+{% extends "base.jinja" %}
+
+{% block content %}
+    <div class="page">
+        <div class="container py-4">
+            <br>
+            {% include 'alerts.jinja' %}
+            <div class="justify-content-center">
+                <header class="hero pb-0">
+                    <div class="container">
+                        <h1 class="hero-title">You did it!</h1>
+                    </div>
+                </header>
+                <br><br>
+                <section class="section section-light">
+                    <div class="container">
+                        Payment success.
+                    </div>
+                </section>
+            </div>
+
+
+        </div>
+    </div>
+{% endblock content %}

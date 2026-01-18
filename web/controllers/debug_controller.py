@@ -8,7 +8,7 @@ from web import constants
 from web.controllers.oauth_controller import DISCORD_OAUTH
 from web.middleware import EnsureAdmin
 from web.tables import OAuthEntry
-from web.util import html_template, signoz_querying
+from web.util import html_template, signoz_querying, alert
 
 
 class DebugController(Controller):
@@ -16,11 +16,22 @@ class DebugController(Controller):
     include_in_schema = False
     path = "/debug"
 
+    @get(path="/stripe/thanks", name="debug_stripe_thanks")
+    async def debug_stripe_thanks(self, request: Request) -> Template:
+        alert(
+            request,
+            "Purchase successful! You may now redeem premium in guilds.",
+            level="success",
+        )
+        return html_template("stripe/thanks.jinja")
+
     @get(path="/oauth/data", name="debug_oauth_data")
     async def list_oauth(self, request: Request) -> Template:
         """List all oauth raw data"""
         oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
-        profile = await DISCORD_OAUTH.get_profile(oauth_entry.access_token, oauth_entry.oauth_id)
+        profile = await DISCORD_OAUTH.get_profile(
+            oauth_entry.access_token, oauth_entry.oauth_id
+        )
         cache_key = f"OAUTH:GUILDS:{oauth_entry.oauth_id}"
         guild_cache_hit = await constants.REDIS_CLIENT.exists(cache_key)
         guilds = await DISCORD_OAUTH.get_user_guilds(

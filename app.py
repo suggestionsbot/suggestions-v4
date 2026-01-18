@@ -33,7 +33,12 @@ from shared.saq import worker as saq_worker
 from shared.saq import suggestions as suggestions_worker
 from web.admin_portal import configure_piccolo_admin
 from web.constants import IS_PRODUCTION
-from web.controllers import AuthController, DebugController, GuildController
+from web.controllers import (
+    AuthController,
+    DebugController,
+    GuildController,
+    StripeController,
+)
 from web.controllers import OAuthController
 from web.controllers.api import APIAlertController, APIAuthTokenController
 from web.endpoints import (
@@ -222,6 +227,8 @@ csrf_config = CSRFConfig(
     exclude=[
         "/admin/",
         "/auth",
+        # We check the webhook secret
+        "/stripe/webhook"
         # It's manged via Tokens not cookies so is fine
         "/api",
     ],
@@ -270,6 +277,7 @@ routes = [
     APIAuthTokenController,
     OAuthController,
     GuildController,
+    StripeController,
 ]
 if not constants.IS_PRODUCTION:
     routes.append(DebugController)

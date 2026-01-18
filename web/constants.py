@@ -4,6 +4,7 @@ import re
 from datetime import timedelta
 from typing import Literal, cast
 
+import stripe
 from commons import value_to_bool
 from dotenv import load_dotenv
 from infisical_sdk import InfisicalSDKClient
@@ -173,3 +174,11 @@ BOT_USER_ID = (
 BOT_INVITE_URL = f"https://discord.com/oauth2/authorize?client_id={BOT_USER_ID}&permissions=395137379328&integration_type=0&scope=bot+applications.commands"
 SIGNOZ_API_KEY = get_secret("SIGNOZ_API_KEY", infisical_client)
 SIGNOZ_API_URL = get_secret("SIGNOZ_API_URL", infisical_client)
+
+# Stripe things
+STRIPE_API_KEY = get_secret("STRIPE_API_KEY", infisical_client)
+STRIPE_PRICE_ID_GUILDS = get_secret("STRIPE_PRICE_ID_GUILDS", infisical_client)
+STRIPE_COUPON_EARLY_ADOPTER = get_secret("STRIPE_COUPON_EARLY_ADOPTER", infisical_client)
+STRIPE_CUSTOMER_PORTAL = get_secret("STRIPE_CUSTOMER_PORTAL", infisical_client)
+STRIPE_WEBHOOK_SECRET = get_secret("STRIPE_WEBHOOK_SECRET", infisical_client)
+stripe.api_key = STRIPE_API_KEY

@@ -44,36 +44,57 @@ class GuildController(Controller):
         )
 
     @get(
-        path="/{guild_id:int}/{guild_name:str}/onboarding",
+        path="/{guild_id:int}/onboarding",
         name="guild_onboarding",
         guards=[ensure_user_has_manage_permissions],
     )
-    async def guild_onboarding(self, request: Request, guild_id: int, guild_name: str) -> Redirect:
+    async def guild_onboarding(
+        self,
+        request: Request,
+        guild_id: int,
+    ) -> Redirect:
         alert(request, "Onboarding page doesnt exist yet", level="warning")
+        oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
+        guild_name = await DISCORD_OAUTH.get_guild_name(
+            oauth_entry.access_token,
+            user_id=oauth_entry.oauth_id,
+            guild_id=guild_id,
+        )
         return Redirect(
             request.url_for("view_guild", guild_id=str(guild_id), guild_name=guild_name),
             status_code=302,
         )
 
     @get(
-        path="/{guild_id:int}/{guild_name:str}/settings",
+        path="/{guild_id:int}/settings",
         name="guild_settings",
         guards=[ensure_user_has_manage_permissions],
     )
-    async def guild_settings(self, request: Request, guild_id: int, guild_name: str) -> Redirect:
+    async def guild_settings(self, request: Request, guild_id: int) -> Redirect:
         alert(request, "Settings page doesnt exist yet", level="warning")
+        oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
+        guild_name = await DISCORD_OAUTH.get_guild_name(
+            oauth_entry.access_token,
+            user_id=oauth_entry.oauth_id,
+            guild_id=guild_id,
+        )
         return Redirect(
             request.url_for("view_guild", guild_id=str(guild_id), guild_name=guild_name),
             status_code=302,
         )
 
     @get(
-        path="/{guild_id:str}/{guild_name:str}",
+        path="/{guild_id:str}",
         name="view_guild",
         guards=[ensure_user_is_in_guild],
     )
-    async def view_guild(self, request: Request, guild_id: int, guild_name: str) -> Template:
-        guild_name = unquote_plus(guild_name)
+    async def view_guild(self, request: Request, guild_id: int) -> Template:
+        oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
+        guild_name = await DISCORD_OAUTH.get_guild_name(
+            oauth_entry.access_token,
+            user_id=oauth_entry.oauth_id,
+            guild_id=guild_id,
+        )
         if constants.IS_PRODUCTION:  # Save time locally
             is_bot_in_guild = await DISCORD_OAUTH.is_bot_in_guild(guild_id)
             if not is_bot_in_guild:
@@ -86,7 +107,9 @@ class GuildController(Controller):
                 )
 
         oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
-        profile = await DISCORD_OAUTH.get_profile(oauth_entry.access_token, oauth_entry.oauth_id)
+        profile = await DISCORD_OAUTH.get_profile(
+            oauth_entry.access_token, oauth_entry.oauth_id
+        )
         guild_config: GuildConfigs = await configs.ensure_guild_config(guild_id)
         requires_config = guild_config.suggestions_channel_id is None
         requires_config = False

@@ -84,6 +84,15 @@ class DiscordOAuth(DiscordOAuth2):
 
         return None
 
+    async def get_guild_name(self, token, *, user_id: int, guild_id: int):
+        result = await self.get_user_data_in_guild(
+            token, user_id=user_id, guild_id=guild_id
+        )
+        if result is None:
+            return "Unknown"
+
+        return result["name"]
+
     async def is_user_in_guild(self, token, *, user_id: int, guild_id: int) -> bool:
         result = await self.get_user_data_in_guild(
             token, user_id=user_id, guild_id=guild_id
