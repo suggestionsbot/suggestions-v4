@@ -8,6 +8,7 @@ from piccolo_api.session_auth.tables import SessionsBase
 from saq import CronJob, Queue
 from saq.types import SettingsDict
 
+from shared.saq.suggestions import edit_suggestion_message
 from web import constants
 from web.tables import APIToken
 from web.util.table_mixins import utc_now
@@ -68,7 +69,12 @@ SAQ_QUEUE = Queue.from_url(os.environ.get("REDIS_URL"))
 
 SAQ_SETTINGS = SettingsDict(
     queue=SAQ_QUEUE,
-    functions=[tick, log_current_valid_sessions, log_current_api_tokens],
+    functions=[
+        tick,
+        log_current_valid_sessions,
+        log_current_api_tokens,
+        edit_suggestion_message,
+    ],
     concurrency=10,
     startup=startup,
     before_process=before_process,
