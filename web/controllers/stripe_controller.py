@@ -67,6 +67,65 @@ class StripeController(Controller):
                 user=user_from_session,
             )
 
+        elif event_type == "customer.subscription.updated":
+            # Two key cases are increase or decrease quantity
+            for item in event["data"]["object"]["items"]["data"]:
+                if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS:
+                    # We expect each fulfil to be able to receive a checkout
+                    # cart that also contains other items which have been purchased
+                    continue
+
+                subscription_id = item["subscription"]
+                stripe_total = item["quantity"]
+                current_total = await GuildTokens.count().where(
+                    GuildTokens.subscription_id == subscription_id
+                )
+                if stripe_total == current_total:
+                    # Something else changed
+                    continue
+
+                elif stripe_total > current_total:
+                    # We need more
+                    log.debug(
+                        "User increased guilds on current subscription",
+                        extra={"stripe.subscription.id": subscription_id},
+                    )
+                    customer = await stripe.Customer.retrieve_async(
+                        event["data"]["object"]["customer"]
+                    )
+                    user_from_session = await Users.objects().get(
+                        Users.email == customer["email"]
+                    )
+                    expires_at = (
+                        arrow.get(item["current_period_end"]).shift(days=5).datetime
+                    )
+                    for _ in range(stripe_total - current_total):
+                        guild_token = GuildTokens(
+                            subscription_id=subscription_id,
+                            user=user_from_session,
+                            used_for_guild=None,
+                            expires_at=expires_at,
+                        )
+                        await guild_token.save()
+
+                elif stripe_total < current_total:
+                    # we need less
+                    log.debug(
+                        "User decreased guilds on current subscription",
+                        extra={"stripe.subscription.id": subscription_id},
+                    )
+                    all_gc = await GuildTokens.objects().where(
+                        GuildTokens.subscription_id == subscription_id
+                    )
+                    for i in range(current_total - stripe_total):
+                        try:
+                            gc = all_gc[i]
+                        except IndexError:
+                            # sometimes this gets out of sync
+                            # if stripe has a number that didnt get built in our db
+                            break
+                        await gc.delete().where(GuildTokens.id == gc.id)
+
         elif event_type == "customer.subscription.deleted":
             skus = await self.extract_subscription_skus(event)
             for sku in skus:
@@ -109,7 +168,7 @@ class StripeController(Controller):
                     await constants.REDIS_CLIENT.set(
                         f"stripe:invoice_paid:{subscription_id}",
                         expires_at.isoformat(),
-                        ex=datetime.timedelta(hours=2),
+                        ex=datetime.timedelta(hours=1),
                     )
                     all_objects = await GuildTokens.objects().where(
                         GuildTokens.subscription_id == subscription_id
@@ -148,14 +207,15 @@ class StripeController(Controller):
             # Guild is a month so give them this for now and
             # invoice.paid will go update it anyway
             subscription = await stripe.Subscription.retrieve_async(subscription_id)
-            expires_at_redis = await constants.REDIS_CLIENT.get(
+            expires_at_redis = await constants.REDIS_CLIENT.getdel(
                 f"stripe:invoice_paid:{subscription_id}"
             )
             if expires_at_redis is None:
                 # Invoice.paid event will handle
                 expires_at = utc_now()
             else:
-                expires_at = arrow.get(orjson.loads(expires_at_redis.decode("utf-8")))
+                expires_at = arrow.get(expires_at_redis.decode("utf-8"))
+
             # expires_at = arrow.get(utc_now()).shift(months=1, days=5).datetime
             for item in subscription["items"]["data"]:
                 if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS:
@@ -175,9 +235,14 @@ class StripeController(Controller):
 
     @get("/guilds/callback", name="stripe_guild_callback", middleware=[EnsureAuth])
     async def guild_callback(
-        self, request: Request, session_id: str
+        self, request: Request, checkout_session_id: str
     ) -> Template | Redirect:
-        await self.fulfil_guild_purchase(session_id, user=request.user)
+        checkout_session = await stripe.checkout.Session.retrieve_async(
+            checkout_session_id
+        )
+        await self.fulfil_guild_purchase(
+            checkout_session["subscription"], user=request.user
+        )
         alert(
             request,
             "Purchase successful! You may now redeem premium in guilds.",
@@ -236,7 +301,7 @@ class StripeController(Controller):
             customer_email=request.user.email,
             mode="subscription",
             success_url=request.url_for("stripe_guild_callback")
-            + "?session_id={CHECKOUT_SESSION_ID}",
+            + "?checkout_session_id={CHECKOUT_SESSION_ID}",
             **addons,
         )
         response: Redirect = Redirect(checkout_session.url, status_code=303)
