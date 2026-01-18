@@ -27,7 +27,9 @@ CACHE_TYPES = bool | dict | int | list
 # noinspection PyMethodMayBeStatic
 class DiscordOAuth(DiscordOAuth2):
     async def cache_set(self, cache_key: str, data: CACHE_TYPES) -> None:
-        await constants.REDIS_CLIENT.setex(cache_key, timedelta(minutes=5), orjson.dumps(data))
+        await constants.REDIS_CLIENT.setex(
+            cache_key, timedelta(minutes=5), orjson.dumps(data)
+        )
 
     async def cache_get(self, cache_key: str) -> CACHE_TYPES | None:
         data_raw = await constants.REDIS_CLIENT.get(cache_key)
@@ -72,7 +74,9 @@ class DiscordOAuth(DiscordOAuth2):
             return True
         return False
 
-    async def get_user_data_in_guild(self, token, *, user_id: int, guild_id: int) -> dict | None:
+    async def get_user_data_in_guild(
+        self, token, *, user_id: int, guild_id: int
+    ) -> dict | None:
         user_guilds = await self.get_user_guilds(token, user_id=user_id)
         for guild in user_guilds:
             if guild["id"] == str(guild_id):
@@ -81,7 +85,9 @@ class DiscordOAuth(DiscordOAuth2):
         return None
 
     async def is_user_in_guild(self, token, *, user_id: int, guild_id: int) -> bool:
-        result = await self.get_user_data_in_guild(token, user_id=user_id, guild_id=guild_id)
+        result = await self.get_user_data_in_guild(
+            token, user_id=user_id, guild_id=guild_id
+        )
         return result is not None
 
     # noinspection PyMethodOverriding
@@ -120,7 +126,9 @@ class DiscordOAuth(DiscordOAuth2):
 
 DISCORD_OAUTH = DiscordOAuth(
     client_id=constants.get_secret("OAUTH_DISCORD_CLIENT_ID", constants.infisical_client),
-    client_secret=constants.get_secret("OAUTH_DISCORD_CLIENT_SECRET", constants.infisical_client),
+    client_secret=constants.get_secret(
+        "OAUTH_DISCORD_CLIENT_SECRET", constants.infisical_client
+    ),
     scopes=[
         "identify",
         "email",
@@ -200,7 +208,9 @@ class OAuthController(Controller):
             return None, Redirect(request.url_for("link_oauth_accounts")), None
 
         if oauth_entry is None:
-            oauth_entry = OAuthEntry(provider=provider, oauth_id=oauth_id, oauth_email=email)
+            oauth_entry = OAuthEntry(
+                provider=provider, oauth_id=oauth_id, oauth_email=email
+            )
             await oauth_entry.save()
             if user_already_exists:
                 # Existing account,
@@ -245,7 +255,9 @@ class OAuthController(Controller):
         )
 
     @get("/select_provider", name="select_oauth_provider")
-    async def get_select_provider(self, request: Request, next_route: str = "/") -> Template:
+    async def get_select_provider(
+        self, request: Request, next_route: str = "/"
+    ) -> Template:
         return html_template(
             "oauth/select_provider.jinja",
             {
@@ -253,7 +265,9 @@ class OAuthController(Controller):
                 "providers": [
                     (
                         k,
-                        request.url_for("provider_sign_in", provider=k, next_route=next_route),
+                        request.url_for(
+                            "provider_sign_in", provider=k, next_route=next_route
+                        ),
                     )
                     for k in [DISCORD_OAUTH]
                 ],
@@ -360,7 +374,21 @@ class OAuthController(Controller):
                 "Something went wrong validating Discord made this request. Try again.",
                 level="error",
             )
-            return html_template("oauth/select_provider.jinja")
+            return html_template(
+                "oauth/select_provider.jinja",
+                {
+                    "providers": [
+                        (
+                            k,
+                            request.url_for(
+                                "provider_sign_in",
+                                provider=k,
+                            ),
+                        )
+                        for k in [DISCORD_OAUTH]
+                    ],
+                },
+            )
 
         try:
             provider_client: DiscordOAuth = DISCORD_OAUTH
@@ -398,9 +426,25 @@ class OAuthController(Controller):
                 "OAuth route ran into issues",
                 extra={"traceback": commons.exception_as_string(e)},
             )
-            return html_template("oauth/select_provider.jinja")
+            return html_template(
+                "oauth/select_provider.jinja",
+                {
+                    "providers": [
+                        (
+                            k,
+                            request.url_for(
+                                "provider_sign_in",
+                                provider=k,
+                            ),
+                        )
+                        for k in [DISCORD_OAUTH]
+                    ],
+                },
+            )
 
-        next_route = AuthController.validate_next_route(request.cookies.get("next_route", "/"))
+        next_route = AuthController.validate_next_route(
+            request.cookies.get("next_route", "/")
+        )
         response: Redirect = Redirect(next_route)
         user.last_login = utc_now()
         await user.save()
