@@ -16,6 +16,7 @@ dependencies = [
     "httpx-retries>=0.4.5",
     "humanize>=4.15.0",
     "infisicalsdk>=1.0.8",
+    "litestar-saq[otel]>=0.6.3",
     "litestar[cryptography,opentelemetry]>=2.19.0",
     "opentelemetry-api>=1.39.1",
     "opentelemetry-exporter-otlp-proto-http>=1.39.1",

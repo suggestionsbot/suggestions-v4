@@ -1810,6 +1810,25 @@ wheels = [
 ]
 
 [[package]]
+name = "litestar-saq"
+version = "0.6.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "litestar" },
+    { name = "saq" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/a0/846b0054093a719eb21188acc03a10960b881493bdbf17f36ff16d7ffec3/litestar_saq-0.6.3.tar.gz", hash = "sha256:01e05083a19dd3eff89ff4d0fbc2dd03c571c7f540ee8c524020b1a6339960db", size = 234183, upload-time = "2025-12-21T01:13:08.795Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/87/81/b60b2ed4fe9f524e9bfccbf1121b88717669317a05946deebe86f1e17e35/litestar_saq-0.6.3-py3-none-any.whl", hash = "sha256:526b9b19303f19fa72c5f17894447dc123777df4ba8262c53223f4464b7adca4", size = 33011, upload-time = "2025-12-21T01:13:07.647Z" },
+]
+
+[package.optional-dependencies]
+otel = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-sdk" },
+]
+
+[[package]]
 name = "markdown-it-py"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3272,6 +3291,7 @@ dependencies = [
     { name = "humanize" },
     { name = "infisicalsdk" },
     { name = "litestar", extra = ["cryptography", "opentelemetry"] },
+    { name = "litestar-saq", extra = ["otel"] },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-sdk" },
@@ -3310,6 +3330,7 @@ requires-dist = [
     { name = "humanize", specifier = ">=4.15.0" },
     { name = "infisicalsdk", specifier = ">=1.0.8" },
     { name = "litestar", extras = ["cryptography", "opentelemetry"], specifier = ">=2.19.0" },
+    { name = "litestar-saq", extras = ["otel"], specifier = ">=0.6.3" },
     { name = "opentelemetry-api", specifier = ">=1.39.1" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.39.1" },
     { name = "opentelemetry-sdk", specifier = ">=1.39.1" },

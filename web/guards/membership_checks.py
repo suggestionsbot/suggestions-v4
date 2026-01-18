@@ -7,7 +7,6 @@ from litestar.datastructures import State
 from litestar.exceptions import PermissionDeniedException
 from litestar.handlers import BaseRouteHandler
 
-from web.controllers.oauth_controller import DISCORD_OAUTH
 from web.exception_handlers import RedirectForAuth
 from web.tables import Users, OAuthEntry
 from web.util import alert
@@ -17,6 +16,8 @@ async def ensure_user_is_in_guild(request: ASGIConnection, route_handler: BaseRo
     request = cast(Request[Users, None, State], request)
     if not request.user or request.user is None:
         raise RedirectForAuth(str(request.url))
+
+    from web.controllers.oauth_controller import DISCORD_OAUTH
 
     guild_id = request.path_params.get("guild_id")
     oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
@@ -61,6 +62,8 @@ async def ensure_user_has_manage_permissions(
             level="info",
         )
         return None
+
+    from web.controllers.oauth_controller import DISCORD_OAUTH
 
     oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
     guild_data = await DISCORD_OAUTH.get_user_data_in_guild(

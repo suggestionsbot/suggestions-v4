@@ -1,8 +1,8 @@
+import asyncio
 import logging
 import time
 from datetime import timedelta
 
-from shared.saq.worker import SAQ_QUEUE
 from shared.tables import Suggestions
 from web.constants import REDIS_CLIENT
 
@@ -17,6 +17,8 @@ async def queue_suggestion_edit(suggestion_id: int) -> None:
     if result is None:
         # There is already a queued edit
         return
+
+    from shared.saq.worker import SAQ_QUEUE
 
     await SAQ_QUEUE.enqueue(
         "edit_suggestion_message",
@@ -33,4 +35,5 @@ async def edit_suggestion_message(_, suggestion_id: int) -> None:
             extra={"suggestion.id": suggestion_id},
         )
 
+    await asyncio.sleep(10)
     raise ValueError("Failed to edit suggestion")
