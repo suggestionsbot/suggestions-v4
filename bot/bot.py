@@ -74,6 +74,7 @@ async def create_bot(
 
     @bot.listen()
     async def modal_event(event: hikari.ModalInteractionCreateEvent) -> None:
+        # event.interaction.resolved.attachments
         await event.interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
             f"Completed modal!\n\nInteraction data:\n```\n{event.interaction.components}\n```",

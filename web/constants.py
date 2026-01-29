@@ -4,6 +4,7 @@ import re
 from datetime import timedelta
 from typing import Literal, cast
 
+import hikari
 import stripe
 from commons import value_to_bool
 from dotenv import load_dotenv
@@ -166,12 +167,6 @@ MFA_TOTP_PROVIDER = AuthenticatorProvider(
 )
 MAILGUN_API_KEY = get_secret("MAILGUN_API_KEY", infisical_client)
 REDIS_CLIENT = aioredis.from_url(os.environ["REDIS_URL"])
-BOT_USER_ID = (
-    474051954998509571
-    if IS_PRODUCTION
-    else 846324706389786676  # Suggestions  # Localized Stats
-)
-BOT_INVITE_URL = f"https://discord.com/oauth2/authorize?client_id={BOT_USER_ID}&permissions=395137379328&integration_type=0&scope=bot+applications.commands"
 SIGNOZ_API_KEY = get_secret("SIGNOZ_API_KEY", infisical_client)
 SIGNOZ_API_URL = get_secret("SIGNOZ_API_URL", infisical_client)
 
@@ -182,3 +177,13 @@ STRIPE_COUPON_EARLY_ADOPTER = get_secret("STRIPE_COUPON_EARLY_ADOPTER", infisica
 STRIPE_CUSTOMER_PORTAL = get_secret("STRIPE_CUSTOMER_PORTAL", infisical_client)
 STRIPE_WEBHOOK_SECRET = get_secret("STRIPE_WEBHOOK_SECRET", infisical_client)
 stripe.api_key = STRIPE_API_KEY
+
+# Bot Items
+BOT_USER_ID = (
+    474051954998509571
+    if IS_PRODUCTION
+    else 846324706389786676  # Suggestions  # Localized Stats
+)
+BOT_TOKEN = get_secret("BOT_TOKEN", infisical_client)
+BOT_INVITE_URL = f"https://discord.com/oauth2/authorize?client_id={BOT_USER_ID}&permissions=395137379328&integration_type=0&scope=bot+applications.commands"
+DISCORD_REST_CLIENT = hikari.RESTApp()

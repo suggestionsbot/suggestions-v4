@@ -69,6 +69,14 @@ async def admin(scope: "Scope", receive: "Receive", send: "Send") -> None:
     await configure_piccolo_admin()(scope, receive, send)
 
 
+async def configure_rest_client_start():
+    await constants.DISCORD_REST_CLIENT.start()
+
+
+async def configure_rest_client_close():
+    await constants.DISCORD_REST_CLIENT.close()
+
+
 async def open_database_connection_pool():
     try:
         engine = engine_finder()
@@ -161,6 +169,7 @@ saq = SAQPlugin(
                 dsn=os.environ.get("REDIS_URL"),
                 concurrency=10,
                 startup=saq_worker.startup,
+                shutdown=saq_worker.shutdown,
                 before_process=saq_worker.before_process,
                 after_process=saq_worker.after_process,
                 tasks=[
@@ -168,6 +177,7 @@ saq = SAQPlugin(
                     saq_worker.log_current_api_tokens,
                     saq_worker.log_current_valid_sessions,
                     suggestions_worker.edit_suggestion_message,
+                    suggestions_worker.test_message_send,
                 ],
                 # https://crontab.guru
                 scheduled_tasks=[
@@ -295,8 +305,8 @@ app = Litestar(
     static_files_config=[
         StaticFilesConfig(directories=["web/static"], path="/static/"),
     ],
-    on_startup=[open_database_connection_pool],
-    on_shutdown=[close_database_connection_pool],
+    on_startup=[open_database_connection_pool, configure_rest_client_start],
+    on_shutdown=[close_database_connection_pool, configure_rest_client_close],
     debug=not IS_PRODUCTION,
     openapi_config=OpenAPIConfig(
         title=constants.SITE_NAME.rstrip() + " API",

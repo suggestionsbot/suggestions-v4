@@ -3,7 +3,10 @@ import logging
 import time
 from datetime import timedelta
 
+import hikari
+
 from shared.tables import Suggestions
+from web import constants
 from web.constants import REDIS_CLIENT
 
 log = logging.getLogger(__name__)
@@ -37,3 +40,10 @@ async def edit_suggestion_message(_, suggestion_id: int) -> None:
 
     await asyncio.sleep(10)
     raise ValueError("Failed to edit suggestion")
+
+
+async def test_message_send(_):
+    async with constants.DISCORD_REST_CLIENT.acquire(
+        constants.BOT_TOKEN, hikari.TokenType.BOT
+    ) as client:
+        await client.create_message(1459693890662830102, "SAQ works as expected")
