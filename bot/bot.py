@@ -11,7 +11,7 @@ from opentelemetry.trace import Status, StatusCode
 from bot import overrides, utils
 from bot.constants import OTEL_TRACER
 from bot.localisation import Localisation
-from bot.menus import GuildConfigurationMenus
+from bot.menus import GuildConfigurationMenus, SuggestionMenu
 from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
 from web import constants as t_constants
@@ -75,14 +75,37 @@ async def create_bot(
     @bot.listen()
     async def modal_event(event: hikari.ModalInteractionCreateEvent) -> None:
         # event.interaction.resolved.attachments
-        await event.interaction.create_initial_response(
-            hikari.ResponseType.MESSAGE_CREATE,
-            f"Completed modal!\n\nInteraction data:\n```\n{event.interaction.components}\n```",
-            flags=hikari.MessageFlag.EPHEMERAL,
-        )
+        ctx = build_ctx(event.interaction)
+        custom_id: str = event.interaction.custom_id
+
+        otel_ctx = None
+        component_key = f"{custom_id} modal"
+        if custom_id.startswith("suggest_modal"):
+            component_key = "suggestion modal"
+            otel_ctx = await utils.otel.get_context_from_link_state(
+                custom_id.split(":", maxsplit=1)[1]
+            )
+
+        with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
+            span.set_attribute("interaction.user.id", ctx.user.id)
+            span.set_attribute(
+                "interaction.user.global_name",
+                (ctx.user.global_name if ctx.user.global_name else ctx.user.username),
+            )
+            if ctx.guild_id:
+                span.set_attribute("interaction.guild.id", ctx.guild_id)
+
+            guild_config = await configs.ensure_guild_config(ctx.guild_id)
+            await SuggestionMenu.handle_interaction(
+                event.interaction.components,
+                ctx=ctx,
+                localisations=localisations,
+                event=event,
+                guild_config=guild_config,
+            )
 
     def build_ctx(
-        interaction: hikari.ComponentInteraction,
+        interaction: hikari.ComponentInteraction | hikari.ModalInteraction,
     ) -> lightbulb.components.MenuContext:
         return lightbulb.components.MenuContext(
             client,

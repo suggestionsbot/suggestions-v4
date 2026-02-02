@@ -2,15 +2,20 @@ import asyncio
 import io
 import logging
 import uuid
+from datetime import timedelta
 from typing import cast
 
 import hikari
 import lightbulb
+import orjson
+from fastnanoid import generate
 from hikari.impl import MessageActionRowBuilder, special_endpoints
 from lightbulb.components import base
+from opentelemetry import trace
 
 import shared
-from bot import utils, constants
+import web.constants
+from bot import utils, constants, menus
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MessageTooLong, MissingQueueChannel
 from bot.localisation import Localisation
@@ -118,53 +123,13 @@ class Suggest(
         localisations: Localisation,
         bot: hikari.RESTBot | hikari.GatewayBot,
     ) -> None:
-        components = [
-            hikari.impl.LabelComponentBuilder(
-                label="Suggestion",
-                description="Your Suggestion",
-                component=hikari.impl.TextInputBuilder(
-                    custom_id="suggestion",
-                    label="suggestion",
-                    style=hikari.TextInputStyle.PARAGRAPH,
-                    required=True,
-                    min_length=1,
-                    max_length=constants.MAX_CONTENT_LENGTH,
-                ),
-            ),
-        ]
-        if guild_config.can_have_images_in_suggestions:
-            components.append(
-                hikari.impl.LabelComponentBuilder(
-                    label="Images",
-                    description="Upload images to show alongside your suggestion",
-                    component=hikari.impl.FileUploadComponentBuilder(
-                        custom_id="files",
-                        min_values=1,
-                        max_values=5,
-                        is_required=False,
-                    ),
-                )
-            )
+        components = await menus.SuggestionMenu.build_suggest_modal(
+            guild_config=guild_config, localisations=localisations, ctx=ctx
+        )
 
-        if guild_config.can_have_anonymous_suggestions:
-            hikari.impl.LabelComponentBuilder(
-                label="Anonymously",
-                description='Want to show up in the UI as "Anonymous"? Defaults to No',
-                component=hikari.impl.TextSelectMenuBuilder(
-                    custom_id="anonymously",
-                    parent=None,
-                    options=[
-                        hikari.impl.SelectOptionBuilder("no", "No"),
-                        hikari.impl.SelectOptionBuilder("yes", "Yes"),
-                    ],
-                    min_values=1,
-                    max_values=1,
-                    is_required=False,
-                ),
-            ),
-
+        link_id: str = await utils.otel.generate_trace_link_state()
         await ctx.interaction.create_modal_response(
             "Create Suggestion",
-            "suggest_modal",
+            f"suggest_modal:{link_id}",
             components=components,
         )

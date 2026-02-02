@@ -14,6 +14,7 @@ from opentelemetry._logs import set_logger_provider
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.propagate import set_global_textmap
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.metrics import MeterProvider
@@ -26,6 +27,7 @@ from opentelemetry.sdk.resources import (
 )
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 from piccolo_api.encryption.providers import XChaCha20Provider
 from piccolo_api.mfa.authenticator.provider import AuthenticatorProvider
 from redis import asyncio as aioredis
@@ -36,6 +38,8 @@ infisical_client.auth.universal_auth.login(
     client_id=os.environ["INFISICAL_ID"],
     client_secret=os.environ["INFISICAL_SECRET"],
 )
+
+OTEL_PROPAGATOR = TraceContextTextMapPropagator()
 
 
 def configure_otel(service_name: str):
@@ -84,6 +88,8 @@ def configure_otel(service_name: str):
     logging.getLogger("bot").setLevel(logging.DEBUG)
     logging.getLogger("shared").setLevel(logging.DEBUG)
     logging.getLogger("web").setLevel(logging.DEBUG)
+
+    set_global_textmap(TraceContextTextMapPropagator())
 
 
 def get_secret(secret_name: str, infisical_client: InfisicalSDKClient) -> str:
