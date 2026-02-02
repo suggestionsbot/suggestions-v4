@@ -8,6 +8,7 @@ import lightbulb
 import orjson
 from hikari.api import special_endpoints
 
+from bot import utils
 from bot.exceptions import SuggestionException
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs
@@ -26,6 +27,7 @@ class GuildConfigurationMenus:
         localisations: Localisation,
         guild_config: GuildConfigs,
         event: hikari.ComponentInteractionCreateEvent,
+        link_id: str,
     ):
         await ctx.defer(ephemeral=True)
         event_values: Sequence[str] = event.interaction.values
@@ -134,20 +136,29 @@ class GuildConfigurationMenus:
                 # We need to pick a channel
                 return await ctx.respond(
                     components=await cls.build_log_channel_components(
-                        ctx=ctx, localisations=localisations, guild_config=guild_config
+                        ctx=ctx,
+                        localisations=localisations,
+                        guild_config=guild_config,
+                        link_id=link_id,
                     )
                 )
 
         elif id_data == "view_page_2":
             return await ctx.respond(
                 components=await cls.build_base_components_page_2(
-                    ctx=ctx, localisations=localisations, guild_config=guild_config
+                    ctx=ctx,
+                    localisations=localisations,
+                    guild_config=guild_config,
+                    link_id=link_id,
                 )
             )
         elif id_data == "view_page_1":
             return await ctx.respond(
                 components=await cls.build_base_components_page_2(
-                    ctx=ctx, localisations=localisations, guild_config=guild_config
+                    ctx=ctx,
+                    localisations=localisations,
+                    guild_config=guild_config,
+                    link_id=link_id,
                 )
             )
 
@@ -178,7 +189,10 @@ class GuildConfigurationMenus:
             elif value == "channel":
                 return await ctx.respond(
                     components=await cls.build_queue_components(
-                        ctx=ctx, localisations=localisations, guild_config=guild_config
+                        ctx=ctx,
+                        localisations=localisations,
+                        guild_config=guild_config,
+                        link_id=link_id,
                     )
                 )
 
@@ -231,7 +245,11 @@ class GuildConfigurationMenus:
         ctx: lightbulb.components.MenuContext | lightbulb.Context,
         guild_config: GuildConfigs,
         localisations: Localisation,
+        link_id: str | None = None,
     ) -> Sequence[special_endpoints.ComponentBuilder]:
+        if link_id is None:
+            link_id = await utils.otel.generate_trace_link_state()
+
         components = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
@@ -249,7 +267,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.ChannelSelectMenuBuilder(
-                                custom_id="gcm:queued_suggestion_channel_id",
+                                custom_id=f"gcm:{link_id}:queued_suggestion_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
                                 placeholder=await cls.get_channel_name(
                                     "queued_suggestion_channel_id",
@@ -270,7 +288,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.ChannelSelectMenuBuilder(
-                                custom_id="gcm:queued_suggestion_log_channel_id",
+                                custom_id=f"gcm:{link_id}:queued_suggestion_log_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
                                 placeholder=await cls.get_channel_name(
                                     "queued_suggestion_log_channel_id",
@@ -304,7 +322,11 @@ class GuildConfigurationMenus:
         ctx: lightbulb.components.MenuContext | lightbulb.Context,
         guild_config: GuildConfigs,
         localisations: Localisation,
+        link_id: str | None = None,
     ) -> Sequence[special_endpoints.ComponentBuilder]:
+        if link_id is None:
+            link_id = await utils.otel.generate_trace_link_state()
+
         return [
             hikari.impl.ContainerComponentBuilder(
                 components=[
@@ -316,7 +338,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.ChannelSelectMenuBuilder(
-                                custom_id="gcm:log_channel_id",
+                                custom_id=f"gcm:{link_id}:link_id:log_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
                                 placeholder=await cls.get_channel_name(
                                     "log_channel_id",
@@ -339,7 +361,11 @@ class GuildConfigurationMenus:
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         guild_config: GuildConfigs,
         localisations: Localisation,
+        link_id: str | None = None,
     ) -> Sequence[special_endpoints.ComponentBuilder]:
+        if link_id is None:
+            link_id = await utils.otel.generate_trace_link_state()
+
         components: list[special_endpoints.ComponentBuilder] = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
@@ -360,7 +386,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.ChannelSelectMenuBuilder(
-                                custom_id="gcm:suggestions_channel_id",
+                                custom_id=f"gcm:{link_id}:suggestions_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
                                 placeholder=await cls.get_channel_name(
                                     "suggestions_channel_id",
@@ -381,7 +407,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:threads_for_suggestions",
+                                custom_id=f"gcm:{link_id}:threads_for_suggestions",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -414,7 +440,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:auto_archive_threads",
+                                custom_id=f"gcm:{link_id}:auto_archive_threads",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -447,7 +473,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:ping_on_thread_creation",
+                                custom_id=f"gcm:{link_id}:ping_on_thread_creation",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -480,7 +506,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:can_have_anonymous_suggestions",
+                                custom_id=f"gcm:{link_id}:can_have_anonymous_suggestions",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -513,7 +539,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:can_have_images_in_suggestions",
+                                custom_id=f"gcm:{link_id}:can_have_images_in_suggestions",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -554,7 +580,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:log_channel",
+                                custom_id=f"gcm:{link_id}:log_channel",
                                 options=[
                                     # If this, set keep logs
                                     hikari.impl.SelectOptionBuilder(
@@ -594,7 +620,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:anonymous_resolutions",
+                                custom_id=f"gcm:{link_id}:anonymous_resolutions",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -632,7 +658,7 @@ class GuildConfigurationMenus:
                             "menus.guild_configuration.responses.pagination.view_next",
                             ctx,
                         ),
-                        custom_id="gcm:view_page_2",
+                        custom_id=f"gcm:{link_id}:view_page_2",
                     ),
                 ]
             ),
@@ -659,7 +685,11 @@ class GuildConfigurationMenus:
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         guild_config: GuildConfigs,
         localisations: Localisation,
+        link_id: str | None = None,
     ) -> Sequence[special_endpoints.ComponentBuilder]:
+        if link_id is None:
+            link_id = await utils.otel.generate_trace_link_state()
+
         components: list[special_endpoints.ComponentBuilder] = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
@@ -690,7 +720,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:suggestions_queue",
+                                custom_id=f"gcm:{link_id}:suggestions_queue",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -739,7 +769,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:dm_messages_disabled",
+                                custom_id=f"gcm:{link_id}:dm_messages_disabled",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -772,7 +802,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id="gcm:primary_language",
+                                custom_id=f"gcm:{link_id}:primary_language",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=k,
@@ -802,7 +832,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.ChannelSelectMenuBuilder(
-                                custom_id="gcm:update_channel_id",
+                                custom_id=f"gcm:{link_id}:update_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
                                 placeholder=await cls.get_channel_name(
                                     "update_channel_id",
@@ -827,7 +857,7 @@ class GuildConfigurationMenus:
                             "menus.guild_configuration.responses.pagination.view_previous",
                             ctx,
                         ),
-                        custom_id="gcm:view_page_1",
+                        custom_id=f"gcm:{link_id}:view_page_1",
                     ),
                 ]
             ),

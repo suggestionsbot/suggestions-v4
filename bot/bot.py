@@ -131,13 +131,14 @@ async def create_bot(
             return
 
         # TODO Handle legacy logic
+        otel_ctx = None
         component_key = f"component {custom_id}"
         if custom_id.startswith("gcm"):
-            component_key = (
-                f"editing guild setting '{custom_id.split(':',maxsplit=1)[1]}'"
-            )
+            _, link_id, setting = custom_id.split(":", maxsplit=2)
+            component_key = f"editing guild setting '{setting}'"
+            otel_ctx = await utils.otel.get_context_from_link_state(link_id)
 
-        with OTEL_TRACER.start_as_current_span(component_key) as span:
+        with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
             span.set_attribute("interaction.user.id", ctx.user.id)
             span.set_attribute(
                 "interaction.user.global_name",
@@ -148,12 +149,14 @@ async def create_bot(
 
             if custom_id.startswith("gcm"):
                 guild_config = await configs.ensure_guild_config(ctx.guild_id)
+                _, link_id, setting = custom_id.split(":", maxsplit=2)
                 await GuildConfigurationMenus.handle_interaction(
-                    custom_id.split(":", maxsplit=1)[1],
+                    setting,
                     ctx=ctx,
                     localisations=localisations,
                     event=event,
                     guild_config=guild_config,
+                    link_id=link_id,
                 )
 
         await ctx.defer(ephemeral=True)
