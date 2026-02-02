@@ -45,7 +45,7 @@ async def generate_trace_link_state() -> str:
     data = {}
     constants.OTEL_PROPAGATOR.inject(data)
     await constants.REDIS_CLIENT.set(
-        f"trace_context:{link_id}", orjson.dumps(data), ex=timedelta(hours=6)
+        f"trace_context:{link_id}", orjson.dumps(data), ex=timedelta(days=1)
     )
     return link_id
 
