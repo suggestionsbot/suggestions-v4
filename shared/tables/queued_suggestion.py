@@ -226,14 +226,14 @@ class QueuedSuggestions(Table, AuditMixin):
                         label=localisations.get_localized_string(
                             "values.suggest.queue_approve", ctx
                         ),
-                        custom_id="queue_approve",
+                        custom_id=f"queue_approve:{self.sID}",
                     ),
                     hikari.impl.InteractiveButtonBuilder(
                         style=hikari.ButtonStyle.DANGER,
                         label=localisations.get_localized_string(
                             "values.suggest.queue_reject", ctx
                         ),
-                        custom_id="queue_reject",
+                        custom_id=f"queue_reject:{self.sID}",
                     ),
                 ]
             ),
