@@ -193,3 +193,9 @@ BOT_USER_ID = (
 BOT_TOKEN = get_secret("BOT_TOKEN", infisical_client)
 BOT_INVITE_URL = f"https://discord.com/oauth2/authorize?client_id={BOT_USER_ID}&permissions=395137379328&integration_type=0&scope=bot+applications.commands"
 DISCORD_REST_CLIENT = hikari.RESTApp()
+
+# CloudFlare R2
+CF_R2_ACCESS_KEY = get_secret("CF_R2_ACCESS_KEY", infisical_client)
+CF_R2_SECRET_ACCESS_KEY = get_secret("CF_R2_SECRET_ACCESS_KEY", infisical_client)
+CF_R2_BUCKET = get_secret("CF_R2_BUCKET", infisical_client)
+CF_R2_URL = get_secret("CF_R2_URL", infisical_client)

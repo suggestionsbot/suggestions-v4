@@ -2,7 +2,7 @@ import typing
 from enum import Enum
 
 import hikari
-from piccolo.columns import Serial, Varchar, Text, ForeignKey, BigInt, Timestamptz
+from piccolo.columns import Serial, Varchar, Text, ForeignKey, BigInt, Timestamptz, Array
 from piccolo.columns.indexes import IndexMethod
 from piccolo.table import Table
 
@@ -96,12 +96,13 @@ class Suggestions(Table, AuditMixin):
         required=False,
         help_text="When this suggestion resolved?",
     )
-    image_url = Text(
-        null=True,
-        default=None,
-        required=False,
-        help_text="An optional image URL to include in the suggestion embed. "
+    image_urls = Array(
+        base_column=Text(),
+        default=[],
+        help_text="Optional image URLs to include in the suggestion embed. "
         "Will usually be a bot managed CF R2 link.",
+        null=True,
+        required=False,
     )
     author_display_name = Text(
         help_text="How should we display the author? Either name or <Anonymous>",

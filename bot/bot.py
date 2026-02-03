@@ -70,6 +70,8 @@ async def create_bot(
         with utils.start_error_span(exc.causes[0], "global error handler") as child:
             # TODO Implement
             await ctx.respond("Something went wrong")
+
+        raise exc
         return False
 
     @bot.listen()
@@ -96,12 +98,14 @@ async def create_bot(
                 span.set_attribute("interaction.guild.id", ctx.guild_id)
 
             guild_config = await configs.ensure_guild_config(ctx.guild_id)
+            user_config = await configs.ensure_user_config(ctx.user.id)
             await SuggestionMenu.handle_interaction(
                 event.interaction.components,
                 ctx=ctx,
                 localisations=localisations,
                 event=event,
                 guild_config=guild_config,
+                user_config=user_config,
             )
 
     def build_ctx(

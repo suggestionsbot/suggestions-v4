@@ -1,12 +1,19 @@
+import logging
 from typing import cast
 
 import commons
 import hikari
 import lightbulb
+from hikari.impl import MessageActionRowBuilder
 
-from bot import constants
+from bot import constants, utils
+from bot.constants import ErrorCode
+from bot.exceptions import MissingQueueChannel
 from bot.localisation import Localisation
-from shared.tables import GuildConfigs
+from shared.tables import GuildConfigs, UserConfigs, QueuedSuggestions
+from shared.utils import r2
+
+logger = logging.getLogger(__name__)
 
 
 class SuggestionMenu:
@@ -22,10 +29,12 @@ class SuggestionMenu:
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
         guild_config: GuildConfigs,
+        user_config: UserConfigs,
         event: hikari.ModalInteractionCreateEvent,
     ):
+        await ctx.defer(ephemeral=True)
         suggestion_content: str | None = None
-        file_ids: list[int] = []
+        image_urls: list[str] = []
         anonymously: bool = False
         for entry in response_fields:
             if entry.custom_id == "suggestion":
@@ -47,8 +56,122 @@ class SuggestionMenu:
                     hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent,
                     entry,
                 )
-                file_ids = entry.values  # noqa
+                for item_id in entry.values:
+                    item: hikari.messages.Attachment | None = (
+                        event.interaction.resolved.attachments.get(item_id)
+                    )
+                    if item is None:
+                        logger.critical(
+                            f"failed to find an image in the resolved attachments"
+                        )
+                        continue
+
+                    image_urls.append(
+                        await r2.upload_file_to_r2(
+                            file_name=item.filename,
+                            # TODO try optimise this to do image streaming?
+                            file_data=await item.read(),
+                            guild_id=guild_config.guild_id,
+                            user_id=user_config.user_id,
+                        )
+                    )
+
+        if guild_config.uses_suggestions_queue:
+            return await cls.handle_queued_suggestion(
+                suggestion=suggestion_content,
+                image_urls=image_urls,
+                is_anonymous=anonymously,
+                ctx=ctx,
+                guild_config=guild_config,
+                user_config=user_config,
+                localisations=localisations,
+            )
+
         pass
+
+    @classmethod
+    async def handle_queued_suggestion(
+        cls,
+        *,
+        suggestion: str,
+        image_urls: list[str],
+        is_anonymous: bool,
+        ctx: lightbulb.components.MenuContext,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        localisations: Localisation,
+    ):
+        """Specific helper for handling queued suggestions"""
+        bot = ctx.client.app
+        qs: QueuedSuggestions = QueuedSuggestions(
+            guild_configuration=guild_config,
+            user_configuration=user_config,
+            suggestion=suggestion,
+            image_urls=image_urls,
+            author_display_name=(
+                f"<@{ctx.user.id}>" if is_anonymous is False else "Anonymous"
+            ),
+        )
+
+        if guild_config.virtual_suggestions_queue is False:
+            # Need to send to a channel
+            if guild_config.queued_suggestion_channel_id is None:
+                raise MissingQueueChannel
+
+            try:
+                channel = await bot.rest.fetch_channel(
+                    guild_config.queued_suggestion_channel_id
+                )
+                channel = cast(hikari.GuildTextChannel, channel)
+            except (hikari.ForbiddenError, hikari.NotFoundError):
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        localisations.get_localized_string(
+                            "errors.suggest.queue_channel_not_found.title",
+                            ctx=ctx,
+                        ),
+                        localisations.get_localized_string(
+                            "errors.suggest.queue_channel_not_found.description",
+                            ctx=ctx,
+                        ),
+                        error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
+                    ),
+                )
+                return None
+
+            prefix = (
+                guild_config.premium.queued_suggestions_prefix
+                if guild_config.premium_is_enabled(ctx)
+                else ""
+            )
+            message: hikari.Message = await channel.send(
+                content=prefix,
+                components=await qs.as_components(
+                    bot=bot, ctx=ctx, localisations=localisations
+                ),
+            )
+            qs.channel_id = message.channel_id
+            qs.message_id = message.id
+            await qs.save()
+
+        logger.debug(
+            f"User {ctx.user.id} created new queued"
+            f" suggestion in guild {ctx.guild_id}",
+            extra={
+                "interaction.user.id": ctx.user.id,
+                "interaction.guild.id": ctx.guild_id,
+            },
+        )
+        await ctx.respond(
+            localisations.get_localized_string(
+                "values.suggest.sent_to_queue",
+                ctx,
+                guild_config=guild_config,
+            ),
+            ephemeral=True,
+        )
+        # TODO Queue sending notification to DM
+        return None
 
     @classmethod
     async def build_suggest_modal(

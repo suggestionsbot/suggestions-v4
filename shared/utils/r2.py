@@ -7,6 +7,7 @@ import secrets
 from aiobotocore.session import get_session
 
 from bot.exceptions import InvalidFileType
+from web import constants
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +23,9 @@ async def upload_file_to_r2(
     session = get_session()
     async with session.create_client(
         "s3",
-        endpoint_url=os.environ["ENDPOINT"],
-        aws_access_key_id=os.environ["ACCESS_KEY"],
-        aws_secret_access_key=os.environ["SECRET_ACCESS_KEY"],
+        endpoint_url=constants.CF_R2_URL,
+        aws_access_key_id=constants.CF_R2_ACCESS_KEY,
+        aws_secret_access_key=constants.CF_R2_SECRET_ACCESS_KEY,
     ) as client:
         mimetype_guessed, _ = mimetypes.guess_type(file_name)
         accepted_mimetypes: dict[str, set[str]] = {
@@ -50,7 +51,7 @@ async def upload_file_to_r2(
 
         file_key = hashlib.sha256(file_data + secrets.token_bytes(16)).hexdigest()
         key = "{}/{}.{}".format(guild_id, file_key, ext)
-        await client.put_object(Bucket=os.environ["BUCKET"], Key=key, Body=file_data)
+        await client.put_object(Bucket=constants.CF_R2_BUCKET, Key=key, Body=file_data)
         logger.debug(
             "User %s in guild %s uploaded an image",
             user_id,

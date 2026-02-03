@@ -2,7 +2,7 @@ import string
 
 from fastnanoid import generate
 
-ALPHABET = string.ascii_letters + string.digits
+ALPHABET = string.ascii_lowercase + string.digits
 
 
 def generate_id(
@@ -13,6 +13,10 @@ def generate_id(
 ) -> str:
     """Returns a unique ID."""
     if include_sep:
-        return generate(alphabet, unique_length // 2) + "-" + generate(alphabet, unique_length // 2)
+        return (
+            generate(alphabet, unique_length // 2)
+            + "-"
+            + generate(alphabet, unique_length // 2)
+        )
 
     return generate(alphabet, unique_length)

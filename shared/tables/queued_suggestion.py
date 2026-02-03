@@ -1,6 +1,8 @@
 import typing
 
 import hikari
+import lightbulb
+from hikari.impl import ContainerComponentBuilder, MessageActionRowBuilder
 from piccolo.columns import (
     Serial,
     Varchar,
@@ -10,11 +12,13 @@ from piccolo.columns import (
     Timestamptz,
     Boolean,
     LazyTableReference,
+    Array,
 )
 from piccolo.columns.indexes import IndexMethod
 from piccolo.table import Table
 
 from bot.constants import EMBED_COLOR
+from bot.localisation import Localisation
 from shared.tables import GuildConfigs, UserConfigs
 from shared.tables.mixins import AuditMixin
 from bot.utils import generate_id
@@ -92,12 +96,13 @@ class QueuedSuggestions(Table, AuditMixin):
         required=False,
         help_text="When this suggestion resolved?",
     )
-    image_url = Text(
-        null=True,
-        default=None,
-        required=False,
-        help_text="An optional image URL to include in the suggestion embed. "
+    image_urls = Array(
+        base_column=Text(),
+        default=[],
+        help_text="Optional image URLs to include in the suggestion embed. "
         "Will usually be a bot managed CF R2 link.",
+        null=True,
+        required=False,
     )
     author_display_name = Text(
         help_text="How should we display the author? Either name or <Anonymous>",
@@ -123,28 +128,113 @@ class QueuedSuggestions(Table, AuditMixin):
     def author_id(self) -> int:
         return self.user_configuration.user_id
 
-    async def as_embed(self, bot: hikari.RESTBot | hikari.GatewayBot) -> hikari.Embed:
+    async def as_components(
+        self,
+        bot: hikari.RESTAware,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        localisations: Localisation,
+    ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
+        # TODO Localize once format decided
         user: hikari.User = await bot.rest.fetch_user(self.author_id)
+        components: list = [
+            hikari.impl.TextDisplayComponentBuilder(
+                content=f"**Suggestion**\n{self.suggestion}"
+            ),
+        ]
+        if self.image_urls:
+            items = []
+            for entry in self.image_urls:
+                items.append(
+                    hikari.impl.MediaGalleryItemBuilder(
+                        media=entry,
+                    ),
+                )
 
-        embed: hikari.Embed = hikari.Embed(
-            description=f"**Submitter**\n{self.author_display_name}\n\n"
-            f"**Suggestion**\n{self.suggestion}",
-            colour=EMBED_COLOR,
-            timestamp=self.created_at,
+            components.append(hikari.impl.MediaGalleryComponentBuilder(items=items))
+
+        components.append(
+            hikari.impl.SeparatorComponentBuilder(
+                divider=True,
+                spacing=hikari.SpacingType.SMALL,
+            )
         )
-        embed.set_footer(text=f"Queued suggestion ID: {self.sID}")
-        if not self.is_anonymous:
-            embed.set_thumbnail(user.display_avatar_url)
+        if self.is_anonymous:
+            components.append(
+                hikari.impl.TextDisplayComponentBuilder(
+                    content=f"**Submitter**\n{self.author_display_name}"
+                )
+            )
 
-        if self.image_url:
-            embed.set_image(self.image_url)
+        else:
+            components.append(
+                hikari.impl.SectionComponentBuilder(
+                    components=[
+                        hikari.impl.TextDisplayComponentBuilder(
+                            content=f"**Submitter**\n{self.author_display_name}"
+                        ),
+                    ],
+                    accessory=hikari.impl.ThumbnailComponentBuilder(
+                        media=user.display_avatar_url,
+                    ),
+                )
+            )
 
         if self.resolved_note and self.resolved_by is not None:
             # Means it's been rejected so we should show it
+            components.append(
+                hikari.impl.SeparatorComponentBuilder(
+                    divider=True,
+                    spacing=hikari.SpacingType.SMALL,
+                )
+            )
             note_desc = (
                 f"\n\n**Moderator**\n{self.resolved_by_display_text}"
                 f"\n**Moderator note**\n{self.resolved_note}"
             )
-            embed.description += note_desc
+            components.append(hikari.impl.TextDisplayComponentBuilder(content=note_desc))
 
-        return embed
+        sid_text = f"`{self.sID}`"
+        sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/queue/{self.sID})"
+        components.append(
+            hikari.impl.TextDisplayComponentBuilder(
+                content=f"Queued Suggestion ID: {sid_text} | Created <t:{int(self.created_at.timestamp())}:R>"
+            )
+        )
+        # components.append(
+        #     hikari.impl.SectionComponentBuilder(
+        #         accessory=hikari.impl.LinkButtonBuilder(
+        #             url=f"https://dashboard.suggestions.gg/guilds/{self.guild_id}/queue/{self.sID}",
+        #             label="View in dashboard",
+        #         ),
+        #         components=[
+        #             hikari.impl.TextDisplayComponentBuilder(
+        #                 content=f"Queued Suggestion ID: {sid_text} | Created <t:{int(self.created_at.timestamp())}:R>"
+        #             ),
+        #         ],
+        #     ),
+        # )
+
+        return [
+            hikari.impl.ContainerComponentBuilder(
+                accent_color=EMBED_COLOR,
+                components=components,
+            ),
+            hikari.impl.MessageActionRowBuilder(
+                components=[
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.SUCCESS,
+                        label=localisations.get_localized_string(
+                            "values.suggest.queue_approve", ctx
+                        ),
+                        custom_id="queue_approve",
+                    ),
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.DANGER,
+                        label=localisations.get_localized_string(
+                            "values.suggest.queue_reject", ctx
+                        ),
+                        custom_id="queue_reject",
+                    ),
+                ]
+            ),
+        ]

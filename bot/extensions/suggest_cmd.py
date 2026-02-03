@@ -40,7 +40,10 @@ def handle_suggestions_errors(func):
                 localisations=localisations,
             )
         except Exception as exception:
-            this_will_handle: tuple[type[Exception], ...] = (MessageTooLong, MissingQueueChannel)
+            this_will_handle: tuple[type[Exception], ...] = (
+                MessageTooLong,
+                MissingQueueChannel,
+            )
             if isinstance(exception, this_will_handle):
                 with utils.start_error_span(exception, "command error handler"):
                     internal_error: InternalErrors = await InternalErrors.persist_error(
@@ -133,9 +136,14 @@ class Suggest(
         if len(self.suggestion) > MAX_CONTENT_LENGTH:
             raise MessageTooLong(self.suggestion)
 
-        if self.anonymously is True and guild_config.can_have_anonymous_suggestions is False:
+        if (
+            self.anonymously is True
+            and guild_config.can_have_anonymous_suggestions is False
+        ):
             await ctx.respond(
-                localisations.get_localized_string("values.suggest.no_anonymous_suggestions", ctx)
+                localisations.get_localized_string(
+                    "values.suggest.no_anonymous_suggestions", ctx
+                )
             )
             return None
 
@@ -180,7 +188,9 @@ class Suggest(
             user_configuration=user_config,
             suggestion=self.suggestion,
             image_url=image_url,
-            author_display_name=(f"<@{ctx.user.id}>" if self.anonymously is False else "Anonymous"),
+            author_display_name=(
+                f"<@{ctx.user.id}>" if self.anonymously is False else "Anonymous"
+            ),
         )
 
         if guild_config.virtual_suggestions_queue is False:
@@ -189,7 +199,9 @@ class Suggest(
                 raise MissingQueueChannel
 
             try:
-                channel = await bot.rest.fetch_channel(guild_config.queued_suggestion_channel_id)
+                channel = await bot.rest.fetch_channel(
+                    guild_config.queued_suggestion_channel_id
+                )
                 channel = cast(hikari.GuildTextChannel, channel)
             except (hikari.ForbiddenError, hikari.NotFoundError):
                 await ctx.respond(
@@ -234,7 +246,7 @@ class Suggest(
             ]
             message: hikari.Message = await channel.send(
                 content=prefix,
-                embed=await qs.as_embed(bot),
+                embed=await qs.as_components(bot),
                 components=components,
             )
             qs.channel_id = message.channel_id
@@ -242,7 +254,8 @@ class Suggest(
             await qs.save()
 
         logger.debug(
-            f"User {ctx.user.id} created new queued" f" suggestion in guild {ctx.guild_id}",
+            f"User {ctx.user.id} created new queued"
+            f" suggestion in guild {ctx.guild_id}",
             extra={
                 "interaction.user.id": ctx.user.id,
                 "interaction.guild.id": ctx.guild_id,
