@@ -1,15 +1,16 @@
+import io
 import logging
 from typing import cast
 
 import commons
 import hikari
 import lightbulb
-from hikari.impl import MessageActionRowBuilder
 
 from bot import constants, utils
-from bot.constants import ErrorCode
-from bot.exceptions import MissingQueueChannel
+from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
+from bot.exceptions import MissingQueueChannel, MessageTooLong
 from bot.localisation import Localisation
+from bot.tables import InternalErrors
 from shared.tables import GuildConfigs, UserConfigs, QueuedSuggestions
 from shared.utils import r2
 
@@ -33,61 +34,155 @@ class SuggestionMenu:
         event: hikari.ModalInteractionCreateEvent,
     ):
         await ctx.defer(ephemeral=True)
-        suggestion_content: str | None = None
-        image_urls: list[str] = []
-        anonymously: bool = False
-        for entry in response_fields:
-            if entry.custom_id == "suggestion":
-                entry = cast(
-                    hikari.interactions.modal_interactions.ModalInteractionTextInputComponent,
-                    entry,
-                )
-                suggestion_content = entry.value
-
-            elif entry.custom_id == "anonymously":
-                entry = cast(
-                    hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent,
-                    entry,
-                )
-                anonymously = commons.value_to_bool(entry.values[0])
-
-            elif entry.custom_id == "files":
-                entry = cast(
-                    hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent,
-                    entry,
-                )
-                for item_id in entry.values:
-                    item: hikari.messages.Attachment | None = (
-                        event.interaction.resolved.attachments.get(item_id)
+        try:
+            suggestion_content: str | None = None
+            image_urls: list[str] = []
+            anonymously: bool = False
+            for entry in response_fields:
+                if entry.custom_id == "suggestion":
+                    entry = cast(
+                        hikari.interactions.modal_interactions.ModalInteractionTextInputComponent,
+                        entry,
                     )
-                    if item is None:
-                        logger.critical(
-                            f"failed to find an image in the resolved attachments"
-                        )
-                        continue
+                    suggestion_content = entry.value
 
-                    image_urls.append(
-                        await r2.upload_file_to_r2(
-                            file_name=item.filename,
-                            # TODO try optimise this to do image streaming?
-                            file_data=await item.read(),
-                            guild_id=guild_config.guild_id,
-                            user_id=user_config.user_id,
-                        )
+                elif entry.custom_id == "anonymously":
+                    entry = cast(
+                        hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent,
+                        entry,
                     )
+                    anonymously = commons.value_to_bool(entry.values[0])
 
-        if guild_config.uses_suggestions_queue:
-            return await cls.handle_queued_suggestion(
-                suggestion=suggestion_content,
-                image_urls=image_urls,
-                is_anonymous=anonymously,
-                ctx=ctx,
-                guild_config=guild_config,
-                user_config=user_config,
-                localisations=localisations,
+                elif entry.custom_id == "files":
+                    if guild_config.can_have_images_in_suggestions is False:
+                        await ctx.respond(
+                            localisations.get_localized_string(
+                                "values.suggest.no_images_in_suggestions", ctx
+                            )
+                        )
+                        return None
+
+                    entry = cast(
+                        hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent,
+                        entry,
+                    )
+                    for item_id in entry.values:
+                        item: hikari.messages.Attachment | None = (
+                            event.interaction.resolved.attachments.get(item_id)
+                        )
+                        if item is None:
+                            logger.critical(
+                                f"failed to find an image in the resolved attachments"
+                            )
+                            continue
+
+                        image_urls.append(
+                            await r2.upload_file_to_r2(
+                                file_name=item.filename,
+                                # TODO try optimise this to do image streaming?
+                                file_data=await item.read(),
+                                guild_id=guild_config.guild_id,
+                                user_id=user_config.user_id,
+                            )
+                        )
+
+            if len(suggestion_content) > MAX_CONTENT_LENGTH:
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        localisations.get_localized_string(
+                            "errors.suggest.content_too_long.title",
+                            ctx=ctx,
+                        ),
+                        localisations.get_localized_string(
+                            "errors.suggest.content_too_long.description",
+                            ctx=ctx,
+                            extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
+                        ),
+                        error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
+                    ),
+                    attachment=hikari.files.Bytes(
+                        io.StringIO(suggestion_content), "content.txt"
+                    ),
+                )
+                return None
+
+            if (
+                anonymously is True
+                and guild_config.can_have_anonymous_suggestions is False
+            ):
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "values.suggest.no_anonymous_suggestions", ctx
+                    )
+                )
+                return None
+
+            if guild_config.uses_suggestions_queue:
+                return await cls.handle_queued_suggestion(
+                    suggestion=suggestion_content,
+                    image_urls=image_urls,
+                    is_anonymous=anonymously,
+                    ctx=ctx,
+                    guild_config=guild_config,
+                    user_config=user_config,
+                    localisations=localisations,
+                )
+
+            pass
+
+        except Exception as exception:
+            this_will_handle: tuple[type[Exception], ...] = (
+                MessageTooLong,
+                MissingQueueChannel,
             )
+            if isinstance(exception, this_will_handle):
+                with utils.start_error_span(exception, "command error handler"):
+                    internal_error: InternalErrors = await InternalErrors.persist_error(
+                        exception,
+                        command_name="suggest",
+                        guild_id=ctx.guild_id,
+                        user_id=ctx.user.id,
+                    )
 
-        pass
+                    if isinstance(exception, MessageTooLong):
+                        await ctx.respond(
+                            embed=utils.error_embed(
+                                localisations.get_localized_string(
+                                    "errors.suggest.content_too_long.title",
+                                    ctx=ctx,
+                                ),
+                                localisations.get_localized_string(
+                                    "errors.suggest.content_too_long.description",
+                                    ctx=ctx,
+                                    extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
+                                ),
+                                error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
+                                internal_error_reference=internal_error,
+                            ),
+                            attachment=hikari.files.Bytes(
+                                io.StringIO(exception.message_text), "content.txt"
+                            ),
+                        )
+                        return None
+
+                    elif isinstance(exception, MissingQueueChannel):
+                        await ctx.respond(
+                            embed=utils.error_embed(
+                                localisations.get_localized_string(
+                                    "errors.suggest.missing_queue_channel.title",
+                                    ctx=ctx,
+                                ),
+                                localisations.get_localized_string(
+                                    "errors.suggest.missing_queue_channel.description",
+                                    ctx=ctx,
+                                ),
+                                error_code=ErrorCode.MISSING_QUEUE_CHANNEL,
+                                internal_error_reference=internal_error,
+                            ),
+                        )
+                        return None
+
+            raise
 
     @classmethod
     async def handle_queued_suggestion(

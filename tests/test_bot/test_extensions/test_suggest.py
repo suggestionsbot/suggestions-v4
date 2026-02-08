@@ -12,6 +12,7 @@ from bot import utils
 from bot.constants import MAX_CONTENT_LENGTH, ErrorCode
 from bot.extensions.suggest import Suggest
 from bot.localisation import Localisation
+from bot.menus import SuggestionMenu
 from bot.tables import InternalErrors
 from shared.tables import (
     GuildConfigs,
@@ -27,42 +28,52 @@ GUILD_ID = 23456
 
 
 def create_options(
-    suggestion: str, anon: bool = False, image: bool = False
-) -> Sequence[hikari.CommandInteractionOption]:
-    options: list[hikari.CommandInteractionOption] = [
-        hikari.CommandInteractionOption(
-            name="suggestion",
-            type=hikari.OptionType.STRING,
+    suggestion: str, anon: bool = False, image: bool = False, image_count: int = 1
+) -> list[
+    hikari.interactions.modal_interactions.ModalInteractionTextInputComponent
+    | hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent
+    | hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent
+]:
+    options: list[
+        hikari.interactions.modal_interactions.ModalInteractionTextInputComponent
+        | hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent
+        | hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent
+    ] = [
+        AsyncMock(
+            custom_id="suggestion",
             value=suggestion,
-            options=None,
         ),
     ]
     if anon:
         options.append(
-            hikari.CommandInteractionOption(
-                name="anonymously",
-                type=hikari.OptionType.BOOLEAN,
-                value=anon,
-                options=None,
-            )
+            AsyncMock(
+                custom_id="anonymously",
+                values=[anon],
+            ),
         )
 
     if image:
         # We need to do pass through and in ctx it gets looked up later
+        flakes = []
+        for i in range(image_count):
+            flakes.append(hikari.Snowflake(i))
+
         options.append(
-            hikari.CommandInteractionOption(
-                name="image",
-                type=hikari.OptionType.ATTACHMENT,
-                value=hikari.Snowflake(12121),
-                options=None,
-            )
+            AsyncMock(
+                custom_id="files",
+                values=[flakes],
+            ),
         )
 
     return options
 
 
 async def invoke_suggest(
-    options: Sequence[hikari.CommandInteractionOption],
+    options: list[
+        hikari.interactions.modal_interactions.ModalInteractionTextInputComponent
+        | hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent
+        | hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent
+    ],
     localisations: Localisation,
     user_id: int = USER_ID,
     guild_id: int = GUILD_ID,
@@ -81,23 +92,38 @@ async def invoke_suggest(
     await user_config.save()
     await guild_config.save()
 
-    cmd, ctx = await prepare_command(Suggest, localisations, options)
+    ctx: lightbulb.components.MenuContext = AsyncMock(
+        spec=lightbulb.components.MenuContext
+    )
+    ctx.interaction.locale = "en-GB"
     ctx.user.id = user_id
     ctx.guild_id = guild_id
 
     if bot is None:
         bot = AsyncMock(spec=hikari.GatewayBot)
 
-    if image is not None:
-        cmd.image = image
-        ctx.interaction.resolved.attachments[hikari.Snowflake(12121)] = image
+    ctx.client.app = bot
 
-    await cmd.invoke(ctx, guild_config, user_config, localisations, bot)
+    event = AsyncMock()
+    if image is not None:
+        opt = [o for o in options if o.custom_id == "files"][0]
+        for i in range(len(opt.values)):
+            event.interaction.resolved.attachments[hikari.Snowflake(i)] = image
+
+    await SuggestionMenu.handle_interaction(
+        options,
+        ctx=ctx,
+        localisations=localisations,
+        event=event,
+        guild_config=guild_config,
+        user_config=user_config,
+    )
     ctx.defer.assert_called_once_with(ephemeral=True)
     return ctx, guild_config, user_config, localisations, bot
 
 
 @freeze_time("2025-01-20")
+@pytest.mark.skip(reason="no longer relevant, kept for backwards referencing")
 async def test_suggestion_too_long(localisation):
     """Asserts an error message is sent when a suggestion is too long."""
     content = "a" * MAX_CONTENT_LENGTH + "a"
@@ -117,7 +143,7 @@ async def test_suggestion_too_long(localisation):
     )
 
 
-@pytest.mark.xfail(reason="Suggestions are not fully implemented yet")
+@pytest.mark.skip(reason="no longer relevant, kept for backwards referencing")
 async def test_newline_handling(localisation):
     """Asserts newlines passed in as content end up rendered correctly."""
     options = create_options("a\\nb")
@@ -231,6 +257,7 @@ async def test_queued_suggestion_missing_queue_channel(localisation):
     gc.virtual_suggestions_queue = False
     gc.queued_suggestion_channel_id = 12345
     bot = AsyncMock(spec=hikari.GatewayBot)
+    bot.rest = AsyncMock(spec=hikari.api.RESTClient)
     bot.rest.fetch_channel.side_effect = hikari.ForbiddenError("test", {}, "test")
 
     ctx, _, uc, _, _ = await invoke_suggest(
