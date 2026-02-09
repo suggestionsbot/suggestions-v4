@@ -138,7 +138,11 @@ class QueuedSuggestions(Table, AuditMixin):
         user: hikari.User = await bot.rest.fetch_user(self.author_id)
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
-                content=f"**Suggestion**\n{self.suggestion}"
+                content=localisations.get_localized_string(
+                    "components.queued_suggestions.suggestion",
+                    ctx,
+                    extras={"SUGGESTION": self.suggestion},
+                )
             ),
         ]
         if self.image_urls:
@@ -161,7 +165,11 @@ class QueuedSuggestions(Table, AuditMixin):
         if self.is_anonymous:
             components.append(
                 hikari.impl.TextDisplayComponentBuilder(
-                    content=f"**Submitter**\n{self.author_display_name}"
+                    content=localisations.get_localized_string(
+                        "components.queued_suggestions.submitter",
+                        ctx,
+                        extras={"AUTHOR_DISPLAY": self.author_display_name},
+                    )
                 )
             )
 
@@ -170,7 +178,11 @@ class QueuedSuggestions(Table, AuditMixin):
                 hikari.impl.SectionComponentBuilder(
                     components=[
                         hikari.impl.TextDisplayComponentBuilder(
-                            content=f"**Submitter**\n{self.author_display_name}"
+                            content=localisations.get_localized_string(
+                                "components.queued_suggestions.submitter",
+                                ctx,
+                                extras={"AUTHOR_DISPLAY": self.author_display_name},
+                            )
                         ),
                     ],
                     accessory=hikari.impl.ThumbnailComponentBuilder(
@@ -187,32 +199,33 @@ class QueuedSuggestions(Table, AuditMixin):
                     spacing=hikari.SpacingType.SMALL,
                 )
             )
-            note_desc = (
-                f"\n\n**Moderator**\n{self.resolved_by_display_text}"
-                f"\n**Moderator note**\n{self.resolved_note}"
+            components.append(
+                hikari.impl.TextDisplayComponentBuilder(
+                    content=localisations.get_localized_string(
+                        "components.queued_suggestions.moderator",
+                        ctx,
+                        extras={
+                            "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
+                            "RESOLVED_BY_NOTE": self.resolved_note,
+                        },
+                    )
+                )
             )
-            components.append(hikari.impl.TextDisplayComponentBuilder(content=note_desc))
 
         sid_text = f"`{self.sID}`"
-        sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/queue/{self.sID})"
+        # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/queue/{self.sID})"
         components.append(
             hikari.impl.TextDisplayComponentBuilder(
-                content=f"Queued Suggestion ID: {sid_text} | Created <t:{int(self.created_at.timestamp())}:R>"
+                content=localisations.get_localized_string(
+                    "components.queued_suggestions.footer",
+                    ctx,
+                    extras={
+                        "SID": sid_text,
+                        "TIMESTAMP": int(self.created_at.timestamp()),
+                    },
+                ),
             )
         )
-        # components.append(
-        #     hikari.impl.SectionComponentBuilder(
-        #         accessory=hikari.impl.LinkButtonBuilder(
-        #             url=f"https://dashboard.suggestions.gg/guilds/{self.guild_id}/queue/{self.sID}",
-        #             label="View in dashboard",
-        #         ),
-        #         components=[
-        #             hikari.impl.TextDisplayComponentBuilder(
-        #                 content=f"Queued Suggestion ID: {sid_text} | Created <t:{int(self.created_at.timestamp())}:R>"
-        #             ),
-        #         ],
-        #     ),
-        # )
 
         return [
             hikari.impl.ContainerComponentBuilder(
