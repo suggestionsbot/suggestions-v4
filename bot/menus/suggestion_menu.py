@@ -11,7 +11,13 @@ from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MissingQueueChannel, MessageTooLong
 from bot.localisation import Localisation
 from bot.tables import InternalErrors
-from shared.tables import GuildConfigs, UserConfigs, QueuedSuggestions
+from shared.tables import (
+    GuildConfigs,
+    UserConfigs,
+    QueuedSuggestions,
+    Suggestions,
+    SuggestionStateEnum,
+)
 from shared.utils import r2
 
 logger = logging.getLogger(__name__)
@@ -128,7 +134,16 @@ class SuggestionMenu:
                     localisations=localisations,
                 )
 
-            pass
+            else:
+                return await cls.handle_suggestion(
+                    suggestion=suggestion_content,
+                    image_urls=image_urls,
+                    is_anonymous=anonymously,
+                    ctx=ctx,
+                    guild_config=guild_config,
+                    user_config=user_config,
+                    localisations=localisations,
+                )
 
         except Exception as exception:
             this_will_handle: tuple[type[Exception], ...] = (
@@ -183,6 +198,149 @@ class SuggestionMenu:
                         return None
 
             raise
+
+    @classmethod
+    async def handle_suggestion(
+        cls,
+        *,
+        suggestion: str,
+        image_urls: list[str],
+        is_anonymous: bool,
+        ctx: lightbulb.components.MenuContext,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        localisations: Localisation,
+    ):
+        """Specific helper for handling queued suggestions"""
+        bot = ctx.client.app
+        s: Suggestions = Suggestions(
+            guild_configuration=guild_config,
+            user_configuration=user_config,
+            suggestion=suggestion,
+            image_urls=image_urls,
+            author_display_name=(
+                f"<@{ctx.user.id}>" if is_anonymous is False else "Anonymous"
+            ),
+            state=SuggestionStateEnum.PENDING,
+        )
+        await s.save()
+        try:
+            channel = await bot.rest.fetch_channel(guild_config.suggestions_channel_id)
+            channel = cast(hikari.GuildTextChannel, channel)
+        except (hikari.ForbiddenError, hikari.NotFoundError):
+            await ctx.respond(
+                embed=utils.error_embed(
+                    localisations.get_localized_string(
+                        "errors.suggest.suggest_channel_not_found.title",
+                        ctx=ctx,
+                    ),
+                    localisations.get_localized_string(
+                        "errors.suggest.suggest_channel_not_found.description",
+                        ctx=ctx,
+                    ),
+                    error_code=ErrorCode.MISSING_FETCH_PERMISSIONS_IN_SUGGESTIONS_CHANNEL,
+                ),
+            )
+            return None
+
+        prefix = (
+            guild_config.premium.suggestions_prefix
+            if await guild_config.premium_is_enabled(ctx)
+            else ""
+        )
+        message: hikari.Message = await channel.send(
+            content=prefix,
+            components=await s.as_components(
+                bot=bot, ctx=ctx, localisations=localisations
+            ),
+        )
+        s.channel_id = message.channel_id
+        s.message_id = message.id
+        await s.save()
+
+        if guild_config.threads_for_suggestions:
+            try:
+                thread = await bot.rest.create_message_thread(
+                    channel, message, f"Thread for suggestion {s.sID}"
+                )
+            except (hikari.ForbiddenError, hikari.NotFoundError):
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        localisations.get_localized_string(
+                            "errors.suggest.missing_create_thread_perms.title",
+                            ctx=ctx,
+                        ),
+                        localisations.get_localized_string(
+                            "errors.suggest.missing_create_thread_perms.description",
+                            ctx=ctx,
+                        ),
+                        error_code=ErrorCode.MISSING_THREAD_CREATE_PERMISSIONS,
+                    ),
+                )
+                return None
+
+            if guild_config.ping_on_thread_creation and not s.is_anonymous:
+                try:
+                    await thread.send(
+                        localisations.get_localized_string(
+                            "values.suggest.ping_author_in_thread",
+                            ctx,
+                            extras={"AUTHOR": s.author_display_name},
+                        ),
+                        user_mentions=True,
+                    )
+                except (hikari.ForbiddenError, hikari.NotFoundError):
+                    # I'd consider it 'fine' if the bot can't send this message
+                    pass
+
+        if not (guild_config.dm_messages_disabled or user_config.dm_messages_disabled):
+            try:
+                dm_channel = await bot.rest.create_dm_channel(ctx.user)
+                await dm_channel.send(
+                    localisations.get_localized_string(
+                        "dms.suggest.suggestion_created",
+                        ctx,
+                        extras={
+                            "AUTHOR": s.author_display_name,
+                            "CHANNEL": channel.mention,
+                            "SUGGESTION_LINK": f"https://discord.com/channels/{ctx.guild_id}/{channel.id}/{message.id}",
+                        },
+                    ),
+                )
+                await dm_channel.send(
+                    components=await s.as_components(
+                        bot=bot,
+                        ctx=ctx,
+                        localisations=localisations,
+                        exclude_buttons=True,
+                        exclude_votes=True,
+                    ),
+                )
+            except (hikari.ForbiddenError,):
+                # I'd consider it 'fine' if the bot can't send this message
+                logger.debug(
+                    "Failed to dm user about a suggestion",
+                    extra={
+                        "interaction.user.id": ctx.user.id,
+                        "interaction.user.username": ctx.user.display_name,
+                        "interaction.guild.id": ctx.guild_id,
+                        "suggestion.id": s.sID,
+                    },
+                )
+
+        await ctx.respond(
+            localisations.get_localized_string(
+                "values.suggest.suggestion_sent",
+                ctx,
+                extras={
+                    "AUTHOR": s.author_display_name,
+                    "CHANNEL": channel.mention,
+                    "SID": s.sID,
+                },
+            ),
+            ephemeral=True,
+        )
+        return None
 
     @classmethod
     async def handle_queued_suggestion(
@@ -265,7 +423,6 @@ class SuggestionMenu:
             ),
             ephemeral=True,
         )
-        # TODO Queue sending notification to DM
         return None
 
     @classmethod

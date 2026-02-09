@@ -137,7 +137,7 @@ class GuildConfigs(AuditMixin, Table):
             "zh-TW": "Chinese, Taiwan",
         }[self.primary_language_raw]
 
-    def premium_is_enabled(
+    async def premium_is_enabled(
         self, ctx: lightbulb.Context | lightbulb.components.MenuContext
     ) -> bool:
         """Returns true if this guild is considered to have active premium"""

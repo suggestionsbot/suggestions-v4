@@ -134,7 +134,6 @@ class QueuedSuggestions(Table, AuditMixin):
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         localisations: Localisation,
     ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
-        # TODO Localize once format decided
         user: hikari.User = await bot.rest.fetch_user(self.author_id)
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
@@ -191,7 +190,7 @@ class QueuedSuggestions(Table, AuditMixin):
                 )
             )
 
-        if self.resolved_note and self.resolved_by is not None:
+        if self.resolved_by is not None and self.related_suggestion is None:
             # Means it's been rejected so we should show it
             components.append(
                 hikari.impl.SeparatorComponentBuilder(
@@ -199,18 +198,23 @@ class QueuedSuggestions(Table, AuditMixin):
                     spacing=hikari.SpacingType.SMALL,
                 )
             )
-            components.append(
-                hikari.impl.TextDisplayComponentBuilder(
-                    content=localisations.get_localized_string(
-                        "components.queued_suggestions.moderator",
-                        ctx,
-                        extras={
-                            "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
-                            "RESOLVED_BY_NOTE": self.resolved_note,
-                        },
-                    )
-                )
+            content = localisations.get_localized_string(
+                "components.queued_suggestions.resolved",
+                ctx,
+                extras={
+                    "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
+                },
             )
+            if self.resolved_note is not None:
+                content += localisations.get_localized_string(
+                    "components.queued_suggestions.resolved_note",
+                    ctx,
+                    extras={
+                        "RESOLVED_BY_NOTE": self.resolved_note,
+                    },
+                )
+
+            components.append(hikari.impl.TextDisplayComponentBuilder(content=content))
 
         sid_text = f"`{self.sID}`"
         # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/queue/{self.sID})"

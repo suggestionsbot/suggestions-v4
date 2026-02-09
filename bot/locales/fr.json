@@ -44,7 +44,7 @@
     "values.approve_message": "Vous avez approuv\u00e9 **{}**",
     "values.reject_message": "Vous avez rejet\u00e9 **{}**",
     "values.clear_message": "J'ai effac\u00e9 `{}` pour vous.",
-    "values.suggest_suggestion_sent": "H\u00e9, {}. Votre suggestion a \u00e9t\u00e9 envoy\u00e9e \u00e0 {} pour \u00eatre vot\u00e9e !\n\nVeuillez attendre qu'elle soit approuv\u00e9e ou rejet\u00e9e par un membre du personnel.\n\nL'ID de votre suggestion (sID) pour r\u00e9f\u00e9rence est **{}**.",
+    "values.suggest.suggestion_sent": "H\u00e9, $AUTHOR. Votre suggestion a \u00e9t\u00e9 envoy\u00e9e \u00e0 $CHANNEL pour \u00eatre vot\u00e9e !\n\nVeuillez attendre qu'elle soit approuv\u00e9e ou rejet\u00e9e par un membre du personnel.\n\nL'ID de votre suggestion (sID) pour r\u00e9f\u00e9rence est **$SID**.",
     "values.suggest_suggestion_sent_footer": "ID de guilde : {} | sID : {}",
     "values.suggest_thanks": "Merci pour votre suggestion !",
     "values.suggest.sent_to_queue": "Votre suggestion a \u00e9t\u00e9 envoy\u00e9e \u00e0 la file d'attente pour traitement.",

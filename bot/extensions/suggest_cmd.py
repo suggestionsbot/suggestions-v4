@@ -222,7 +222,7 @@ class Suggest(
 
             prefix = (
                 guild_config.premium.queued_suggestions_prefix
-                if guild_config.premium_is_enabled(ctx)
+                if await guild_config.premium_is_enabled(ctx)
                 else ""
             )
             components = [

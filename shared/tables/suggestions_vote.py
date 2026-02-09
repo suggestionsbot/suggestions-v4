@@ -12,7 +12,7 @@ class SuggestionsVoteTypeEnum(Enum):
     DownVote = "DownVote"
 
 
-class SuggestionsVote(Table, AuditMixin):
+class SuggestionVotes(Table, AuditMixin):
     id = Serial(
         primary_key=True,
         unique=True,

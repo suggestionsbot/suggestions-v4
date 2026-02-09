@@ -48,7 +48,7 @@
     "values.approve_message": "Du har godkendt **{}**",
     "values.reject_message": "Du har afvist **{}**",
     "values.clear_message": "Jeg har ryddet `{}` for dig.",
-    "values.suggest_suggestion_sent": "Hej, {}. Dit forslag er blevet sendt til {} for at blive stemt p\u00e5!\n\nVent venligst, indtil det bliver godkendt eller afvist af et staff medlem.\n\nDit forslags-id (sID) til reference er **{}**.",
+    "values.suggest.suggestion_sent": "Hej, $AUTHOR. Dit forslag er blevet sendt til $CHANNEL for at blive stemt p\u00e5!\n\nVent venligst, indtil det bliver godkendt eller afvist af et staff medlem.\n\nDit forslags-id (sID) til reference er **$SID**.",
     "values.suggest_suggestion_sent_footer": "Guild ID: {} | sID: {}",
     "values.suggest_thanks": "Tak for dit forslag!",
     "values.suggest.sent_to_queue": "Dit forslag er blevet sendt til k\u00f8en til behandling.",

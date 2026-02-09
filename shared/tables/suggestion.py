@@ -1,13 +1,21 @@
+import io
 import typing
 from enum import Enum
 
 import hikari
+import lightbulb
+from hikari.impl import ContainerComponentBuilder, MessageActionRowBuilder
 from piccolo.columns import Serial, Varchar, Text, ForeignKey, BigInt, Timestamptz, Array
 from piccolo.columns.indexes import IndexMethod
 from piccolo.table import Table
 
+from bot import constants
 from bot.constants import REJECTED_COLOR, APPROVED_COLOR, PENDING_COLOR
-from shared.tables import GuildConfigs, UserConfigs
+from bot.localisation import Localisation
+from shared.tables import (
+    GuildConfigs,
+    UserConfigs,
+)
 from shared.tables.mixins import AuditMixin
 from bot.utils import generate_id
 
@@ -36,13 +44,18 @@ class Suggestions(Table, AuditMixin):
     guild_configuration = ForeignKey(GuildConfigs, index=True)
     # Secret as if anon we don't want to reveal
     user_configuration = ForeignKey(UserConfigs, index=True, secret=True)
-    state = Varchar(help_text="The current state of this suggestion", choices=SuggestionStateEnum)
+    state = Varchar(
+        help_text="The current state of this suggestion",
+        choices=SuggestionStateEnum,
+        null=False,
+        required=True,
+    )
     moderator_note = Text(
         null=True,
         required=False,
         help_text="An optional note that was added by a moderator",
     )
-    moderator_note_added_by = ForeignKey(UserConfigs, index=True)
+    moderator_note_added_by = ForeignKey(UserConfigs, index=True, secret=True)
     moderator_note_added_by_display_text = Text(
         null=True,
         default=None,
@@ -133,3 +146,191 @@ class Suggestions(Table, AuditMixin):
     @property
     def author_id(self) -> int:
         return self.user_configuration.user_id
+
+    @property
+    def is_anonymous(self) -> bool:
+        return self.author_display_name == "Anonymous"
+
+    async def as_components(
+        self,
+        bot: hikari.RESTAware,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        localisations: Localisation,
+        *,
+        exclude_buttons: bool = False,
+        exclude_votes: bool = False,
+    ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
+        user: hikari.User = await bot.rest.fetch_user(self.author_id)
+        components: list = [
+            hikari.impl.TextDisplayComponentBuilder(
+                content=localisations.get_localized_string(
+                    "components.suggestions.suggestion",
+                    ctx,
+                    extras={"SUGGESTION": self.suggestion},
+                )
+            ),
+        ]
+        if self.image_urls:
+            items = []
+            for entry in self.image_urls:
+                items.append(
+                    hikari.impl.MediaGalleryItemBuilder(
+                        media=entry,
+                    ),
+                )
+
+            components.append(hikari.impl.MediaGalleryComponentBuilder(items=items))
+
+        components.append(
+            hikari.impl.SeparatorComponentBuilder(
+                divider=True,
+                spacing=hikari.SpacingType.SMALL,
+            )
+        )
+        if self.is_anonymous:
+            components.append(
+                hikari.impl.TextDisplayComponentBuilder(
+                    content=localisations.get_localized_string(
+                        "components.suggestions.submitter",
+                        ctx,
+                        extras={"AUTHOR_DISPLAY": self.author_display_name},
+                    )
+                )
+            )
+
+        else:
+            components.append(
+                hikari.impl.SectionComponentBuilder(
+                    components=[
+                        hikari.impl.TextDisplayComponentBuilder(
+                            content=localisations.get_localized_string(
+                                "components.suggestions.submitter",
+                                ctx,
+                                extras={"AUTHOR_DISPLAY": self.author_display_name},
+                            )
+                        ),
+                    ],
+                    accessory=hikari.impl.ThumbnailComponentBuilder(
+                        media=user.display_avatar_url,
+                    ),
+                )
+            )
+
+        if self.moderator_note:
+            components.append(
+                hikari.impl.SeparatorComponentBuilder(
+                    divider=True,
+                    spacing=hikari.SpacingType.SMALL,
+                )
+            )
+            content = localisations.get_localized_string(
+                "components.suggestions.moderator_note",
+                ctx,
+                extras={
+                    "MODERATOR_NOTE_BY_DISPLAY": self.moderator_note_added_by_display_text,
+                    "MODERATOR_NOTE": self.moderator_note,
+                },
+            )
+            components.append(hikari.impl.TextDisplayComponentBuilder(content=content))
+
+        if self.state is not SuggestionStateEnum.PENDING:
+            components.append(
+                hikari.impl.SeparatorComponentBuilder(
+                    divider=True,
+                    spacing=hikari.SpacingType.SMALL,
+                )
+            )
+            content = localisations.get_localized_string(
+                "components.suggestions.resolved",
+                ctx,
+                extras={
+                    "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
+                },
+            )
+            if self.resolved_note is not None:
+                content += localisations.get_localized_string(
+                    "components.suggestions.resolved_note",
+                    ctx,
+                    extras={
+                        "RESOLVED_BY_NOTE": self.resolved_note,
+                    },
+                )
+
+            components.append(hikari.impl.TextDisplayComponentBuilder(content=content))
+
+        if not exclude_votes:
+            components.append(
+                hikari.impl.SeparatorComponentBuilder(
+                    divider=True,
+                    spacing=hikari.SpacingType.SMALL,
+                )
+            )
+            votes = io.StringIO()
+            from shared.tables import SuggestionVotes, SuggestionsVoteTypeEnum
+
+            up_votes = (
+                await SuggestionVotes.count()
+                .where(SuggestionVotes.suggestion == self)
+                .where(SuggestionVotes.vote_type == SuggestionsVoteTypeEnum.UpVote)
+            )
+            votes.write(f"{constants.DEFAULT_UP_VOTE.mention}: **{up_votes}**\n")
+
+            down_votes = (
+                await SuggestionVotes.count()
+                .where(SuggestionVotes.suggestion == self)
+                .where(SuggestionVotes.vote_type == SuggestionsVoteTypeEnum.DownVote)
+            )
+            votes.write(f"{constants.DEFAULT_DOWN_VOTE.mention}: **{down_votes}**")
+
+            components.append(
+                hikari.impl.TextDisplayComponentBuilder(
+                    content=localisations.get_localized_string(
+                        "components.suggestions.results",
+                        ctx,
+                        extras={
+                            "VOTES": votes.getvalue(),
+                        },
+                    )
+                )
+            )
+
+        sid_text = f"`{self.sID}`"
+        # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/suggestions/{self.sID})"
+        components.append(
+            hikari.impl.TextDisplayComponentBuilder(
+                content=localisations.get_localized_string(
+                    "components.suggestions.footer",
+                    ctx,
+                    extras={
+                        "SID": sid_text,
+                        "TIMESTAMP": int(self.created_at.timestamp()),
+                    },
+                ),
+            )
+        )
+
+        result: list = [
+            hikari.impl.ContainerComponentBuilder(
+                accent_color=self.color,
+                components=components,
+            ),
+        ]
+        if not exclude_buttons:
+            result.append(
+                hikari.impl.MessageActionRowBuilder(
+                    components=[
+                        hikari.impl.InteractiveButtonBuilder(
+                            style=hikari.ButtonStyle.SECONDARY,
+                            emoji=constants.DEFAULT_UP_VOTE,
+                            custom_id=f"up_vote:{self.sID}",
+                        ),
+                        hikari.impl.InteractiveButtonBuilder(
+                            style=hikari.ButtonStyle.SECONDARY,
+                            emoji=constants.DEFAULT_DOWN_VOTE,
+                            custom_id=f"down_vote:{self.sID}",
+                        ),
+                    ]
+                )
+            )
+
+        return result

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
+import hikari
 from hikari import Color
 from opentelemetry import trace
 
@@ -14,6 +15,18 @@ APPROVED_COLOR = Color.of((0, 230, 64))
 PENDING_COLOR = Color.of((255, 214, 99))
 EMBED_COLOR = Color.of((255, 214, 99))
 OTEL_TRACER = trace.get_tracer(__name__)
+
+# TODO Set these IDs based on current env
+DEFAULT_UP_VOTE = hikari.CustomEmoji(
+    id=hikari.Snowflake(1470358301555294320),
+    name="nerdSuccess",
+    is_animated=False,
+)
+DEFAULT_DOWN_VOTE = hikari.CustomEmoji(
+    id=hikari.Snowflake(1470358346879209503),
+    name="nerdError",
+    is_animated=False,
+)
 
 
 class ErrorCode(IntEnum):
