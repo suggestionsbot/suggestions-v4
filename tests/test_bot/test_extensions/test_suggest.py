@@ -25,6 +25,7 @@ from tests.conftest import prepare_command
 
 USER_ID = 12345
 GUILD_ID = 23456
+CHANNEL_ID = 348934
 
 
 def create_options(
@@ -305,12 +306,12 @@ async def test_channel_queued_suggestions(localisation):
     gc = GuildConfigs()
     gc.uses_suggestions_queue = True
     gc.virtual_suggestions_queue = False
-    gc.queued_suggestion_channel_id = 12345
+    gc.queued_suggestion_channel_id = CHANNEL_ID
     bot = AsyncMock(spec=hikari.GatewayBot)
     bot.rest.fetch_user = AsyncMock()
     bot.rest.fetch_channel = AsyncMock()
     ctx, _, _, _, _ = await invoke_suggest(
-        options, localisations=localisation, guild_config=gc, bot=bot
+        options, localisations=localisation, guild_config=gc, bot=bot, user_id=USER_ID
     )
 
     r_2 = await QueuedSuggestions.count()
@@ -321,6 +322,30 @@ async def test_channel_queued_suggestions(localisation):
     assert r_3.suggestion == "test"
     assert r_3.author_id == USER_ID
     assert r_3.author_display_name == f"<@{USER_ID}>"
+    assert r_3.channel_id is not None
+    assert r_3.message_id is not None
+
+
+async def test_anonymous_queued_suggestion(localisation):
+    """Asserts that created anonymous queue suggestions are actually anonymous"""
+    options = create_options("test", anon=True)
+    gc = GuildConfigs()
+    gc.can_have_anonymous_suggestions = True
+    gc.uses_suggestions_queue = True
+    gc.virtual_suggestions_queue = False
+    gc.queued_suggestion_channel_id = 12345
+    bot = AsyncMock(spec=hikari.GatewayBot)
+    bot.rest.fetch_user = AsyncMock()
+    bot.rest.fetch_channel = AsyncMock()
+    ctx, _, _, _, _ = await invoke_suggest(
+        options, localisations=localisation, user_id=USER_ID, guild_config=gc, bot=bot
+    )
+    r_3: QueuedSuggestions = await QueuedSuggestions.objects(
+        QueuedSuggestions.user_configuration
+    ).first()
+    assert r_3.suggestion == "test"
+    assert r_3.user_configuration.user_id == USER_ID
+    assert r_3.author_display_name == "Anonymous"
 
 
 async def test_channel_anonymous_queued_suggestions(localisation):
@@ -348,3 +373,31 @@ async def test_channel_anonymous_queued_suggestions(localisation):
     assert r_3.suggestion == "test"
     assert r_3.author_id == USER_ID
     assert r_3.author_display_name == "Anonymous"
+
+
+async def test_virtual_queued_suggestions(localisation):
+    r_1 = await QueuedSuggestions.count()
+    assert r_1 == 0
+
+    options = create_options("test")
+    gc = GuildConfigs()
+    gc.uses_suggestions_queue = True
+    gc.virtual_suggestions_queue = True
+    gc.queued_suggestion_channel_id = 12345
+    bot = AsyncMock(spec=hikari.GatewayBot)
+    bot.rest.fetch_user = AsyncMock()
+    bot.rest.fetch_channel = AsyncMock()
+    ctx, _, _, _, _ = await invoke_suggest(
+        options, localisations=localisation, guild_config=gc, bot=bot
+    )
+
+    r_2 = await QueuedSuggestions.count()
+    assert r_2 == 1
+    r_3: QueuedSuggestions = await QueuedSuggestions.objects(
+        QueuedSuggestions.user_configuration
+    ).first()
+    assert r_3.suggestion == "test"
+    assert r_3.author_id == USER_ID
+    assert r_3.author_display_name == f"<@{USER_ID}>"
+    assert r_3.channel_id is None
+    assert r_3.message_id is None

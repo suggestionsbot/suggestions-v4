@@ -247,8 +247,8 @@ class SuggestionMenu:
             )
             qs.channel_id = message.channel_id
             qs.message_id = message.id
-            await qs.save()
 
+        await qs.save()
         logger.debug(
             f"User {ctx.user.id} created new queued"
             f" suggestion in guild {ctx.guild_id}",
