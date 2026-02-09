@@ -251,7 +251,11 @@ class SuggestionMenu:
         message: hikari.Message = await channel.send(
             content=prefix,
             components=await s.as_components(
-                bot=bot, ctx=ctx, localisations=localisations
+                bot=bot,
+                ctx=ctx,
+                localisations=localisations,
+                use_guild_locale=True,
+                guild_config=guild_config,
             ),
         )
         s.channel_id = message.channel_id

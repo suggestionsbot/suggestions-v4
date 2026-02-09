@@ -79,7 +79,7 @@ class Localisation:
         guild_config: GuildConfigs | None = None,
         use_guild_locale: bool = False,
     ):
-        if use_guild_locale:
+        if use_guild_locale and guild_config is not None:
             locale = guild_config.primary_language
         else:
             locale = ctx.interaction.locale
