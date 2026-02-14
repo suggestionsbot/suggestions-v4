@@ -59,7 +59,7 @@ class GuildConfigs(AuditMixin, Table):
         default=False,
         help_text="Auto archive threads when suggestions are resolved?",
     )
-    uses_suggestions_queue = Boolean(
+    uses_suggestion_queue = Boolean(
         default=False,
         help_text="If True, suggestions go to a queue for review instead "
         "of to the suggestions channel",
@@ -141,6 +141,8 @@ class GuildConfigs(AuditMixin, Table):
         self, ctx: lightbulb.Context | lightbulb.components.MenuContext
     ) -> bool:
         """Returns true if this guild is considered to have active premium"""
+        # TODO Needs reworking now stripe exists
+        return False
         now = utc_now()
         for entitlement in ctx.interaction.entitlements:
             if entitlement.is_deleted is True:

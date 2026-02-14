@@ -123,7 +123,7 @@ class SuggestionMenu:
                 )
                 return None
 
-            if guild_config.uses_suggestions_queue:
+            if guild_config.uses_suggestion_queue:
                 return await cls.handle_queued_suggestion(
                     suggestion=suggestion_content,
                     image_urls=image_urls,
@@ -398,8 +398,8 @@ class SuggestionMenu:
 
             prefix = (
                 guild_config.premium.queued_suggestions_prefix
-                if guild_config.premium_is_enabled(ctx)
-                else ""
+                if await guild_config.premium_is_enabled(ctx)
+                else hikari.undefined.UNDEFINED
             )
             message: hikari.Message = await channel.send(
                 content=prefix,

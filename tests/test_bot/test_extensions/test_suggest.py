@@ -230,7 +230,7 @@ async def test_image_in_suggestion(localisation):
 async def test_queued_suggestion_missing_queue_channel_config(localisation):
     options = create_options("test")
     gc = GuildConfigs()
-    gc.uses_suggestions_queue = True
+    gc.uses_suggestion_queue = True
     gc.virtual_suggestions_queue = False
     ctx, _, _, _, _ = await invoke_suggest(
         options, localisations=localisation, guild_config=gc
@@ -254,7 +254,7 @@ async def test_queued_suggestion_missing_queue_channel(localisation):
     """Asserts the bot behaves when it can't fetch the queue channel"""
     options = create_options("test")
     gc = GuildConfigs()
-    gc.uses_suggestions_queue = True
+    gc.uses_suggestion_queue = True
     gc.virtual_suggestions_queue = False
     gc.queued_suggestion_channel_id = 12345
     bot = AsyncMock(spec=hikari.GatewayBot)
@@ -304,7 +304,7 @@ async def test_channel_queued_suggestions(localisation):
 
     options = create_options("test")
     gc = GuildConfigs()
-    gc.uses_suggestions_queue = True
+    gc.uses_suggestion_queue = True
     gc.virtual_suggestions_queue = False
     gc.queued_suggestion_channel_id = CHANNEL_ID
     bot = AsyncMock(spec=hikari.GatewayBot)
@@ -331,7 +331,7 @@ async def test_anonymous_queued_suggestion(localisation):
     options = create_options("test", anon=True)
     gc = GuildConfigs()
     gc.can_have_anonymous_suggestions = True
-    gc.uses_suggestions_queue = True
+    gc.uses_suggestion_queue = True
     gc.virtual_suggestions_queue = False
     gc.queued_suggestion_channel_id = 12345
     bot = AsyncMock(spec=hikari.GatewayBot)
@@ -354,7 +354,7 @@ async def test_channel_anonymous_queued_suggestions(localisation):
 
     options = create_options("test", anon=True)
     gc = GuildConfigs()
-    gc.uses_suggestions_queue = True
+    gc.uses_suggestion_queue = True
     gc.virtual_suggestions_queue = False
     gc.queued_suggestion_channel_id = 12345
     gc.can_have_anonymous_suggestions = True
@@ -381,7 +381,7 @@ async def test_virtual_queued_suggestions(localisation):
 
     options = create_options("test")
     gc = GuildConfigs()
-    gc.uses_suggestions_queue = True
+    gc.uses_suggestion_queue = True
     gc.virtual_suggestions_queue = True
     gc.queued_suggestion_channel_id = 12345
     bot = AsyncMock(spec=hikari.GatewayBot)

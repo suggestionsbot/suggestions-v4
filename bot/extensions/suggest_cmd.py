@@ -164,7 +164,7 @@ class Suggest(
                 user_id=ctx.user.id,
             )
 
-        if guild_config.uses_suggestions_queue:
+        if guild_config.uses_suggestion_queue:
             return await self.handle_queued_suggestion(
                 ctx, guild_config, user_config, localisations, image_url, bot
             )
@@ -223,7 +223,7 @@ class Suggest(
             prefix = (
                 guild_config.premium.queued_suggestions_prefix
                 if await guild_config.premium_is_enabled(ctx)
-                else ""
+                else hikari.undefined.UNDEFINED
             )
             components = [
                 (

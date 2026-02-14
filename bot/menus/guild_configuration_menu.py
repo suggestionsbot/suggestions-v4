@@ -64,7 +64,7 @@ class GuildConfigurationMenus:
                     "queued_suggestion_channel_id",
                     "queued_suggestion_log_channel_id",
                 ):
-                    guild_config.uses_suggestions_queue = True
+                    guild_config.uses_suggestion_queue = True
                     guild_config.virtual_suggestions_queue = False
 
                 await guild_config.save()
@@ -165,7 +165,7 @@ class GuildConfigurationMenus:
         elif id_data == "suggestions_queue":
             value = event_values[0]
             if value == "none":
-                guild_config.uses_suggestions_queue = False
+                guild_config.uses_suggestion_queue = False
                 await guild_config.save()
                 return await ctx.respond(
                     localisations.get_localized_string(
@@ -174,7 +174,7 @@ class GuildConfigurationMenus:
                 )
 
             elif value == "virtual":
-                guild_config.uses_suggestions_queue = True
+                guild_config.uses_suggestion_queue = True
                 guild_config.virtual_suggestions_queue = True
                 guild_config.queued_suggestion_channel_id = None
                 guild_config.queued_suggestion_log_channel_id = None
@@ -699,10 +699,10 @@ class GuildConfigurationMenus:
         ]
 
         # Add queue container
-        no_queue_is_default = not guild_config.uses_suggestions_queue
+        no_queue_is_default = not guild_config.uses_suggestion_queue
         virtual_is_default = False
         channel_is_default = False
-        if guild_config.uses_suggestions_queue:
+        if guild_config.uses_suggestion_queue:
             if guild_config.virtual_suggestions_queue:
                 virtual_is_default = True
             else:
