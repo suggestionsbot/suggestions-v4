@@ -1,6 +1,14 @@
 import hikari
 import lightbulb
-from piccolo.columns import BigInt, Boolean, Array, ForeignKey, LazyTableReference, Text
+from piccolo.columns import (
+    BigInt,
+    Boolean,
+    Array,
+    ForeignKey,
+    LazyTableReference,
+    Text,
+    JSON,
+)
 from piccolo.table import Table
 
 from shared.tables import PremiumGuildConfigs
@@ -79,6 +87,11 @@ class GuildConfigs(AuditMixin, Table):
         BigInt(),
         help_text="A list of users who cannot make suggestions",
     )
+    blocked_users_json = JSON(
+        help_text="A migration helper given Apache hop doesnt like arrays. Will need to do a second migration later",
+        null=True,
+        default=None,
+    )
     ping_on_thread_creation = Boolean(
         default=True,
         help_text="Ping the suggestions author in the suggestions thread",
@@ -142,6 +155,7 @@ class GuildConfigs(AuditMixin, Table):
     ) -> bool:
         """Returns true if this guild is considered to have active premium"""
         # TODO Needs reworking now stripe exists
+        # TODO If true this should also ensure the premium foreignkey exists
         return False
         now = utc_now()
         for entitlement in ctx.interaction.entitlements:

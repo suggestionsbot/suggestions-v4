@@ -36,12 +36,14 @@ class PremiumGuildConfigs(AuditMixin, Table):
         help_text="The discord guild id",
     )
     suggestions_prefix = Text(
-        default="",
+        default=None,
+        null=True,
         help_text="If the guild has premium, what to prefix suggestions with. "
         "Typically used for pinging roles.",
     )
     queued_suggestions_prefix = Text(
-        default="",
+        default=None,
+        null=True,
         help_text="If the guild has premium, what to prefix queued suggestions with. "
         "Typically used for pinging roles.",
     )

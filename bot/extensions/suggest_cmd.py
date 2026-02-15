@@ -223,6 +223,7 @@ class Suggest(
             prefix = (
                 guild_config.premium.queued_suggestions_prefix
                 if await guild_config.premium_is_enabled(ctx)
+                and guild_config.premium.queued_suggestions_prefix is not None
                 else hikari.undefined.UNDEFINED
             )
             components = [

@@ -1389,7 +1389,7 @@ wheels = [
 [[package]]
 name = "hikari"
 version = "2.5.1.dev0"
-source = { git = "https://github.com/mplatypus/hikari.git?rev=feature%2Fmodals-v2#52230b7b57244a91dc4b7cb4a2244f417d056788" }
+source = { git = "https://github.com/mplatypus/hikari.git?rev=feature%2Fmodals-v2#bd5785ca8191bdbc69aaf8c8d22ce9a765d4a150" }
 dependencies = [
     { name = "aiohttp" },
     { name = "attrs" },

@@ -10,7 +10,6 @@ dependencies = [
     "fastnanoid>=0.4.3",
     "function-cooldowns>=2.2.0",
     "hikari-lightbulb>=3.2.3",
-    #    "hikari[speedups]>=2.5.0",
     "hikari[speedups]",
     "httpx-oauth>=0.16.1",
     "httpx-retries>=0.4.5",

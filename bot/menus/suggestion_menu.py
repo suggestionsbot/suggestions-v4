@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import logging
 from typing import cast
@@ -27,11 +29,7 @@ class SuggestionMenu:
     @classmethod
     async def handle_interaction(
         cls,
-        response_fields: list[
-            hikari.interactions.modal_interactions.ModalInteractionTextInputComponent
-            | hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent
-            | hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent
-        ],
+        response_fields: list[hikari.LabelComponent],
         *,
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
@@ -45,21 +43,22 @@ class SuggestionMenu:
             image_urls: list[str] = []
             anonymously: bool = False
             for entry in response_fields:
-                if entry.custom_id == "suggestion":
-                    entry = cast(
-                        hikari.interactions.modal_interactions.ModalInteractionTextInputComponent,
-                        entry,
-                    )
-                    suggestion_content = entry.value
+                if (
+                    isinstance(entry.component, hikari.TextInputComponent)
+                    and entry.component.custom_id == "suggestion"
+                ):
+                    suggestion_content = entry.component.value
 
-                elif entry.custom_id == "anonymously":
-                    entry = cast(
-                        hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent,
-                        entry,
-                    )
-                    anonymously = commons.value_to_bool(entry.values[0])
+                elif (
+                    isinstance(entry.component, hikari.TextSelectMenuComponent)
+                    and entry.component.custom_id == "anonymously"
+                ):
+                    anonymously = commons.value_to_bool(entry.component.options[0].value)
 
-                elif entry.custom_id == "files":
+                elif (
+                    isinstance(entry.component, hikari.FileUploadComponent)
+                    and entry.component.custom_id == "files"
+                ):
                     if guild_config.can_have_images_in_suggestions is False:
                         await ctx.respond(
                             localisations.get_localized_string(
@@ -68,11 +67,7 @@ class SuggestionMenu:
                         )
                         return None
 
-                    entry = cast(
-                        hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent,
-                        entry,
-                    )
-                    for item_id in entry.values:
+                    for item_id in entry.component.values:
                         item: hikari.messages.Attachment | None = (
                             event.interaction.resolved.attachments.get(item_id)
                         )
@@ -246,6 +241,7 @@ class SuggestionMenu:
         prefix = (
             guild_config.premium.suggestions_prefix
             if await guild_config.premium_is_enabled(ctx)
+            and guild_config.premium.queued_suggestions_prefix is not None
             else ""
         )
         message: hikari.Message = await channel.send(
