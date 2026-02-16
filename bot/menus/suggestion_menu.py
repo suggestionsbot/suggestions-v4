@@ -16,9 +16,6 @@ from bot.tables import InternalErrors
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
-    QueuedSuggestions,
-    Suggestions,
-    SuggestionStateEnum,
 )
 from shared.utils import r2
 
@@ -208,6 +205,9 @@ class SuggestionMenu:
     ):
         """Specific helper for handling queued suggestions"""
         bot = ctx.client.app
+        from shared.tables import SuggestionStateEnum
+        from shared.tables import Suggestions
+
         s: Suggestions = Suggestions(
             guild_configuration=guild_config,
             user_configuration=user_config,
@@ -356,6 +356,8 @@ class SuggestionMenu:
     ):
         """Specific helper for handling queued suggestions"""
         bot = ctx.client.app
+        from shared.tables import QueuedSuggestions
+
         qs: QueuedSuggestions = QueuedSuggestions(
             guild_configuration=guild_config,
             user_configuration=user_config,
