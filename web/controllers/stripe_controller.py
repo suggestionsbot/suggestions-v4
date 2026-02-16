@@ -70,7 +70,7 @@ class StripeController(Controller):
         elif event_type == "customer.subscription.updated":
             # Two key cases are increase or decrease quantity
             for item in event["data"]["object"]["items"]["data"]:
-                if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS:
+                if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
                     # We expect each fulfil to be able to receive a checkout
                     # cart that also contains other items which have been purchased
                     continue
@@ -129,7 +129,7 @@ class StripeController(Controller):
         elif event_type == "customer.subscription.deleted":
             skus = await self.extract_subscription_skus(event)
             for sku in skus:
-                if sku == constants.STRIPE_PRICE_ID_GUILDS:
+                if sku == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
                     # Revoke guild premium tokens
                     subscription_id: str = event["data"]["object"]["id"]
                     all_objects = await GuildTokens.objects().where(
@@ -142,7 +142,7 @@ class StripeController(Controller):
             for line_item in event["data"]["object"]["lines"]:
                 if (
                     line_item["pricing"]["price_details"]["price"]
-                    == constants.STRIPE_PRICE_ID_GUILDS
+                    == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
                 ):
                     subscription_id = line_item["parent"]["subscription_item_details"][
                         "subscription"
@@ -153,7 +153,7 @@ class StripeController(Controller):
                     guild_items = [
                         i
                         for i in subscription["items"]
-                        if i["price"]["id"] == constants.STRIPE_PRICE_ID_GUILDS
+                        if i["price"]["id"] == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
                     ]
                     if len(guild_items) == 0:
                         log.critical("Expected at-least one guild sku, found none")
@@ -218,7 +218,7 @@ class StripeController(Controller):
 
             # expires_at = arrow.get(utc_now()).shift(months=1, days=5).datetime
             for item in subscription["items"]["data"]:
-                if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS:
+                if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
                     # We expect each fulfil to be able to receive a checkout
                     # cart that also contains other items which have been purchased
                     continue
@@ -260,7 +260,9 @@ class StripeController(Controller):
 
     @get("/guilds/checkout", name="stripe_guild_checkout", middleware=[EnsureAuth])
     async def checkout_guild(self) -> Template:
-        price_result = await stripe.Price.retrieve_async(constants.STRIPE_PRICE_ID_GUILDS)
+        price_result = await stripe.Price.retrieve_async(
+            constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
+        )
         return html_template(
             "stripe/guild_checkout.jinja",
             {"pricing": price_result},
@@ -294,9 +296,14 @@ class StripeController(Controller):
         checkout_session = await stripe.checkout.Session.create_async(
             line_items=[
                 {
-                    "price": constants.STRIPE_PRICE_ID_GUILDS,
+                    "price": constants.STRIPE_PRICE_ID_GUILDS_MONTHLY,
                     "quantity": quantity,
                 },
+                # TODO Implement yearly support later
+                # {
+                #     "price": constants.STRIPE_PRICE_ID_GUILDS_YEARLY,
+                #     "quantity": quantity,
+                # },
             ],
             customer_email=request.user.email,
             mode="subscription",

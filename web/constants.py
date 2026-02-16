@@ -178,7 +178,12 @@ SIGNOZ_API_URL = get_secret("SIGNOZ_API_URL", infisical_client)
 
 # Stripe things
 STRIPE_API_KEY = get_secret("STRIPE_API_KEY", infisical_client)
-STRIPE_PRICE_ID_GUILDS = get_secret("STRIPE_PRICE_ID_GUILDS", infisical_client)
+STRIPE_PRICE_ID_GUILDS_MONTHLY = get_secret(
+    "STRIPE_PRICE_ID_GUILDS_MONTHLY", infisical_client
+)
+STRIPE_PRICE_ID_GUILDS_YEARLY = get_secret(
+    "STRIPE_PRICE_ID_GUILDS_YEARLY", infisical_client
+)
 STRIPE_COUPON_EARLY_ADOPTER = get_secret("STRIPE_COUPON_EARLY_ADOPTER", infisical_client)
 STRIPE_CUSTOMER_PORTAL = get_secret("STRIPE_CUSTOMER_PORTAL", infisical_client)
 STRIPE_WEBHOOK_SECRET = get_secret("STRIPE_WEBHOOK_SECRET", infisical_client)
