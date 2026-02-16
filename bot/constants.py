@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from enum import IntEnum
+from pathlib import Path
 
 import hikari
 from hikari import Color
 from opentelemetry import trace
 
+from bot.localisation import Localisation
 
 VERSION = "4.0"
 MAX_CONTENT_LENGTH = 1000
@@ -15,6 +17,9 @@ APPROVED_COLOR = Color.of((0, 230, 64))
 PENDING_COLOR = Color.of((255, 214, 99))
 EMBED_COLOR = Color.of((255, 214, 99))
 OTEL_TRACER = trace.get_tracer(__name__)
+LOCALISATIONS = Localisation(
+    base_path=Path("bot"),
+)
 
 # TODO Set these IDs based on current env
 DEFAULT_UP_VOTE = hikari.CustomEmoji(

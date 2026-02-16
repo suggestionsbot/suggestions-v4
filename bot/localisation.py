@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import json
 import logging
+import typing
 from pathlib import Path
 from string import Template
 
@@ -8,7 +11,9 @@ import lightbulb
 from lightbulb import DictLocalizationProvider
 
 from bot.exceptions import MissingTranslation
-from shared.tables import GuildConfigs
+
+if typing.TYPE_CHECKING:
+    from shared.tables import GuildConfigs
 
 logger = logging.getLogger(__name__)
 

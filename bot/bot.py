@@ -8,9 +8,8 @@ from hikari.impl import CacheSettings, config
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
-from bot import overrides, utils
+from bot import overrides, utils, constants
 from bot.constants import OTEL_TRACER
-from bot.localisation import Localisation
 from bot.menus import GuildConfigurationMenus, SuggestionMenu
 from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
@@ -28,7 +27,7 @@ async def create_user_config(ctx: lightbulb.Context) -> UserConfigs:
 
 
 async def create_bot(
-    token, base_path: Path, *, log_conf: str | None = "INFO"
+    token, *, log_conf: str | None = "INFO"
 ) -> (hikari.GatewayBot, lightbulb.Client):
     bot = hikari.GatewayBot(
         token=token,
@@ -37,7 +36,6 @@ async def create_bot(
         intents=hikari.Intents.NONE,
     )
     logger.debug(f"Test with {repr(log_conf)}")
-    localisations = Localisation(base_path)
 
     default_enabled_guilds = ()
     if not t_constants.IS_PRODUCTION:
@@ -46,7 +44,7 @@ async def create_bot(
         bot,
         default_enabled_guilds=default_enabled_guilds,
         default_locale=hikari.Locale.EN_GB,
-        localization_provider=localisations.lightbulb_provider,
+        localization_provider=constants.LOCALISATIONS.lightbulb_provider,
     )
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
         GuildConfigs, create_guild_config
@@ -54,8 +52,10 @@ async def create_bot(
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
         UserConfigs, create_user_config
     )
+    from bot.localisation import Localisation
+
     client.di.registry_for(lightbulb.di.Contexts.DEFAULT).register_value(
-        Localisation, localisations
+        Localisation, constants.LOCALISATIONS
     )
 
     @client.error_handler
@@ -102,7 +102,7 @@ async def create_bot(
             await SuggestionMenu.handle_interaction(
                 event.interaction.components,
                 ctx=ctx,
-                localisations=localisations,
+                localisations=constants.LOCALISATIONS,
                 event=event,
                 guild_config=guild_config,
                 user_config=user_config,
@@ -157,7 +157,7 @@ async def create_bot(
                 await GuildConfigurationMenus.handle_interaction(
                     setting,
                     ctx=ctx,
-                    localisations=localisations,
+                    localisations=constants.LOCALISATIONS,
                     event=event,
                     guild_config=guild_config,
                     link_id=link_id,

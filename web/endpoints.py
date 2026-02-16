@@ -10,11 +10,6 @@ from web.util import html_template, alert
 
 @get(path="/", include_in_schema=False)
 async def home(request: Request) -> Template:
-    await SAQ_QUEUE.enqueue("test_message_send")
-    async with constants.DISCORD_REST_CLIENT.acquire(
-        constants.BOT_TOKEN, hikari.TokenType.BOT
-    ) as client:
-        await client.create_message(1459693890662830102, "litestar works as expected")
     return html_template("home.jinja", {"title": "Landing page"})
 
 

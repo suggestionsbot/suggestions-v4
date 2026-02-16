@@ -176,6 +176,7 @@ saq = SAQPlugin(
                     saq_worker.tick,
                     saq_worker.log_current_api_tokens,
                     saq_worker.log_current_valid_sessions,
+                    suggestions_worker.queue_suggestion_edit,
                     suggestions_worker.edit_suggestion_message,
                     suggestions_worker.test_message_send,
                 ],

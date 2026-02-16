@@ -12,6 +12,7 @@ from piccolo.table import Table
 from bot import constants
 from bot.constants import REJECTED_COLOR, APPROVED_COLOR, PENDING_COLOR
 from bot.localisation import Localisation
+from shared.saq.worker import SAQ_QUEUE
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
@@ -151,9 +152,13 @@ class Suggestions(Table, AuditMixin):
     def is_anonymous(self) -> bool:
         return self.author_display_name == "Anonymous"
 
+    async def queue_message_edit(self):
+        """Helper to queue the update of the message in discord"""
+        await SAQ_QUEUE.enqueue("queue_suggestion_edit", suggestion_id=self.sID)
+
     async def as_components(
         self,
-        bot: hikari.RESTAware,
+        rest: hikari.api.RESTClient,
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         localisations: Localisation,
         *,
@@ -162,7 +167,7 @@ class Suggestions(Table, AuditMixin):
         use_guild_locale: bool = False,
         guild_config=None,
     ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
-        user: hikari.User = await bot.rest.fetch_user(self.author_id)
+        user: hikari.User = await rest.fetch_user(self.author_id)
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(

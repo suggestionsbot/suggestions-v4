@@ -50,7 +50,8 @@ class SuggestionMenu:
                     isinstance(entry.component, hikari.TextSelectMenuComponent)
                     and entry.component.custom_id == "anonymously"
                 ):
-                    anonymously = commons.value_to_bool(entry.component.options[0].value)
+                    pass
+                    # anonymously = commons.value_to_bool(entry.component.options[0].value)
 
                 elif (
                     isinstance(entry.component, hikari.FileUploadComponent)
@@ -247,7 +248,7 @@ class SuggestionMenu:
         message: hikari.Message = await channel.send(
             content=prefix,
             components=await s.as_components(
-                bot=bot,
+                rest=bot.rest,
                 ctx=ctx,
                 localisations=localisations,
                 use_guild_locale=True,
@@ -309,7 +310,7 @@ class SuggestionMenu:
                 )
                 await dm_channel.send(
                     components=await s.as_components(
-                        bot=bot,
+                        rest=bot.rest,
                         ctx=ctx,
                         localisations=localisations,
                         exclude_buttons=True,

@@ -36,7 +36,6 @@ async def main():
 
     bot, client = await create_bot(
         token=t_constants.get_secret("BOT_TOKEN", t_constants.infisical_client),
-        base_path=Path("bot"),
         log_conf=log_conf,
     )
     bot = cast(hikari.GatewayBot, bot)
