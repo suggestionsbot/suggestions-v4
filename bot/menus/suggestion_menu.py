@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import io
 import logging
-from typing import cast
+import typing
+from typing import cast, Literal
 
 import commons
 import hikari
@@ -19,10 +20,121 @@ from shared.tables import (
 )
 from shared.utils import r2
 
+if typing.TYPE_CHECKING:
+    from shared.tables import (
+        Suggestions,
+        SuggestionVotes,
+        SuggestionsVoteTypeEnum,
+        SuggestionStateEnum,
+    )
+
 logger = logging.getLogger(__name__)
 
 
 class SuggestionMenu:
+    @classmethod
+    async def handle_vote(
+        cls,
+        sid: str,
+        vote: SuggestionsVoteTypeEnum,
+        *,
+        ctx: lightbulb.components.MenuContext,
+        localisations: Localisation,
+    ):
+        await ctx.defer(ephemeral=True)
+        from shared.tables import (
+            Suggestions,
+            SuggestionStateEnum,
+            SuggestionVotes,
+            SuggestionsVoteTypeEnum,
+        )
+
+        suggestion: Suggestions | None = await Suggestions.fetch_suggestion(sid)
+        if suggestion is None:
+            logger.debug(
+                "SuggestionNotFound",
+                extra={
+                    "interaction.guild.id": ctx.guild_id,
+                    "interaction.author.id": ctx.user.id,
+                    "interaction.author.global_name": ctx.user.global_name,
+                },
+            )
+            return await ctx.respond(
+                embed=utils.error_embed(
+                    localisations.get_localized_string(
+                        "menus.suggestion.not_found.title", ctx
+                    ),
+                    localisations.get_localized_string(
+                        "menus.suggestion.not_found.description", ctx
+                    ),
+                ),
+                ephemeral=True,
+            )
+
+        if suggestion.state != SuggestionStateEnum.PENDING.value:
+            return await ctx.respond(
+                localisations.get_localized_string(
+                    "values.suggestion_no_more_casting", ctx
+                )
+            )
+
+        vote_obj: SuggestionVotes = await SuggestionVotes.objects().get_or_create(
+            SuggestionVotes.suggestion == suggestion,
+            defaults={
+                SuggestionVotes.suggestion: suggestion,
+                SuggestionVotes.vote_type: vote,
+                SuggestionVotes.user_id: ctx.user.id,
+            },
+        )
+        if not vote_obj._was_created and vote_obj.vote_type == vote.value:
+            # Trying to vote again for the same item
+            key = (
+                "values.suggestion_up_vote_already_voted"
+                if vote == SuggestionsVoteTypeEnum.UpVote
+                else "values.suggestion_down_vote_already_voted"
+            )
+            return await ctx.respond(localisations.get_localized_string(key, ctx))
+
+        if vote_obj._was_created:
+            # New vote
+            key = (
+                "values.suggestion_up_vote_registered_vote"
+                if vote == SuggestionsVoteTypeEnum.UpVote
+                else "values.suggestion_down_vote_registered_vote"
+            )
+            logger.debug(
+                f"Member voted on {suggestion.suggestion} with {vote.value}",
+                extra={
+                    "interaction.user.id": ctx.user.id,
+                    "interaction.user.username": ctx.user.display_name,
+                    "interaction.guild.id": ctx.guild_id,
+                    "suggestion.id": suggestion.sID,
+                },
+            )
+
+        else:
+            # Vote has changed
+            key = (
+                "values.suggestion_down_vote_modified_vote"
+                if vote == SuggestionsVoteTypeEnum.DownVote
+                else "values.suggestion_up_vote_modified_vote"
+            )
+            logger.debug(
+                f"Member modified their vote on {suggestion.suggestion} to a {vote.value}",
+                extra={
+                    "interaction.user.id": ctx.user.id,
+                    "interaction.user.username": ctx.user.display_name,
+                    "interaction.guild.id": ctx.guild_id,
+                    "suggestion.id": suggestion.sID,
+                },
+            )
+
+        vote_obj.vote_type = vote
+        await vote_obj.save()
+        await suggestion.queue_message_edit()
+        await ctx.respond(localisations.get_localized_string(key, ctx))
+        return None
+
     @classmethod
     async def handle_interaction(
         cls,

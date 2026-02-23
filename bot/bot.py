@@ -125,6 +125,8 @@ async def create_bot(
     async def on_component_interaction(
         event: hikari.ComponentInteractionCreateEvent,
     ) -> None:
+        from shared.tables import SuggestionsVoteTypeEnum
+
         # TODO Wrap these events in a component error handler
         ctx = build_ctx(event.interaction)
         custom_id: str = event.interaction.custom_id
@@ -141,6 +143,42 @@ async def create_bot(
             _, link_id, setting = custom_id.split(":", maxsplit=2)
             component_key = f"editing guild setting '{setting}'"
             otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+
+        elif custom_id.startswith("suggestions_up_vote") or custom_id.startswith(
+            "suggestions_down_vote"
+        ):
+            # Legacy button type one
+            custom_id, suggestion_id = custom_id.split("|", maxsplit=2)
+            custom_id = custom_id[:-1]
+            vote_enum = (
+                SuggestionsVoteTypeEnum.UpVote
+                if custom_id == "suggestions_up_vote"
+                else SuggestionsVoteTypeEnum.DownVote
+            )
+            component_key = f"suggestion {vote_enum.value}"
+
+        elif custom_id.startswith("SuggestionsUpVote") or custom_id.startswith(
+            "SuggestionsDownVote"
+        ):
+            # Other legacy button type
+            custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
+            vote_enum = (
+                SuggestionsVoteTypeEnum.UpVote
+                if custom_id == "SuggestionsUpVote"
+                else SuggestionsVoteTypeEnum.DownVote
+            )
+            component_key = f"suggestion {vote_enum.value}"
+
+        elif custom_id.startswith("v4_suggestions_up_vote") or custom_id.startswith(
+            "v4_suggestions_down_vote"
+        ):
+            custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
+            vote_enum = (
+                SuggestionsVoteTypeEnum.UpVote
+                if custom_id == "v4_suggestions_up_vote"
+                else SuggestionsVoteTypeEnum.DownVote
+            )
+            component_key = f"suggestion {vote_enum.value}"
 
         with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
             span.set_attribute("interaction.user.id", ctx.user.id)
@@ -163,6 +201,21 @@ async def create_bot(
                     link_id=link_id,
                 )
 
-        await ctx.defer(ephemeral=True)
+            elif component_key in ("suggestion UpVote", "suggestion DownVote"):
+                await SuggestionMenu.handle_vote(
+                    suggestion_id,  # noqa
+                    vote_enum,  # noqa
+                    ctx=ctx,
+                    localisations=constants.LOCALISATIONS,
+                )
+
+            else:
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        "Unknown Event",
+                        f"Please contact support if this keeps happening.",
+                    ),
+                    ephemeral=True,
+                )
 
     return bot, client

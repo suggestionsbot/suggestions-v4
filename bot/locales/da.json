@@ -30,7 +30,7 @@
     "commands.info.options.support.description": "Indstil dette for at modtage oplysninger, der er relevante for at modtage officiel support.",
     "commands.ping.name": "ping",
     "commands.ping.description": "Pong!",
-    "values.suggestion_up_vote_no_more_casting": "Du kan ikke l\u00e6ngere afgive stemmer p\u00e5 dette forslag.",
+    "values.suggestion_no_more_casting": "Du kan ikke l\u00e6ngere afgive stemmer p\u00e5 dette forslag.",
     "values.suggestion_up_vote_already_voted": "Du har allerede stemt p\u00e5 dette forslag.",
     "values.suggestion_up_vote_modified_vote": "Jeg har \u00e6ndret din stemme fra en nedstemt til en stemme op for dette forslag.\nForslaget vil blive opdateret om kort tid.",
     "values.suggestion_up_vote_registered_vote": "Tak!\nJeg har registreret din stemme.",

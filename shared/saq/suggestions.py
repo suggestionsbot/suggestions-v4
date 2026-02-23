@@ -16,7 +16,7 @@ from web.constants import REDIS_CLIENT
 log = logging.getLogger(__name__)
 
 
-async def queue_suggestion_edit(_, suggestion_id: str) -> None:
+async def queue_suggestion_edit(suggestion_id: str) -> None:
     redis_key = f"saq:queue_suggestion_edit:{suggestion_id}"
     result = await REDIS_CLIENT.set(
         redis_key, suggestion_id, nx=True, ex=timedelta(seconds=9)

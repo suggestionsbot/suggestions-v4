@@ -30,7 +30,7 @@
     "commands.info.options.support.description": "Resmi destek almakla ilgili bilgileri almak i\u00e7in bunu ayarlay\u0131n.",
     "commands.ping.name": "ping",
     "commands.ping.description": "Pong!",
-    "values.suggestion_up_vote_no_more_casting": "Bu \u00f6neri i\u00e7in art\u0131k oy kullanamazs\u0131n\u0131z.",
+    "values.suggestion_no_more_casting": "Bu \u00f6neri i\u00e7in art\u0131k oy kullanamazs\u0131n\u0131z.",
     "values.suggestion_up_vote_already_voted": "Bu \u00f6neriye zaten olumlu oy verdiniz.",
     "values.suggestion_up_vote_modified_vote": "Bu \u00f6neri i\u00e7in verdi\u011finiz oyunuzu olumsuz oydan olumlu oya \u00e7evirdim.\n\u00d6neri k\u0131sa s\u00fcre i\u00e7inde g\u00fcncellenecektir.",
     "values.suggestion_up_vote_registered_vote": "Te\u015fekk\u00fcrler!\nOlumlu oyunuzu kaydettim.",

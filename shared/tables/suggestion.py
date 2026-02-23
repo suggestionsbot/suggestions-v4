@@ -154,7 +154,9 @@ class Suggestions(Table, AuditMixin):
 
     async def queue_message_edit(self):
         """Helper to queue the update of the message in discord"""
-        await SAQ_QUEUE.enqueue("queue_suggestion_edit", suggestion_id=self.sID)
+        from shared.saq.suggestions import queue_suggestion_edit
+
+        await queue_suggestion_edit(suggestion_id=self.sID)
 
     async def as_components(
         self,
@@ -345,12 +347,12 @@ class Suggestions(Table, AuditMixin):
                         hikari.impl.InteractiveButtonBuilder(
                             style=hikari.ButtonStyle.SECONDARY,
                             emoji=constants.DEFAULT_UP_VOTE,
-                            custom_id=f"up_vote:{self.sID}",
+                            custom_id=f"v4_suggestions_up_vote:{self.sID}",
                         ),
                         hikari.impl.InteractiveButtonBuilder(
                             style=hikari.ButtonStyle.SECONDARY,
                             emoji=constants.DEFAULT_DOWN_VOTE,
-                            custom_id=f"down_vote:{self.sID}",
+                            custom_id=f"v4_suggestions_down_vote:{self.sID}",
                         ),
                     ]
                 )

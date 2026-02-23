@@ -28,7 +28,7 @@
     "commands.info.options.support.name": "support",
     "commands.ping.name": "ping",
     "commands.ping.description": "Pong!",
-    "values.suggestion_up_vote_no_more_casting": "Sie k\u00f6nnen auf diesen Vorschlag nicht mehr abstimmen.",
+    "values.suggestion_no_more_casting": "Sie k\u00f6nnen auf diesen Vorschlag nicht mehr abstimmen.",
     "values.suggestion_up_vote_already_voted": "Sie haben diesen Vorschlag bereits positiv bewertet.",
     "values.suggestion_up_vote_modified_vote": "Ich habe Ihre Bewertung von einer negativen zu einer positiven f\u00fcr diesen Vorschlag ge\u00e4ndert.\nDer Vorschlag wird in K\u00fcrze aktualisiert.",
     "values.suggestion_up_vote_registered_vote": "Danke!\nIch habe Ihre positive Bewertung registriert.",
