@@ -71,7 +71,7 @@ class SuggestionMenu:
                 ephemeral=True,
             )
 
-        if suggestion.state != SuggestionStateEnum.PENDING.value:
+        if suggestion.state != SuggestionStateEnum.PENDING:
             return await ctx.respond(
                 localisations.get_localized_string(
                     "values.suggestion_no_more_casting", ctx
@@ -329,7 +329,7 @@ class SuggestionMenu:
             author_display_name=(
                 f"<@{ctx.user.id}>" if is_anonymous is False else "Anonymous"
             ),
-            state=SuggestionStateEnum.PENDING,
+            state_raw=SuggestionStateEnum.PENDING,
         )
         await s.save()
         try:

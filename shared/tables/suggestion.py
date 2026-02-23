@@ -45,7 +45,7 @@ class Suggestions(Table, AuditMixin):
     guild_configuration = ForeignKey(GuildConfigs, index=True)
     # Secret as if anon we don't want to reveal
     user_configuration = ForeignKey(UserConfigs, index=True, secret=True)
-    state = Varchar(
+    state_raw = Varchar(
         help_text="The current state of this suggestion",
         choices=SuggestionStateEnum,
         null=False,
@@ -121,6 +121,10 @@ class Suggestions(Table, AuditMixin):
     author_display_name = Text(
         help_text="How should we display the author? Either name or <Anonymous>",
     )
+
+    @property
+    def state(self) -> SuggestionStateEnum:
+        return SuggestionStateEnum(self.state_raw)
 
     @property
     def color(self) -> hikari.Color:
