@@ -8,6 +8,7 @@ import lightbulb
 from dotenv import load_dotenv
 
 from bot import create_bot
+from bot.constants import CONFIGURE_GROUP
 from shared.tables import GuildConfigs
 from web import constants as t_constants
 
@@ -43,9 +44,12 @@ async def main():
 
     @bot.listen(hikari.StartingEvent)
     async def on_starting(_: hikari.StartingEvent) -> None:
+        # Force load these so they register on the group
+        from bot.extensions.configure_guild import ConfigureGuildCmd  # noqa
+
+        client.register(CONFIGURE_GROUP)
         await client.load_extensions(
             "bot.extensions.suggest",
-            "bot.extensions.configure",
         )
         await client.start()
 

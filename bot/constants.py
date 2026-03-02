@@ -4,6 +4,7 @@ from enum import IntEnum
 from pathlib import Path
 
 import hikari
+import lightbulb
 from hikari import Color
 from opentelemetry import trace
 
@@ -19,6 +20,13 @@ EMBED_COLOR = Color.of((255, 214, 99))
 OTEL_TRACER = trace.get_tracer(__name__)
 LOCALISATIONS = Localisation(
     base_path=Path("bot"),
+)
+CONFIGURE_GROUP = lightbulb.Group(
+    name="commands.configure.name",
+    description="commands.configure.description",
+    localize=True,
+    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
+    contexts=[hikari.ApplicationContextType.GUILD],
 )
 
 # TODO Set these IDs based on current env
