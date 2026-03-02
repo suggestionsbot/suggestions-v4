@@ -13,7 +13,7 @@ async def test_guild_config_default():
     r_1: GuildConfigs = GuildConfigs(guild_id=123)
     assert r_1.guild_id == 123
     assert r_1.keep_logs is False
-    assert r_1.dm_messages_disabled is False
+    assert r_1.generic_dm_messages_disabled is False
     assert r_1.log_channel_id is None
     assert r_1.queued_suggestion_channel_id is None
     assert r_1.queued_suggestion_log_channel_id is None

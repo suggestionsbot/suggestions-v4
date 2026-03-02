@@ -26,9 +26,10 @@ class GuildConfigs(AuditMixin, Table):
         default=False,
         help_text="Should resolved suggestions stay in the suggestions channel?",
     )
-    dm_messages_disabled = Boolean(
+    generic_dm_messages_disabled = Boolean(
         default=False,
-        help_text="If True, don't send messages to members of this guild",
+        help_text="If True, don't send generic messages to members of this guild"
+        " such as on suggestion create or resolve",
     )
     log_channel_id = BigInt(
         default=None,

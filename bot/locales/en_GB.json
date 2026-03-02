@@ -38,7 +38,7 @@
   "menus.guild_configuration.base_menu.suggestion_queue.virtual": "Virtual suggestions queue",
   "menus.guild_configuration.base_menu.suggestion_queue.channel": "Send them to a channel based queue",
   "menus.guild_configuration.base_menu.ping_on_thread_creation": "Should suggestion authors be pinged in created threads upon thread creation?",
-  "menus.guild_configuration.base_menu.dm_messages_disabled": "Can the bot DM users about events such as new suggestions?",
+  "menus.guild_configuration.base_menu.generic_dm_messages_disabled": "Can the bot DM users about events such as new suggestions or when a suggestion they created is resolved?",
   "menus.guild_configuration.base_menu.primary_language": "What is the guilds primary language? Note only currently supported languages will be selectable.",
   "menus.guild_configuration.base_menu.update_channel_id": "A channel the bot can send updates to about new features, supported languages, etc",
   "menus.guild_configuration.base_menu.anonymous_resolutions": "Should moderators be anonymous when resolving suggestions?",

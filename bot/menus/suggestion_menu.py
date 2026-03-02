@@ -406,7 +406,10 @@ class SuggestionMenu:
                     # I'd consider it 'fine' if the bot can't send this message
                     pass
 
-        if not (guild_config.dm_messages_disabled or user_config.dm_messages_disabled):
+        if not (
+            guild_config.generic_dm_messages_disabled
+            or user_config.generic_dm_messages_disabled
+        ):
             try:
                 dm_channel = await bot.rest.create_dm_channel(ctx.user)
                 await dm_channel.send(

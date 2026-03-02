@@ -96,7 +96,7 @@ class GuildConfigurationMenus:
                 )
             )
 
-        elif id_data in ("dm_messages_disabled",):
+        elif id_data in ("generic_dm_messages_disabled",):
             # Flipped for legacy purposes to maintain translations
             # These are all bool answers so is fine to do as is
             result = not commons.value_to_bool(event_values[0])
@@ -762,14 +762,14 @@ class GuildConfigurationMenus:
                 components=[
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
-                            "menus.guild_configuration.base_menu.dm_messages_disabled",
+                            "menus.guild_configuration.base_menu.generic_dm_messages_disabled",
                             ctx,
                         )
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id=f"gcm:{link_id}:dm_messages_disabled",
+                                custom_id=f"gcm:{link_id}:generic_dm_messages_disabled",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -777,7 +777,7 @@ class GuildConfigurationMenus:
                                             ctx,
                                         ),
                                         value="yes",
-                                        is_default=not guild_config.dm_messages_disabled,
+                                        is_default=not guild_config.generic_dm_messages_disabled,
                                     ),
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -785,7 +785,7 @@ class GuildConfigurationMenus:
                                             ctx,
                                         ),
                                         value="no",
-                                        is_default=guild_config.dm_messages_disabled,
+                                        is_default=guild_config.generic_dm_messages_disabled,
                                     ),
                                 ],
                                 min_values=1,

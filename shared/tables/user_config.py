@@ -10,8 +10,10 @@ class UserConfigs(AuditMixin, Table):
         index=True,
         help_text="The discord user id",
     )
-    dm_messages_disabled = Boolean(
-        default=False, help_text="If True, don't send this user DM's"
+    generic_dm_messages_disabled = Boolean(
+        default=False,
+        help_text="If True, don't send this user dms for generic messages"
+        " such as on suggestion create or resolution",
     )
     ping_on_thread_creation = Boolean(
         default=True,
