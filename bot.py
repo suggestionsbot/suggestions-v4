@@ -50,6 +50,7 @@ async def main():
         client.register(CONFIGURE_GROUP)
         await client.load_extensions(
             "bot.extensions.suggest",
+            "bot.tasks.store_guilds_in_redis",
         )
         await client.start()
 

@@ -29,11 +29,16 @@ async def create_user_config(ctx: lightbulb.Context) -> UserConfigs:
 async def create_bot(
     token, *, log_conf: str | None = "INFO"
 ) -> (hikari.GatewayBot, lightbulb.Client):
+    intents = hikari.Intents.NONE
+    intents |= hikari.Intents.GUILDS
+    # We will cache guilds and see how big it gets
+    cache_items = config.CacheComponents.NONE
+    cache_items |= config.CacheComponents.GUILDS
     bot = hikari.GatewayBot(
         token=token,
         logs=log_conf,
-        cache_settings=CacheSettings(components=config.CacheComponents.NONE),
-        intents=hikari.Intents.NONE,
+        cache_settings=CacheSettings(components=cache_items),
+        intents=intents,
     )
     logger.debug(f"Test with {repr(log_conf)}")
 

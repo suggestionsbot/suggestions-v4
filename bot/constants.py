@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from enum import IntEnum
 from pathlib import Path
 
@@ -40,6 +41,11 @@ DEFAULT_DOWN_VOTE = hikari.CustomEmoji(
     name="nerdError",
     is_animated=False,
 )
+
+# Clustering stuff
+CLUSTER_ID = int(os.environ.get("CLUSTER_ID", 1))
+TOTAL_SHARDS = int(os.environ.get("TOTAL_SHARDS", 1))
+SHARDS_PER_CLUSTER = int(os.environ.get("SHARDS_PER_CLUSTER", 10))
 
 
 class ErrorCode(IntEnum):
