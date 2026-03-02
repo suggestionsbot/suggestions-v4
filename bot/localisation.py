@@ -31,7 +31,7 @@ class Localisation:
         }
         data: dict[hikari.Locale, dict[str, str]] = {}
         for k, v in self._file_to_locale.items():
-            with open(k, "r", encoding="utf-8") as f:
+            with open(k.resolve(), "r", encoding="utf-8") as f:
                 as_dict = json.loads(f.read())
                 data[v] = as_dict
 

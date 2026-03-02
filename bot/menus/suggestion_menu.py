@@ -152,23 +152,20 @@ class SuggestionMenu:
             image_urls: list[str] = []
             anonymously: bool = False
             for entry in response_fields:
-                if (
-                    isinstance(entry.component, hikari.TextInputComponent)
-                    and entry.component.custom_id == "suggestion"
-                ):
+                if entry.component.custom_id == "suggestion":
+                    entry.component = cast(hikari.TextInputComponent, entry.component)
                     suggestion_content = entry.component.value
 
-                elif (
-                    isinstance(entry.component, hikari.TextSelectMenuComponent)
-                    and entry.component.custom_id == "anonymously"
-                ):
-                    pass
-                    # anonymously = commons.value_to_bool(entry.component.options[0].value)
+                elif entry.component.custom_id == "anonymously":
+                    entry.component = cast(
+                        hikari.TextSelectMenuComponent, entry.component
+                    )
+                    anonymously = commons.value_to_bool(  # TODO Fix once upstream does
+                        entry.component.options[0]
+                    )
 
-                elif (
-                    isinstance(entry.component, hikari.FileUploadComponent)
-                    and entry.component.custom_id == "files"
-                ):
+                elif entry.component.custom_id == "files":
+                    entry.component = cast(hikari.FileUploadComponent, entry.component)
                     if guild_config.can_have_images_in_suggestions is False:
                         await ctx.respond(
                             localisations.get_localized_string(

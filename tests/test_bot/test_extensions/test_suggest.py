@@ -1,6 +1,5 @@
 import io
 from functools import partial
-from typing import Sequence
 from unittest.mock import patch, AsyncMock
 
 import hikari
@@ -10,7 +9,6 @@ from freezegun import freeze_time
 
 from bot import utils
 from bot.constants import MAX_CONTENT_LENGTH, ErrorCode
-from bot.extensions.suggest import Suggest
 from bot.localisation import Localisation
 from bot.menus import SuggestionMenu
 from bot.tables import InternalErrors
@@ -21,7 +19,6 @@ from shared.tables import (
     QueuedSuggestions,
 )
 from shared.utils import configs
-from tests.conftest import prepare_command
 
 USER_ID = 12345
 GUILD_ID = 23456
@@ -30,26 +27,22 @@ CHANNEL_ID = 348934
 
 def create_options(
     suggestion: str, anon: bool = False, image: bool = False, image_count: int = 1
-) -> list[
-    hikari.interactions.modal_interactions.ModalInteractionTextInputComponent
-    | hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent
-    | hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent
-]:
-    options: list[
-        hikari.interactions.modal_interactions.ModalInteractionTextInputComponent
-        | hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent
-        | hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent
-    ] = [
+) -> list[hikari.LabelComponent]:
+    options: list[hikari.LabelComponent] = [
         AsyncMock(
-            custom_id="suggestion",
-            value=suggestion,
+            component=AsyncMock(
+                custom_id="suggestion",
+                value=suggestion,
+            )
         ),
     ]
     if anon:
         options.append(
             AsyncMock(
-                custom_id="anonymously",
-                values=[anon],
+                component=AsyncMock(
+                    custom_id="anonymously",
+                    options=[anon],
+                )
             ),
         )
 
@@ -61,8 +54,10 @@ def create_options(
 
         options.append(
             AsyncMock(
-                custom_id="files",
-                values=[flakes],
+                component=AsyncMock(
+                    custom_id="files",
+                    values=[flakes],
+                )
             ),
         )
 
@@ -70,11 +65,7 @@ def create_options(
 
 
 async def invoke_suggest(
-    options: list[
-        hikari.interactions.modal_interactions.ModalInteractionTextInputComponent
-        | hikari.interactions.modal_interactions.ModalInteractionFileUploadComponent
-        | hikari.interactions.modal_interactions.ModalInteractionStringSelectComponent
-    ],
+    options: list[hikari.LabelComponent],
     localisations: Localisation,
     user_id: int = USER_ID,
     guild_id: int = GUILD_ID,
@@ -83,7 +74,13 @@ async def invoke_suggest(
     guild_config: GuildConfigs = None,
     user_config: UserConfigs = None,
     bot: hikari.GatewayBot = None,
-) -> (lightbulb.Context, GuildConfigs, UserConfigs, Localisation, hikari.GatewayBot):
+) -> tuple[
+    lightbulb.Context | lightbulb.components.MenuContext,
+    GuildConfigs,
+    UserConfigs,
+    Localisation,
+    hikari.GatewayBot,
+]:
     if guild_config is None:
         guild_config = await configs.ensure_guild_config(guild_id)
 
@@ -97,18 +94,18 @@ async def invoke_suggest(
         spec=lightbulb.components.MenuContext
     )
     ctx.interaction.locale = "en-GB"
-    ctx.user.id = user_id
-    ctx.guild_id = guild_id
+    ctx.user.id = user_id  # noqa
+    ctx.guild_id = guild_id  # noqa
 
     if bot is None:
         bot = AsyncMock(spec=hikari.GatewayBot)
 
-    ctx.client.app = bot
+    ctx.client.app = bot  # noqa
 
     event = AsyncMock()
     if image is not None:
-        opt = [o for o in options if o.custom_id == "files"][0]
-        for i in range(len(opt.values)):
+        opt = [o for o in options if o.component.custom_id == "files"][0]
+        for i in range(len(opt.component.values)):
             event.interaction.resolved.attachments[hikari.Snowflake(i)] = image
 
     await SuggestionMenu.handle_interaction(
@@ -119,7 +116,7 @@ async def invoke_suggest(
         guild_config=guild_config,
         user_config=user_config,
     )
-    ctx.defer.assert_called_once_with(ephemeral=True)
+    ctx.defer.assert_called_once_with(ephemeral=True)  # noqa
     return ctx, guild_config, user_config, localisations, bot
 
 
