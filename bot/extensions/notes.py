@@ -61,7 +61,7 @@ async def notify_user_of_change(
             "commands.note.add.responses.dm_change_footer",
             ctx,
             guild_config=guild_config,
-            extras={"GUILD_ID": ctx.guild_id, "SID": suggestion.sID},
+            extras={"GUILD_ID": ctx.guild_id, "SID": suggestion.footer_sid},
         )
     )
 

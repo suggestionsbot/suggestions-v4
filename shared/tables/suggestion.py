@@ -134,6 +134,11 @@ class Suggestions(Table, AuditMixin):
     )
 
     @property
+    def footer_sid(self) -> str:
+        # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/suggestions/{self.sID})"
+        return f"`{self.sID}`"
+
+    @property
     def message_jump_link(self) -> str:
         return f"https://discord.com/channels/{self.guild_id}/{self.channel_id}/{self.message_id}"
 
@@ -356,15 +361,13 @@ class Suggestions(Table, AuditMixin):
                 )
             )
 
-        sid_text = f"`{self.sID}`"
-        # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/suggestions/{self.sID})"
         components.append(
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "components.suggestions.footer",
                     ctx,
                     extras={
-                        "SID": sid_text,
+                        "SID": self.footer_sid,
                         "TIMESTAMP": int(self.created_at.timestamp()),
                     },
                     use_guild_locale=use_guild_locale,
