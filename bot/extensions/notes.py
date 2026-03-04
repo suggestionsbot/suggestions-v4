@@ -49,31 +49,37 @@ async def notify_user_of_change(
         )
         return None
 
-    embed: hikari.Embed = hikari.Embed(
-        description=localisations.get_localized_string(
-            "commands.note.add.responses.dm_change",
-            ctx,
-            extras={"JUMP": suggestion.message_jump_link},
+    components: list = [
+        hikari.impl.TextDisplayComponentBuilder(
+            content=localisations.get_localized_string(
+                "commands.note.add.responses.dm_change",
+                ctx,
+                extras={"JUMP": suggestion.message_jump_link},
+            )
         ),
-        colour=EMBED_COLOR,
-    )
-    embed.set_footer(
-        text=localisations.get_localized_string(
-            "commands.note.add.responses.dm_change_footer",
-            ctx,
-            guild_config=guild_config,
-            extras={"GUILD_ID": ctx.guild_id, "SID": suggestion.footer_sid},
-        )
-    )
+        hikari.impl.SeparatorComponentBuilder(
+            divider=True,
+            spacing=hikari.SpacingType.SMALL,
+        ),
+        hikari.impl.TextDisplayComponentBuilder(
+            content=localisations.get_localized_string(
+                "commands.note.add.responses.dm_change_footer",
+                ctx,
+                guild_config=guild_config,
+                extras={"GUILD_ID": ctx.guild_id, "SID": suggestion.footer_sid},
+            ),
+        ),
+    ]
 
-    guild = ctx.interaction.get_guild()
-    if guild is None:
-        guild = await ctx.interaction.fetch_guild()
-
-    embed.set_author(name=guild.name, icon=guild.make_icon_url())
+    result: list = [
+        hikari.impl.ContainerComponentBuilder(
+            accent_color=EMBED_COLOR,
+            components=components,
+        ),
+    ]
     try:
         dm_channel = await ctx.client.rest.create_dm_channel(ctx.user)
-        await dm_channel.send(embed=embed)
+        await dm_channel.send(components=result)
     except (hikari.ForbiddenError,):
         # I'd consider it 'fine' if the bot can't send this message
         logger.debug(
