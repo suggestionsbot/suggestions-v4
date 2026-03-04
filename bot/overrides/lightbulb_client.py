@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import io
 import logging
 import typing as t
 
@@ -34,7 +35,9 @@ LOGGER = logging.getLogger(__name__)
 def client_from_app(
     app: GatewayClientAppT,
     default_enabled_guilds: Sequence[hikari.Snowflakeish] = (),
-    execution_step_order: Sequence[execution.ExecutionStep] = DEFAULT_EXECUTION_STEP_ORDER,
+    execution_step_order: Sequence[
+        execution.ExecutionStep
+    ] = DEFAULT_EXECUTION_STEP_ORDER,
     default_locale: hikari.Locale = hikari.Locale.EN_US,
     localization_provider: localization.LocalizationProvider = localization.localization_unsupported,
     delete_unknown_commands: bool = True,
@@ -48,7 +51,9 @@ def client_from_app(
 def client_from_app(
     app: RestClientAppT,
     default_enabled_guilds: Sequence[hikari.Snowflakeish] = (),
-    execution_step_order: Sequence[execution.ExecutionStep] = DEFAULT_EXECUTION_STEP_ORDER,
+    execution_step_order: Sequence[
+        execution.ExecutionStep
+    ] = DEFAULT_EXECUTION_STEP_ORDER,
     default_locale: hikari.Locale = hikari.Locale.EN_US,
     localization_provider: localization.LocalizationProvider = localization.localization_unsupported,
     delete_unknown_commands: bool = True,
@@ -61,7 +66,9 @@ def client_from_app(
 def client_from_app(
     app: GatewayClientAppT | RestClientAppT,
     default_enabled_guilds: Sequence[hikari.Snowflakeish] = (),
-    execution_step_order: Sequence[execution.ExecutionStep] = DEFAULT_EXECUTION_STEP_ORDER,
+    execution_step_order: Sequence[
+        execution.ExecutionStep
+    ] = DEFAULT_EXECUTION_STEP_ORDER,
     default_locale: hikari.Locale = hikari.Locale.EN_US,
     localization_provider: localization.LocalizationProvider = localization.localization_unsupported,
     delete_unknown_commands: bool = True,
@@ -143,17 +150,22 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
 
         options, command = out
         command_locale_key = command._command_data.qualified_name
+        localised_key = []
         try:
-            localised_key = self.localization_provider(command_locale_key)[hikari.Locale.EN_GB]
+            for entry in command_locale_key.split(" "):
+                localised_key.append(
+                    self.localization_provider(entry)[hikari.Locale.EN_GB]
+                )
+
         except Exception as e:
-            localised_key = command_locale_key
+            localised_key.append(command_locale_key)
             LOGGER.error(
                 "Failed to find command name for tracing for input %s",
                 command_locale_key,
                 extra={"traceback": commons.exception_as_string(e)},
             )
 
-        # TODO Test this command name is accurate
+        localised_key = " ".join(localised_key)
         with OTEL_TRACER.start_as_current_span(f"/{localised_key}") as span:
             span.set_attribute("interaction.user.id", interaction.user.id)
             span.set_attribute(
@@ -167,4 +179,6 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
             if interaction.guild_id:
                 span.set_attribute("interaction.guild.id", interaction.guild_id)
 
-            await super().handle_application_command_interaction(interaction, initial_response_sent)
+            await super().handle_application_command_interaction(
+                interaction, initial_response_sent
+            )
