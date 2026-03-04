@@ -3,6 +3,7 @@ import logging
 import hikari
 import lightbulb
 
+import shared.utils
 from bot import utils
 from bot.constants import NOTES_GROUP, EMBED_COLOR
 from bot.localisation import Localisation
@@ -86,6 +87,14 @@ async def notify_user_of_change(
         )
 
 
+async def autocomplete_callback(ctx: lightbulb.AutocompleteContext[str]) -> None:
+    current_value: str = ctx.focused.value or ""
+    values_to_recommend = await shared.utils.get_sid_autocomplete_for_guild(
+        guild_id=ctx.interaction.guild_id, search=current_value
+    )
+    await ctx.respond(values_to_recommend)
+
+
 @NOTES_GROUP.register
 class NotesAddCmd(
     lightbulb.SlashCommand,
@@ -98,6 +107,7 @@ class NotesAddCmd(
         "commands.note.add.options.suggestion_id.name",
         "commands.note.add.options.suggestion_id.description",
         localize=True,
+        autocomplete=autocomplete_callback,
     )
     note = lightbulb.string(
         "commands.note.add.options.note.name",
@@ -187,6 +197,7 @@ class NotesRemoveCmd(
         "commands.note.remove.options.suggestion_id.name",
         "commands.note.remove.options.suggestion_id.description",
         localize=True,
+        autocomplete=autocomplete_callback,
     )
 
     @lightbulb.invoke

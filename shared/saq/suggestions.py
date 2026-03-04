@@ -1,5 +1,3 @@
-import asyncio
-import dataclasses
 import logging
 import time
 from datetime import timedelta
@@ -8,10 +6,11 @@ from unittest.mock import MagicMock
 import hikari
 import lightbulb
 
+from bot import constants as b_constants
+from shared import utils
 from shared.tables import Suggestions, QueuedSuggestions
 from shared.utils.configs import ensure_guild_config
 from web import constants
-from bot import constants as b_constants
 from web.constants import REDIS_CLIENT
 
 log = logging.getLogger(__name__)
@@ -64,14 +63,6 @@ async def edit_suggestion_message(_, suggestion_id: str, guild_id: int) -> None:
         )
 
 
-@dataclasses.dataclass
-class RedisSuggestion:
-    # Because redis-py is odd
-    string: str
-    score: int = 1
-    payload: dict | None = None
-
-
 async def populate_sid_autocomplete(_):
     """Populates autocomplete of all queued and regular suggestion sids when called
 
@@ -118,8 +109,8 @@ async def populate_sid_autocomplete(_):
 
             for row in rows:
                 # Won't duplicate entries if already present :)
-                await REDIS_CLIENT.ft("sid_autocomplete_index").sugadd(
-                    row.guild_configuration.guild_id, RedisSuggestion(string=row.sID)
+                await utils.cache_sid_in_autocomplete(
+                    guild_id=row.guild_configuration.guild_id, suggestion_id=row.sID
                 )
 
 

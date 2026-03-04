@@ -9,6 +9,7 @@ import commons
 import hikari
 import lightbulb
 
+import shared.utils
 from bot import constants, utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MissingQueueChannel, MessageTooLong
@@ -19,7 +20,6 @@ from shared.tables import (
     UserConfigs,
 )
 from shared.utils import r2
-from web.constants import REDIS_CLIENT
 
 if typing.TYPE_CHECKING:
     from shared.tables import (
@@ -370,10 +370,8 @@ class SuggestionMenu:
         s.channel_id = message.channel_id
         s.message_id = message.id
         await s.save()
-        from shared.saq.suggestions import RedisSuggestion
-
-        await REDIS_CLIENT.ft("sid_autocomplete_index").sugadd(
-            ctx.guild_id, RedisSuggestion(string=s.sID)
+        await shared.utils.cache_sid_in_autocomplete(
+            guild_id=ctx.guild_id, suggestion_id=s.sID
         )
 
         if guild_config.threads_for_suggestions:
@@ -530,11 +528,10 @@ class SuggestionMenu:
             qs.message_id = message.id
 
         await qs.save()
-        from shared.saq.suggestions import RedisSuggestion
-
-        await REDIS_CLIENT.ft("sid_autocomplete_index").sugadd(
-            ctx.guild_id, RedisSuggestion(string=qs.sID)
+        await shared.utils.cache_sid_in_autocomplete(
+            guild_id=ctx.guild_id, suggestion_id=qa.sID
         )
+
         logger.debug(
             f"User {ctx.user.id} created new queued"
             f" suggestion in guild {ctx.guild_id}",
