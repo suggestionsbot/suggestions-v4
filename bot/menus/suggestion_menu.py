@@ -371,7 +371,14 @@ class SuggestionMenu:
         s.message_id = message.id
         await s.save()
         await shared.utils.cache_sid_in_autocomplete(
-            guild_id=ctx.guild_id, suggestion_id=s.sID
+            guild_id=ctx.guild_id,
+            suggestion_id=s.sID,
+            index="shared_sid_autocomplete_index",
+        )
+        await shared.utils.cache_sid_in_autocomplete(
+            guild_id=ctx.guild_id,
+            suggestion_id=s.sID,
+            index="suggestion_sid_autocomplete_index",
         )
 
         if guild_config.threads_for_suggestions:
@@ -529,7 +536,14 @@ class SuggestionMenu:
 
         await qs.save()
         await shared.utils.cache_sid_in_autocomplete(
-            guild_id=ctx.guild_id, suggestion_id=qa.sID
+            guild_id=ctx.guild_id,
+            suggestion_id=qs.sID,
+            index="shared_sid_autocomplete_index",
+        )
+        await shared.utils.cache_sid_in_autocomplete(
+            guild_id=ctx.guild_id,
+            suggestion_id=qs.sID,
+            index="queue_sid_autocomplete_index",
         )
 
         logger.debug(

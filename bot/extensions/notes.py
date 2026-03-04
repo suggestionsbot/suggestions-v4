@@ -96,7 +96,9 @@ async def notify_user_of_change(
 async def autocomplete_callback(ctx: lightbulb.AutocompleteContext[str]) -> None:
     current_value: str = ctx.focused.value or ""
     values_to_recommend = await shared.utils.get_sid_autocomplete_for_guild(
-        guild_id=ctx.interaction.guild_id, search=current_value
+        guild_id=ctx.interaction.guild_id,
+        search=current_value,
+        index="suggestion_sid_autocomplete_index",
     )
     await ctx.respond(values_to_recommend)
 

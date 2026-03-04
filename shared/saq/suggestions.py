@@ -110,8 +110,22 @@ async def populate_sid_autocomplete(_):
             for row in rows:
                 # Won't duplicate entries if already present :)
                 await utils.cache_sid_in_autocomplete(
-                    guild_id=row.guild_configuration.guild_id, suggestion_id=row.sID
+                    guild_id=row.guild_configuration.guild_id,
+                    suggestion_id=row.sID,
+                    index="shared_sid_autocomplete_index",
                 )
+                if isinstance(row, Suggestions):
+                    await utils.cache_sid_in_autocomplete(
+                        guild_id=row.guild_configuration.guild_id,
+                        suggestion_id=row.sID,
+                        index="suggestion_sid_autocomplete_index",
+                    )
+                else:
+                    await utils.cache_sid_in_autocomplete(
+                        guild_id=row.guild_configuration.guild_id,
+                        suggestion_id=row.sID,
+                        index="queue_sid_autocomplete_index",
+                    )
 
 
 async def test_message_send(_):
