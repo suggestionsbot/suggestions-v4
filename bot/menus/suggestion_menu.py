@@ -49,7 +49,9 @@ class SuggestionMenu:
             SuggestionsVoteTypeEnum,
         )
 
-        suggestion: Suggestions | None = await Suggestions.fetch_suggestion(sid)
+        suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
+            sid, ctx.guild_id
+        )
         if suggestion is None:
             logger.debug(
                 "SuggestionNotFound",

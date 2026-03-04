@@ -16,7 +16,7 @@ from web.constants import REDIS_CLIENT
 log = logging.getLogger(__name__)
 
 
-async def queue_suggestion_edit(suggestion_id: str) -> None:
+async def queue_suggestion_edit(suggestion_id: str, guild_id: int) -> None:
     redis_key = f"saq:queue_suggestion_edit:{suggestion_id}"
     result = await REDIS_CLIENT.set(
         redis_key, suggestion_id, nx=True, ex=timedelta(seconds=9)
@@ -30,12 +30,13 @@ async def queue_suggestion_edit(suggestion_id: str) -> None:
     await SAQ_QUEUE.enqueue(
         "edit_suggestion_message",
         suggestion_id=suggestion_id,
+        guild_id=guild_id,
         scheduled=time.time() + 10,
     )
 
 
-async def edit_suggestion_message(_, suggestion_id: str) -> None:
-    suggestion = await Suggestions.fetch_suggestion(suggestion_id)
+async def edit_suggestion_message(_, suggestion_id: str, guild_id: int) -> None:
+    suggestion = await Suggestions.fetch_suggestion(suggestion_id, guild_id)
     if suggestion is None:
         log.error(
             "Suggestion was none when attempting to edit",

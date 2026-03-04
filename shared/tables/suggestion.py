@@ -5,8 +5,19 @@ from enum import Enum
 import hikari
 import lightbulb
 from hikari.impl import ContainerComponentBuilder, MessageActionRowBuilder
-from piccolo.columns import Serial, Varchar, Text, ForeignKey, BigInt, Timestamptz, Array
+from piccolo.columns import (
+    Serial,
+    Varchar,
+    Text,
+    ForeignKey,
+    BigInt,
+    Timestamptz,
+    Array,
+    Where,
+    And,
+)
 from piccolo.columns.indexes import IndexMethod
+from piccolo.columns.operators import Equal
 from piccolo.table import Table
 
 from bot import constants
@@ -123,6 +134,10 @@ class Suggestions(Table, AuditMixin):
     )
 
     @property
+    def message_jump_link(self) -> str:
+        return f"https://discord.com/channels/{self.guild_id}/{self.channel_id}/{self.message_id}"
+
+    @property
     def state(self) -> SuggestionStateEnum:
         return SuggestionStateEnum(self.state_raw)
 
@@ -138,14 +153,34 @@ class Suggestions(Table, AuditMixin):
 
     # noinspection PyPep8Naming
     @classmethod
-    async def fetch_suggestion(cls, sID: str) -> typing.Self:
+    async def fetch_suggestion(
+        cls, sID: str, guild_id: int, *, state: SuggestionStateEnum | None = None
+    ) -> typing.Self:
         """Simple helper method to also ensure configurations are prefetched"""
-        return await cls.objects(
-            Suggestions.user_configuration, Suggestions.guild_configuration
-        ).get(Suggestions.sID == sID)
+        query = (
+            cls.objects(Suggestions.user_configuration, Suggestions.guild_configuration)
+            .where(
+                And(
+                    Where(Suggestions.sID, sID, operator=Equal),
+                    Where(
+                        Suggestions.guild_configuration.guild_id, guild_id, operator=Equal
+                    ),
+                )
+            )
+            .first()
+        )
+
+        if state is not None:
+            query = query.where(Suggestions.state_raw == state)
+
+        return await query
 
     @property
     def guild_id(self) -> int:
+        if self.guild_configuration is None:
+            raise ValueError(
+                "Suggestion must be fetched with foreign keys to use .guild_id"
+            )
         return self.guild_configuration.guild_id
 
     @property
@@ -160,7 +195,7 @@ class Suggestions(Table, AuditMixin):
         """Helper to queue the update of the message in discord"""
         from shared.saq.suggestions import queue_suggestion_edit
 
-        await queue_suggestion_edit(suggestion_id=self.sID)
+        await queue_suggestion_edit(suggestion_id=self.sID, guild_id=self.guild_id)
 
     async def as_components(
         self,
