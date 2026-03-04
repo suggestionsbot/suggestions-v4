@@ -1,4 +1,5 @@
 import asyncio
+import dataclasses
 import logging
 import time
 from datetime import timedelta
@@ -7,7 +8,7 @@ from unittest.mock import MagicMock
 import hikari
 import lightbulb
 
-from shared.tables import Suggestions
+from shared.tables import Suggestions, QueuedSuggestions
 from shared.utils.configs import ensure_guild_config
 from web import constants
 from bot import constants as b_constants
@@ -61,6 +62,65 @@ async def edit_suggestion_message(_, suggestion_id: str, guild_id: int) -> None:
         await client.edit_message(
             suggestion.channel_id, suggestion.message_id, components=components
         )
+
+
+@dataclasses.dataclass
+class RedisSuggestion:
+    # Because redis-py is odd
+    string: str
+    score: int = 1
+    payload: dict | None = None
+
+
+async def populate_sid_autocomplete(_):
+    """Populates autocomplete of all queued and regular suggestion sids when called
+
+    We shouldn't need to do this often given they add themselves but it
+    will help ensure the consistency of data if I miss something
+    """
+    page_size = 500
+
+    async def build_base_query(
+        *,
+        table_class,
+        prefetch_cols,
+        order_by,
+        cursor_col,
+        next_cursor_id: str | None,
+    ):
+        base_query = (
+            table_class.objects(*prefetch_cols).limit(page_size + 1).order_by(order_by)
+        )
+        if next_cursor_id is not None:
+            base_query = base_query.where(cursor_col >= next_cursor_id)
+
+        return base_query
+
+    for table in [Suggestions, QueuedSuggestions]:
+        next_cursor = None
+        has_next_queued: bool = True
+        while has_next_queued:
+            query = await build_base_query(
+                table_class=table,
+                prefetch_cols=[table.guild_configuration],
+                order_by=table.id,
+                cursor_col=table.id,
+                next_cursor_id=next_cursor,
+            )
+
+            rows: list = await query.run()
+            next_cursor = None
+            if len(rows) > page_size:
+                final_row = rows.pop(-1)
+                next_cursor = final_row.id
+            else:
+                has_next_queued = False
+
+            for row in rows:
+                # Won't duplicate entries if already present :)
+                await REDIS_CLIENT.ft("sid_autocomplete_index").sugadd(
+                    row.guild_configuration.guild_id, RedisSuggestion(string=row.sID)
+                )
 
 
 async def test_message_send(_):

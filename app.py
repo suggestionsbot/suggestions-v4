@@ -178,6 +178,7 @@ saq = SAQPlugin(
                     saq_worker.log_current_valid_sessions,
                     suggestions_worker.queue_suggestion_edit,
                     suggestions_worker.edit_suggestion_message,
+                    suggestions_worker.populate_sid_autocomplete,
                     suggestions_worker.test_message_send,
                 ],
                 # https://crontab.guru
@@ -200,6 +201,12 @@ saq = SAQPlugin(
                     CronJob(
                         saq_worker.log_current_api_tokens,
                         cron="*/5 * * * *",
+                        timeout=saq_worker.SAQ_TIMEOUT,
+                        retries=1,
+                    ),
+                    CronJob(
+                        suggestions_worker.populate_sid_autocomplete,
+                        cron="0 */2 * * *",  # Every second hour
                         timeout=saq_worker.SAQ_TIMEOUT,
                         retries=1,
                     ),

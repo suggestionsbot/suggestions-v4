@@ -61,6 +61,7 @@ async def startup(_):
     await constants.DISCORD_REST_CLIENT.start()
     await SAQ_QUEUE.enqueue("log_current_valid_sessions")
     await SAQ_QUEUE.enqueue("log_current_api_tokens")
+    await SAQ_QUEUE.enqueue("populate_sid_autocomplete")
 
 
 async def shutdown(_):

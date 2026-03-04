@@ -19,6 +19,7 @@ from shared.tables import (
     UserConfigs,
 )
 from shared.utils import r2
+from web.constants import REDIS_CLIENT
 
 if typing.TYPE_CHECKING:
     from shared.tables import (
@@ -369,6 +370,11 @@ class SuggestionMenu:
         s.channel_id = message.channel_id
         s.message_id = message.id
         await s.save()
+        from shared.saq.suggestions import RedisSuggestion
+
+        await REDIS_CLIENT.ft("sid_autocomplete_index").sugadd(
+            ctx.guild_id, RedisSuggestion(string=s.sID)
+        )
 
         if guild_config.threads_for_suggestions:
             try:
@@ -524,6 +530,11 @@ class SuggestionMenu:
             qs.message_id = message.id
 
         await qs.save()
+        from shared.saq.suggestions import RedisSuggestion
+
+        await REDIS_CLIENT.ft("sid_autocomplete_index").sugadd(
+            ctx.guild_id, RedisSuggestion(string=qs.sID)
+        )
         logger.debug(
             f"User {ctx.user.id} created new queued"
             f" suggestion in guild {ctx.guild_id}",
