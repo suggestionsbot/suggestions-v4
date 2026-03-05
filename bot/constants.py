@@ -6,6 +6,7 @@ from pathlib import Path
 
 import hikari
 import lightbulb
+from commons import value_to_bool
 from hikari import Color
 from opentelemetry import trace
 
@@ -39,12 +40,21 @@ NOTES_GROUP = lightbulb.Group(
 
 # TODO Set these IDs based on current env
 DEFAULT_UP_VOTE = hikari.CustomEmoji(
-    id=hikari.Snowflake(1470358301555294320),
+    id=(
+        hikari.Snowflake(1470358301555294320)
+        if value_to_bool(os.environ.get("DEBUG"))
+        # Prod ID
+        else hikari.Snowflake(1478974500057124864)
+    ),
     name="nerdSuccess",
     is_animated=False,
 )
 DEFAULT_DOWN_VOTE = hikari.CustomEmoji(
-    id=hikari.Snowflake(1470358346879209503),
+    id=(
+        hikari.Snowflake(1470358346879209503)
+        if value_to_bool(os.environ.get("DEBUG"))
+        else hikari.Snowflake(1478974532839800932)
+    ),
     name="nerdError",
     is_animated=False,
 )
