@@ -13,8 +13,11 @@ from piccolo.columns import (
     Boolean,
     LazyTableReference,
     Array,
+    And,
+    Where,
 )
 from piccolo.columns.indexes import IndexMethod
+from piccolo.columns.operators import Equal
 from piccolo.table import Table
 
 from bot.constants import EMBED_COLOR
@@ -114,11 +117,26 @@ class QueuedSuggestions(Table, AuditMixin):
 
     # noinspection PyPep8Naming
     @classmethod
-    async def fetch_queued_suggestion(cls, sID: str) -> typing.Self:
+    async def fetch_queued_suggestion(cls, sID: str, guild_id: int) -> typing.Self:
         """Simple helper method to also ensure configurations are prefetched"""
-        return await cls.objects(
-            QueuedSuggestions.user_configuration, QueuedSuggestions.guild_configuration
-        ).get(QueuedSuggestions.sID == sID)
+        query = (
+            cls.objects(
+                QueuedSuggestions.user_configuration,
+                QueuedSuggestions.guild_configuration,
+            )
+            .where(
+                And(
+                    Where(QueuedSuggestions.sID, sID, operator=Equal),
+                    Where(
+                        QueuedSuggestions.guild_configuration.guild_id,
+                        guild_id,
+                        operator=Equal,
+                    ),
+                )
+            )
+            .first()
+        )
+        return await query
 
     @property
     def guild_id(self) -> int:

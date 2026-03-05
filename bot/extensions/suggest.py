@@ -123,6 +123,20 @@ class Suggest(
         localisations: Localisation,
         bot: hikari.RESTBot | hikari.GatewayBot,
     ) -> None:
+        if ctx.user.id in guild_config.blocked_users:
+            await ctx.respond(
+                embed=utils.error_embed(
+                    localisations.get_localized_string(
+                        "commands.suggest.responses.blocked.title", ctx
+                    ),
+                    localisations.get_localized_string(
+                        "commands.suggest.responses.blocked.description", ctx
+                    ),
+                ),
+                ephemeral=True,
+            )
+            return None
+
         components = await menus.SuggestionMenu.build_suggest_modal(
             guild_config=guild_config, localisations=localisations, ctx=ctx
         )
