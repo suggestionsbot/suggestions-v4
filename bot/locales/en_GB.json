@@ -69,7 +69,7 @@
   "menus.guild_configuration.base_menu.generic_dm_messages_disabled": "Can the bot DM users about events such as new suggestions or when a suggestion they created is resolved?",
   "menus.guild_configuration.base_menu.primary_language": "What is the guilds primary language? Note only currently supported languages will be selectable.",
   "menus.guild_configuration.base_menu.update_channel_id": "A channel the bot can send updates to about new features, supported languages, etc",
-  "menus.guild_configuration.base_menu.anonymous_resolutions": "Should moderators be anonymous when resolving suggestions?",
+  "menus.guild_configuration.base_menu.allow_anonymous_moderators": "Can moderators be anonymous when resolving suggestions or adding notes?",
   "menus.guild_configuration.responses.suggestions_channel_id.empty": "I'm sorry but suggestions channel choices cannot be empty. Please try again and select a new channel.",
   "menus.guild_configuration.responses.log_channel_id.empty": "I'm sorry but suggestion log channel choices cannot be empty. Please try again and select a new channel.",
   "menus.guild_configuration.responses.update_channel_id.empty": "I'm sorry but the update channel choices cannot be empty. Please try again and select a new channel.",

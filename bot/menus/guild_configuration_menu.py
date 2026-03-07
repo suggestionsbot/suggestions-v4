@@ -82,7 +82,7 @@ class GuildConfigurationMenus:
             "can_have_anonymous_suggestions",
             "can_have_images_in_suggestions",
             "ping_on_thread_creation",
-            "anonymous_resolutions",
+            "allow_anonymous_moderators",
         ):
             # These are all bool answers so is fine to do as is
             result = commons.value_to_bool(event_values[0])
@@ -613,14 +613,14 @@ class GuildConfigurationMenus:
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
-                            "menus.guild_configuration.base_menu.anonymous_resolutions",
+                            "menus.guild_configuration.base_menu.allow_anonymous_moderators",
                             ctx,
                         )
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.TextSelectMenuBuilder(
-                                custom_id=f"gcm:{link_id}:anonymous_resolutions",
+                                custom_id=f"gcm:{link_id}:allow_anonymous_moderators",
                                 options=[
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
