@@ -80,9 +80,9 @@ class GuildConfigs(AuditMixin, Table):
         default=True,
         help_text="If True, users are allowed to add images to suggestions",
     )
-    anonymous_resolutions = Boolean(
+    allow_anonymous_moderators = Boolean(
         default=False,
-        help_text="If True, moderators will be anonymous when suggestions are resolved",
+        help_text="If True, moderators can be anonymous when suggestions are resolved or when adding notes",
     )
     blocked_users = Array(
         BigInt(),

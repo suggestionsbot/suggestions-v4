@@ -628,7 +628,7 @@ class GuildConfigurationMenus:
                                             ctx,
                                         ),
                                         value="yes",
-                                        is_default=guild_config.anonymous_resolutions,
+                                        is_default=guild_config.allow_anonymous_moderators,
                                     ),
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
@@ -636,7 +636,7 @@ class GuildConfigurationMenus:
                                             ctx,
                                         ),
                                         value="no",
-                                        is_default=not guild_config.anonymous_resolutions,
+                                        is_default=not guild_config.allow_anonymous_moderators,
                                     ),
                                 ],
                                 min_values=1,

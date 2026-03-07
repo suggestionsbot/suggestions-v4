@@ -24,7 +24,7 @@ async def test_guild_config_default():
     assert r_1.uses_suggestion_queue is False
     assert r_1.virtual_suggestions_queue is True
     assert r_1.can_have_images_in_suggestions is True
-    assert r_1.anonymous_resolutions is False
+    assert r_1.allow_anonymous_moderators is False
     assert r_1.blocked_users == []
     assert r_1.ping_on_thread_creation is True
 
