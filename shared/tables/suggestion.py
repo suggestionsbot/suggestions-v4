@@ -196,11 +196,18 @@ class Suggestions(Table, AuditMixin):
     def is_anonymous(self) -> bool:
         return self.author_display_name == "Anonymous"
 
-    async def queue_message_edit(self):
+    async def queue_message_edit(
+        self, *, exclude_buttons: bool = False, as_resolved: bool = False
+    ):
         """Helper to queue the update of the message in discord"""
         from shared.saq.suggestions import queue_suggestion_edit
 
-        await queue_suggestion_edit(suggestion_id=self.sID, guild_id=self.guild_id)
+        await queue_suggestion_edit(
+            suggestion_id=self.sID,
+            guild_id=self.guild_id,
+            exclude_buttons=exclude_buttons,
+            as_resolved=as_resolved,
+        )
 
     async def as_components(
         self,
@@ -208,6 +215,7 @@ class Suggestions(Table, AuditMixin):
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         localisations: Localisation,
         *,
+        as_resolved: bool = False,
         exclude_buttons: bool = False,
         exclude_votes: bool = False,
         use_guild_locale: bool = False,
@@ -350,7 +358,11 @@ class Suggestions(Table, AuditMixin):
             components.append(
                 hikari.impl.TextDisplayComponentBuilder(
                     content=localisations.get_localized_string(
-                        "components.suggestions.results",
+                        (
+                            "components.suggestions.results_resolved"
+                            if as_resolved
+                            else "components.suggestions.results"
+                        ),
                         ctx,
                         extras={
                             "VOTES": votes.getvalue(),
@@ -364,11 +376,16 @@ class Suggestions(Table, AuditMixin):
         components.append(
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
-                    "components.suggestions.footer",
+                    (
+                        "components.suggestions.footer_resolved"
+                        if as_resolved
+                        else "components.suggestions.footer"
+                    ),
                     ctx,
                     extras={
                         "SID": self.footer_sid,
-                        "TIMESTAMP": int(self.created_at.timestamp()),
+                        "CREATED": (int(self.created_at.timestamp())),
+                        "RESOLVED": (int(self.resolved_at.timestamp())),
                     },
                     use_guild_locale=use_guild_locale,
                     guild_config=guild_config,

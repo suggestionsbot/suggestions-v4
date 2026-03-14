@@ -338,7 +338,7 @@ class GuildConfigurationMenus:
                     hikari.impl.MessageActionRowBuilder(
                         components=[
                             hikari.impl.ChannelSelectMenuBuilder(
-                                custom_id=f"gcm:{link_id}:link_id:log_channel_id",
+                                custom_id=f"gcm:{link_id}:log_channel_id",
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
                                 placeholder=await cls.get_channel_name(
                                     "log_channel_id",

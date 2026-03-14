@@ -7,10 +7,13 @@ from pathlib import Path
 import hikari
 import lightbulb
 from commons import value_to_bool
+from dotenv import load_dotenv
 from hikari import Color
 from opentelemetry import trace
 
 from bot.localisation import Localisation
+
+load_dotenv()
 
 VERSION = "4.0"
 MAX_CONTENT_LENGTH = 1000
@@ -49,7 +52,7 @@ BLOCKLIST_GROUP = lightbulb.Group(
 DEFAULT_UP_VOTE = hikari.CustomEmoji(
     id=(
         hikari.Snowflake(1470358301555294320)
-        if not value_to_bool(os.environ.get("DEBUG"))
+        if value_to_bool(os.environ.get("DEBUG"))
         else hikari.Snowflake(1478974500057124864)
     ),
     name="nerdSuccess",
@@ -58,7 +61,7 @@ DEFAULT_UP_VOTE = hikari.CustomEmoji(
 DEFAULT_DOWN_VOTE = hikari.CustomEmoji(
     id=(
         hikari.Snowflake(1470358346879209503)
-        if not value_to_bool(os.environ.get("DEBUG"))
+        if value_to_bool(os.environ.get("DEBUG"))
         else hikari.Snowflake(1478974532839800932)
     ),
     name="nerdError",

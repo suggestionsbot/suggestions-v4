@@ -386,6 +386,8 @@ class SuggestionMenu:
                 thread = await bot.rest.create_message_thread(
                     channel, message, f"Thread for suggestion {s.sID}"
                 )
+                s.thread_id = thread.id
+                await s.save()
             except (hikari.ForbiddenError, hikari.NotFoundError):
                 await ctx.respond(
                     embed=utils.error_embed(
