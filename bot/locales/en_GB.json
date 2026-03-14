@@ -55,6 +55,8 @@
   "commands.resolve.options.resolution.description": "What state is the suggestion being changed to?",
   "commands.resolve.options.resolution.menu.choices.1.name": "Approved",
   "commands.resolve.options.resolution.menu.choices.2.name": "Rejected",
+  "commands.resolve.options.resolution.menu.choices.3.name": "Implemented",
+  "commands.resolve.options.resolution.menu.choices.4.name": "Duplicate",
   "commands.resolve.responses.locking_thread": "Locking this thread as the suggestion has reached a resolution.",
   "commands.resolve.responses.cant_get_log_channel": "Failed to locate and send the suggestion to your log channel. Please ensure the bot has the correct permissions in the log channel and try again.",
   "commands.resolve.responses.missing_suggestion_channel_perms": "I cannot delete the original suggestion. Please ensure the bot has the correct permissions in the channel and try again.",

@@ -21,7 +21,13 @@ from piccolo.columns.operators import Equal
 from piccolo.table import Table
 
 from bot import constants
-from bot.constants import REJECTED_COLOR, APPROVED_COLOR, PENDING_COLOR
+from bot.constants import (
+    REJECTED_COLOR,
+    APPROVED_COLOR,
+    PENDING_COLOR,
+    IMPLEMENTED_COLOR,
+    DUPLICATE_COLOR,
+)
 from bot.localisation import Localisation
 from shared.saq.worker import SAQ_QUEUE
 from shared.tables import (
@@ -37,6 +43,8 @@ class SuggestionStateEnum(Enum):
     APPROVED = "Approved"
     REJECTED = "Rejected"
     CLEARED = "Cleared"
+    IMPLEMENTED = "Implemented"
+    DUPLICATE = "Duplicate"
 
 
 class Suggestions(Table, AuditMixin):
@@ -153,6 +161,12 @@ class Suggestions(Table, AuditMixin):
 
         elif self.state is SuggestionStateEnum.APPROVED:
             return APPROVED_COLOR
+
+        elif self.state is SuggestionStateEnum.IMPLEMENTED:
+            return IMPLEMENTED_COLOR
+
+        elif self.state is SuggestionStateEnum.DUPLICATE:
+            return DUPLICATE_COLOR
 
         return PENDING_COLOR
 

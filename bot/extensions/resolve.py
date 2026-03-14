@@ -187,6 +187,16 @@ class ResolveCmd(
                 "Rejected",
                 True,
             ),
+            lightbulb.Choice(
+                "commands.resolve.options.resolution.menu.choices.3.name",
+                "Implemented",
+                True,
+            ),
+            lightbulb.Choice(
+                "commands.resolve.options.resolution.menu.choices.4.name",
+                "Duplicate",
+                True,
+            ),
         ],
     )
     response = lightbulb.string(
