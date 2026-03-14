@@ -49,8 +49,7 @@ BLOCKLIST_GROUP = lightbulb.Group(
 DEFAULT_UP_VOTE = hikari.CustomEmoji(
     id=(
         hikari.Snowflake(1470358301555294320)
-        if value_to_bool(os.environ.get("DEBUG"))
-        # Prod ID
+        if not value_to_bool(os.environ.get("DEBUG"))
         else hikari.Snowflake(1478974500057124864)
     ),
     name="nerdSuccess",
@@ -59,7 +58,7 @@ DEFAULT_UP_VOTE = hikari.CustomEmoji(
 DEFAULT_DOWN_VOTE = hikari.CustomEmoji(
     id=(
         hikari.Snowflake(1470358346879209503)
-        if value_to_bool(os.environ.get("DEBUG"))
+        if not value_to_bool(os.environ.get("DEBUG"))
         else hikari.Snowflake(1478974532839800932)
     ),
     name="nerdError",
