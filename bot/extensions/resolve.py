@@ -6,7 +6,13 @@ import lightbulb
 
 import shared
 from bot.localisation import Localisation
-from shared.tables import GuildConfigs, UserConfigs, Suggestions, SuggestionStateEnum
+from shared.tables import (
+    GuildConfigs,
+    UserConfigs,
+    Suggestions,
+    SuggestionStateEnum,
+    QueuedSuggestions,
+)
 from web.util.table_mixins import utc_now
 
 loader = lightbulb.Loader()
@@ -239,6 +245,13 @@ class ResolveCmd(
                 user_config,
                 localisations,
             )
+            return
+
+        await ctx.respond(
+            localisations.get_localized_string(
+                "commands.resolve.responses.suggestion_not_found", ctx
+            )
+        )
 
 
 @loader.command
@@ -294,6 +307,13 @@ class ApproveCmd(
                 user_config,
                 localisations,
             )
+            return
+
+        await ctx.respond(
+            localisations.get_localized_string(
+                "commands.resolve.responses.suggestion_not_found", ctx
+            )
+        )
 
 
 @loader.command
@@ -349,3 +369,10 @@ class RejectCmd(
                 user_config,
                 localisations,
             )
+            return
+
+        await ctx.respond(
+            localisations.get_localized_string(
+                "commands.resolve.responses.suggestion_not_found", ctx
+            )
+        )

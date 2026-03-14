@@ -62,6 +62,7 @@
   "commands.resolve.responses.missing_suggestion_channel_perms": "I cannot delete the original suggestion. Please ensure the bot has the correct permissions in the channel and try again.",
   "commands.resolve.responses.keep_logs_edit_soon": "Thank you for resolving the `$SID` suggestion. It will be edited in a few seconds to reflect the new state.",
   "commands.resolve.responses.resolved_immediately": "Thank you for resolving the `$SID` suggestion. It has been resolved and sent here: $JUMP",
+  "commands.resolve.responses.suggestion_not_found": "I cannot find a suggestion with that ID to resolve.",
   "commands.note.name": "note",
   "commands.note.description": "Add or remove notes from suggestions.",
   "commands.note.add.name": "add",
