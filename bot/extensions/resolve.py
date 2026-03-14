@@ -206,11 +206,9 @@ class ResolveCmd(
     async def invoke(
         self,
         ctx: lightbulb.Context,
-        client: lightbulb.Client,
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         localisations: Localisation,
-        bot: hikari.RESTBot | hikari.GatewayBot,
     ) -> None:
         await ctx.defer(ephemeral=True)
         note: str | None = (
@@ -226,6 +224,116 @@ class ResolveCmd(
                 note,
                 self.anonymously,
                 state,
+                ctx,
+                guild_config,
+                user_config,
+                localisations,
+            )
+
+
+@loader.command
+class ApproveCmd(
+    lightbulb.SlashCommand,
+    name="commands.approve.name",
+    description="commands.approve.description",
+    localize=True,
+    contexts=[hikari.ApplicationContextType.GUILD],
+):
+    suggestion_id = lightbulb.string(
+        "commands.approve.options.suggestion_id.name",
+        "commands.approve.options.suggestion_id.description",
+        localize=True,
+        autocomplete=autocomplete_callback,
+    )
+    response = lightbulb.string(
+        "commands.approve.options.response.name",
+        "commands.approve.options.response.description",
+        localize=True,
+        default=None,
+    )
+    anonymously = lightbulb.boolean(
+        "commands.approve.options.anonymously.name",
+        "commands.approve.options.anonymously.description",
+        default=False,
+        localize=True,
+    )
+
+    @lightbulb.invoke
+    async def invoke(
+        self,
+        ctx: lightbulb.Context,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        localisations: Localisation,
+    ) -> None:
+        await ctx.defer(ephemeral=True)
+        note: str | None = (
+            self.response.replace("\\n", "\n") if self.response is not None else None
+        )
+        suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
+            self.suggestion_id, guild_config.guild_id
+        )
+        if suggestion:
+            await resolve_suggestion(
+                suggestion,
+                note,
+                self.anonymously,
+                SuggestionStateEnum.APPROVED,
+                ctx,
+                guild_config,
+                user_config,
+                localisations,
+            )
+
+
+@loader.command
+class RejectCmd(
+    lightbulb.SlashCommand,
+    name="commands.reject.name",
+    description="commands.reject.description",
+    localize=True,
+    contexts=[hikari.ApplicationContextType.GUILD],
+):
+    suggestion_id = lightbulb.string(
+        "commands.reject.options.suggestion_id.name",
+        "commands.reject.options.suggestion_id.description",
+        localize=True,
+        autocomplete=autocomplete_callback,
+    )
+    response = lightbulb.string(
+        "commands.reject.options.response.name",
+        "commands.reject.options.response.description",
+        localize=True,
+        default=None,
+    )
+    anonymously = lightbulb.boolean(
+        "commands.reject.options.anonymously.name",
+        "commands.reject.options.anonymously.description",
+        default=False,
+        localize=True,
+    )
+
+    @lightbulb.invoke
+    async def invoke(
+        self,
+        ctx: lightbulb.Context,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        localisations: Localisation,
+    ) -> None:
+        await ctx.defer(ephemeral=True)
+        note: str | None = (
+            self.response.replace("\\n", "\n") if self.response is not None else None
+        )
+        suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
+            self.suggestion_id, guild_config.guild_id
+        )
+        if suggestion:
+            await resolve_suggestion(
+                suggestion,
+                note,
+                self.anonymously,
+                SuggestionStateEnum.REJECTED,
                 ctx,
                 guild_config,
                 user_config,
