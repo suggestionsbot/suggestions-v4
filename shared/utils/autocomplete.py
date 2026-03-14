@@ -16,7 +16,7 @@ async def cache_sid_in_autocomplete(
     ],
 ):
     await REDIS_CLIENT.ft(index).sugadd(
-        f"{index}:{guild_id}", Suggestion(string=suggestion_id)
+        f"{guild_id}:{index}", Suggestion(string=suggestion_id)
     )
 
 
@@ -32,6 +32,6 @@ async def get_sid_autocomplete_for_guild(
     max_return: int = 20,
 ) -> list[str]:
     results = await REDIS_CLIENT.ft(index).sugget(
-        f"{index}:{guild_id}", search, num=max_return
+        f"{guild_id}:{index}", search, num=max_return
     )
     return [r.string for r in results]
