@@ -278,7 +278,7 @@
   "values.suggest.queue_approve": "Approve queued suggestion",
   "values.suggest.queue_reject": "Reject queued suggestion",
   "values.suggest.ping_author_in_thread": "Hey $AUTHOR, I have created this thread for you to discuss your suggestion in.",
-  "saq.notify_users_of_new_suggestion.responses.suggestion_created": "Hey, $AUTHOR. Your suggestion has been sent to $CHANNEL to be voted on!\n\nI have attached a copy of your suggestion below for reference. You can also find the version containing votes here: $SUGGESTION_LINK",
+  "saq.notify_users_of_new_suggestion.responses.suggestion_created": "Hey $AUTHOR.\nYour suggestion has been sent to $CHANNEL to be voted on!\n\nI have attached a copy of your suggestion below for reference. You can also find the version containing votes here: $SUGGESTION_LINK",
   "saq.suggestion_resolved_notifications.responses.suggestion_resolved.description": "Hey $AUTHOR.\nA suggestion of yours has been marked as **$STATE** by $RESOLVED_BY.\n\nYou can view the relevant suggestion at this link: $JUMP_TO",
   "saq.suggestion_resolved_notifications.responses.suggestion_resolved.footer": "Guild ID: $GUILD_ID | sID: $SID"
 }

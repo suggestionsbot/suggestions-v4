@@ -78,26 +78,18 @@ async def notify_users_of_new_suggestion(_, suggestion_id: str, guild_id: int):
             dm_channel = await client.create_dm_channel(
                 hikari.Snowflake(suggestion.author_id)
             )
-            await dm_channel.send(
-                LOCALISATIONS.get_localized_string(
-                    "saq.notify_users_of_new_suggestion.responses.suggestion_created",
-                    user_config.primary_language,
-                    extras={
-                        "AUTHOR": suggestion.author_display_name,
-                        "CHANNEL": f"<#{suggestion.channel_id}>",
-                        "SUGGESTION_LINK": suggestion.message_jump_link,
-                    },
-                ),
+            components = await cv2.build_new_suggestion_notification(
+                user_config=user_config, suggestion=suggestion
             )
-            await dm_channel.send(
-                components=await suggestion.as_components(
-                    rest=client,
-                    locale=user_config.primary_language,
-                    localisations=LOCALISATIONS,
-                    exclude_buttons=True,
-                    exclude_votes=True,
-                ),
+            suggestion_components = await suggestion.as_components(
+                rest=client,
+                locale=user_config.primary_language,
+                localisations=LOCALISATIONS,
+                exclude_buttons=True,
+                exclude_votes=True,
             )
+            components.extend(suggestion_components)
+            await dm_channel.send(components=components)
         except (hikari.ForbiddenError,):
             # I'd consider it 'fine' if the bot can't send this message
             logger.debug(
