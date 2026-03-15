@@ -3,7 +3,7 @@ from __future__ import annotations
 import io
 import logging
 import typing
-from typing import cast, Literal
+from typing import cast
 
 import commons
 import hikari
@@ -65,10 +65,10 @@ class SuggestionMenu:
             return await ctx.respond(
                 embed=utils.error_embed(
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.title", ctx
+                        "menus.suggestion.not_found.title", ctx.interaction.locale
                     ),
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.description", ctx
+                        "menus.suggestion.not_found.description", ctx.interaction.locale
                     ),
                 ),
                 ephemeral=True,
@@ -77,7 +77,7 @@ class SuggestionMenu:
         if suggestion.state != SuggestionStateEnum.PENDING:
             return await ctx.respond(
                 localisations.get_localized_string(
-                    "values.suggestion_no_more_casting", ctx
+                    "values.suggestion_no_more_casting", ctx.interaction.locale
                 )
             )
 
@@ -96,7 +96,9 @@ class SuggestionMenu:
                 if vote == SuggestionsVoteTypeEnum.UpVote
                 else "values.suggestion_down_vote_already_voted"
             )
-            return await ctx.respond(localisations.get_localized_string(key, ctx))
+            return await ctx.respond(
+                localisations.get_localized_string(key, ctx.interaction.locale)
+            )
 
         if vote_obj._was_created:
             # New vote
@@ -135,7 +137,7 @@ class SuggestionMenu:
         vote_obj.vote_type = vote
         await vote_obj.save()
         await suggestion.queue_message_edit()
-        await ctx.respond(localisations.get_localized_string(key, ctx))
+        await ctx.respond(localisations.get_localized_string(key, ctx.interaction.locale))
         return None
 
     @classmethod
@@ -163,16 +165,18 @@ class SuggestionMenu:
                     entry.component = cast(
                         hikari.TextSelectMenuComponent, entry.component
                     )
-                    anonymously = commons.value_to_bool(  # TODO Fix once upstream does
-                        entry.component.options[0]
-                    )
+                    anonymously = False
+                    # anonymously = commons.value_to_bool(  # TODO Fix once upstream does
+                    #     entry.component.options[0]
+                    # )
 
                 elif entry.component.custom_id == "files":
                     entry.component = cast(hikari.FileUploadComponent, entry.component)
                     if guild_config.can_have_images_in_suggestions is False:
                         await ctx.respond(
                             localisations.get_localized_string(
-                                "values.suggest.no_images_in_suggestions", ctx
+                                "values.suggest.no_images_in_suggestions",
+                                ctx.interaction.locale,
                             )
                         )
                         return None
@@ -202,11 +206,11 @@ class SuggestionMenu:
                     embed=utils.error_embed(
                         localisations.get_localized_string(
                             "errors.suggest.content_too_long.title",
-                            ctx=ctx,
+                            ctx.interaction.locale,
                         ),
                         localisations.get_localized_string(
                             "errors.suggest.content_too_long.description",
-                            ctx=ctx,
+                            ctx.interaction.locale,
                             extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
                         ),
                         error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
@@ -223,7 +227,7 @@ class SuggestionMenu:
             ):
                 await ctx.respond(
                     localisations.get_localized_string(
-                        "values.suggest.no_anonymous_suggestions", ctx
+                        "values.suggest.no_anonymous_suggestions", ctx.interaction.locale
                     )
                 )
                 return None
@@ -269,11 +273,11 @@ class SuggestionMenu:
                             embed=utils.error_embed(
                                 localisations.get_localized_string(
                                     "errors.suggest.content_too_long.title",
-                                    ctx=ctx,
+                                    ctx.interaction.locale,
                                 ),
                                 localisations.get_localized_string(
                                     "errors.suggest.content_too_long.description",
-                                    ctx=ctx,
+                                    ctx.interaction.locale,
                                     extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
                                 ),
                                 error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
@@ -290,11 +294,11 @@ class SuggestionMenu:
                             embed=utils.error_embed(
                                 localisations.get_localized_string(
                                     "errors.suggest.missing_queue_channel.title",
-                                    ctx=ctx,
+                                    ctx.interaction.locale,
                                 ),
                                 localisations.get_localized_string(
                                     "errors.suggest.missing_queue_channel.description",
-                                    ctx=ctx,
+                                    ctx.interaction.locale,
                                 ),
                                 error_code=ErrorCode.MISSING_QUEUE_CHANNEL,
                                 internal_error_reference=internal_error,
@@ -340,11 +344,11 @@ class SuggestionMenu:
                 embed=utils.error_embed(
                     localisations.get_localized_string(
                         "errors.suggest.suggest_channel_not_found.title",
-                        ctx=ctx,
+                        ctx.interaction.locale,
                     ),
                     localisations.get_localized_string(
                         "errors.suggest.suggest_channel_not_found.description",
-                        ctx=ctx,
+                        ctx.interaction.locale,
                     ),
                     error_code=ErrorCode.MISSING_FETCH_PERMISSIONS_IN_SUGGESTIONS_CHANNEL,
                 ),
@@ -393,11 +397,11 @@ class SuggestionMenu:
                     embed=utils.error_embed(
                         localisations.get_localized_string(
                             "errors.suggest.missing_create_thread_perms.title",
-                            ctx=ctx,
+                            ctx.interaction.locale,
                         ),
                         localisations.get_localized_string(
                             "errors.suggest.missing_create_thread_perms.description",
-                            ctx=ctx,
+                            ctx.interaction.locale,
                         ),
                         error_code=ErrorCode.MISSING_THREAD_CREATE_PERMISSIONS,
                     ),
@@ -409,7 +413,7 @@ class SuggestionMenu:
                     await thread.send(
                         localisations.get_localized_string(
                             "values.suggest.ping_author_in_thread",
-                            ctx,
+                            ctx.interaction.locale,
                             extras={"AUTHOR": s.author_display_name},
                         ),
                         user_mentions=True,
@@ -427,7 +431,7 @@ class SuggestionMenu:
                 await dm_channel.send(
                     localisations.get_localized_string(
                         "dms.suggest.suggestion_created",
-                        ctx,
+                        ctx.interaction.locale,
                         extras={
                             "AUTHOR": s.author_display_name,
                             "CHANNEL": channel.mention,
@@ -459,7 +463,7 @@ class SuggestionMenu:
         await ctx.respond(
             localisations.get_localized_string(
                 "values.suggest.suggestion_sent",
-                ctx,
+                ctx.interaction.locale,
                 extras={
                     "AUTHOR": s.author_display_name,
                     "CHANNEL": channel.mention,
@@ -511,11 +515,11 @@ class SuggestionMenu:
                     embed=utils.error_embed(
                         localisations.get_localized_string(
                             "errors.suggest.queue_channel_not_found.title",
-                            ctx=ctx,
+                            ctx.interaction.locale,
                         ),
                         localisations.get_localized_string(
                             "errors.suggest.queue_channel_not_found.description",
-                            ctx=ctx,
+                            ctx.interaction.locale,
                         ),
                         error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
                     ),
@@ -559,7 +563,7 @@ class SuggestionMenu:
         await ctx.respond(
             localisations.get_localized_string(
                 "values.suggest.sent_to_queue",
-                ctx,
+                ctx.interaction.locale,
                 guild_config=guild_config,
             ),
             ephemeral=True,
@@ -577,10 +581,11 @@ class SuggestionMenu:
         components = [
             hikari.impl.LabelComponentBuilder(
                 label=localisations.get_localized_string(
-                    "commands.suggest.options.suggestion.name", ctx
+                    "commands.suggest.options.suggestion.name", ctx.interaction.locale
                 ).capitalize(),
                 description=localisations.get_localized_string(
-                    "commands.suggest.options.suggestion.description", ctx
+                    "commands.suggest.options.suggestion.description",
+                    ctx.interaction.locale,
                 ),
                 component=hikari.impl.TextInputBuilder(
                     custom_id="suggestion",
@@ -596,10 +601,11 @@ class SuggestionMenu:
             components.append(
                 hikari.impl.LabelComponentBuilder(
                     label=localisations.get_localized_string(
-                        "commands.suggest.options.image.name", ctx
+                        "commands.suggest.options.image.name", ctx.interaction.locale
                     ).capitalize(),
                     description=localisations.get_localized_string(
-                        "commands.suggest.options.image.description", ctx
+                        "commands.suggest.options.image.description",
+                        ctx.interaction.locale,
                     ),
                     component=hikari.impl.FileUploadComponentBuilder(
                         custom_id="files",
@@ -614,10 +620,12 @@ class SuggestionMenu:
             components.append(
                 hikari.impl.LabelComponentBuilder(
                     label=localisations.get_localized_string(
-                        "commands.suggest.options.anonymously.name", ctx
+                        "commands.suggest.options.anonymously.name",
+                        ctx.interaction.locale,
                     ).capitalize(),
                     description=localisations.get_localized_string(
-                        "commands.suggest.options.anonymously.description", ctx
+                        "commands.suggest.options.anonymously.description",
+                        ctx.interaction.locale,
                     ),
                     component=hikari.impl.TextSelectMenuBuilder(
                         custom_id="anonymously",
@@ -626,14 +634,14 @@ class SuggestionMenu:
                             hikari.impl.SelectOptionBuilder(
                                 label=localisations.get_localized_string(
                                     "menus.suggestion.yes",
-                                    ctx,
+                                    ctx.interaction.locale,
                                 ),
                                 value="yes",
                             ),
                             hikari.impl.SelectOptionBuilder(
                                 label=localisations.get_localized_string(
                                     "menus.suggestion.no",
-                                    ctx,
+                                    ctx.interaction.locale,
                                 ),
                                 value="no",
                                 is_default=True,

@@ -23,7 +23,7 @@ async def create_guild_config(ctx: lightbulb.Context) -> GuildConfigs:
 
 
 async def create_user_config(ctx: lightbulb.Context) -> UserConfigs:
-    return await configs.ensure_user_config(ctx.user.id)
+    return await configs.ensure_user_config(ctx.user.id, locale=ctx.interaction.locale)
 
 
 async def create_bot(

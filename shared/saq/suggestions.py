@@ -139,6 +139,28 @@ async def populate_sid_autocomplete(_):
                     )
 
 
+async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int):
+    """Notifies users of when there suggestion has been resolved"""
+    # TODO Support dm'ing subscribed users
+    suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
+        suggestion_id, guild_id
+    )
+    if not suggestion:
+        log.error(
+            "Suggestion was none when notifying user",
+            extra={"suggestion.id": suggestion_id},
+        )
+        return
+
+    async with constants.DISCORD_REST_CLIENT.acquire(
+        constants.BOT_TOKEN, hikari.TokenType.BOT
+    ) as client:
+        dm_channel = await client.create_dm_channel(
+            hikari.Snowflake(suggestion.author_id)
+        )
+        await dm_channel.send()
+
+
 async def test_message_send(_):
     async with constants.DISCORD_REST_CLIENT.acquire(
         constants.BOT_TOKEN, hikari.TokenType.BOT

@@ -179,6 +179,7 @@ saq = SAQPlugin(
                     suggestions_worker.queue_suggestion_edit,
                     suggestions_worker.edit_suggestion_message,
                     suggestions_worker.populate_sid_autocomplete,
+                    suggestions_worker.suggestion_resolved_notifications,
                     suggestions_worker.test_message_send,
                 ],
                 # https://crontab.guru

@@ -53,7 +53,7 @@ async def notify_user_of_change(
         hikari.impl.TextDisplayComponentBuilder(
             content=localisations.get_localized_string(
                 "commands.note.add.responses.dm_change",
-                ctx,
+                ctx.interaction.locale,
                 extras={"JUMP": suggestion.message_jump_link},
             )
         ),
@@ -64,7 +64,7 @@ async def notify_user_of_change(
         hikari.impl.TextDisplayComponentBuilder(
             content=localisations.get_localized_string(
                 "commands.note.add.responses.dm_change_footer",
-                ctx,
+                ctx.interaction.locale,
                 guild_config=guild_config,
                 extras={"GUILD_ID": ctx.guild_id, "SID": suggestion.footer_sid},
             ),
@@ -133,11 +133,9 @@ class NotesAddCmd(
     async def invoke(
         self,
         ctx: lightbulb.Context,
-        client: lightbulb.Client,
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         localisations: Localisation,
-        bot: hikari.RESTBot | hikari.GatewayBot,
     ) -> None:
         # backwards compat for newlines instead of using a modal
         await ctx.defer(ephemeral=True)
@@ -157,10 +155,10 @@ class NotesAddCmd(
             await ctx.respond(
                 embed=utils.error_embed(
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.title", ctx
+                        "menus.suggestion.not_found.title", ctx.interaction.locale
                     ),
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.description", ctx
+                        "menus.suggestion.not_found.description", ctx.interaction.locale
                     ),
                 ),
                 ephemeral=True,
@@ -178,7 +176,7 @@ class NotesAddCmd(
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.note.add.responses.change",
-                ctx,
+                ctx.interaction.locale,
                 extras={"JUMP": suggestion.message_jump_link},
             )
         )
@@ -232,10 +230,10 @@ class NotesRemoveCmd(
             await ctx.respond(
                 embed=utils.error_embed(
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.title", ctx
+                        "menus.suggestion.not_found.title", ctx.interaction.locale
                     ),
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.description", ctx
+                        "menus.suggestion.not_found.description", ctx.interaction.locale
                     ),
                 ),
                 ephemeral=True,
@@ -250,7 +248,7 @@ class NotesRemoveCmd(
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.note.add.responses.change",
-                ctx,
+                ctx.interaction.locale,
                 extras={"JUMP": suggestion.message_jump_link},
             )
         )

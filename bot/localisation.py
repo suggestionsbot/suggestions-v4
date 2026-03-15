@@ -53,16 +53,11 @@ class Localisation:
     @staticmethod
     def inject_locale_values(
         content: str,
-        ctx: lightbulb.Context,
         *,
         extras: dict = None,
         guild_config: GuildConfigs | None = None,
     ):
-        base_config = {
-            "CHANNEL_ID": ctx.channel_id,
-            "GUILD_ID": ctx.guild_id,
-            "AUTHOR_ID": ctx.user.id,
-        }
+        base_config = {}
         if extras is not None:
             base_config = {**base_config, **extras}
 
@@ -78,24 +73,17 @@ class Localisation:
     def get_localized_string(
         self,
         key: str,
-        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        locale: hikari.Locale | str,
         *,
         extras: dict = None,
         guild_config: GuildConfigs | None = None,
-        use_guild_locale: bool = False,
     ):
-        if use_guild_locale and guild_config is not None:
-            locale = guild_config.primary_language
-        else:
-            locale = ctx.interaction.locale
-
         if not isinstance(locale, hikari.Locale):
             locale = hikari.Locale(locale)
 
         content = self.get_locale(key, locale)
         return self.inject_locale_values(
             content,
-            ctx=ctx,
             guild_config=guild_config,
             extras=extras,
         )

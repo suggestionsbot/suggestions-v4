@@ -1,5 +1,7 @@
 import logging
 
+import hikari
+
 from shared.tables import GuildConfigs, PremiumGuildConfigs, UserConfigs
 
 logger = logging.getLogger(__name__)
@@ -18,8 +20,13 @@ async def ensure_guild_config(guild_id: int) -> GuildConfigs:
     return gc
 
 
-async def ensure_user_config(user_id: int) -> UserConfigs:
-    uc: UserConfigs = await UserConfigs.objects().get_or_create(UserConfigs.user_id == user_id)
+async def ensure_user_config(
+    user_id: int, *, locale: hikari.Locale = hikari.Locale.EN_GB
+) -> UserConfigs:
+    uc: UserConfigs = await UserConfigs.objects().get_or_create(
+        UserConfigs.user_id == user_id,
+        defaults={UserConfigs.user_id: user_id, UserConfigs.primary_language_raw: locale},
+    )
     if uc._was_created:
         logger.debug("Created new UserConfig for %s", user_id)
 

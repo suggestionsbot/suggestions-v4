@@ -1,4 +1,5 @@
 import io
+import time
 import typing
 from enum import Enum
 
@@ -223,6 +224,15 @@ class Suggestions(Table, AuditMixin):
             as_resolved=as_resolved,
         )
 
+    async def notify_users_of_resolution(self):
+        """Helper to queue user resolution notifications"""
+        await SAQ_QUEUE.enqueue(
+            "suggestion_resolved_notifications",
+            suggestion_id=self.sID,
+            guild_id=self.guild_id,
+            scheduled=time.time() + 5,
+        )
+
     async def as_components(
         self,
         rest: hikari.api.RESTClient,
@@ -233,16 +243,19 @@ class Suggestions(Table, AuditMixin):
         exclude_buttons: bool = False,
         exclude_votes: bool = False,
         use_guild_locale: bool = False,
-        guild_config=None,
+        guild_config: GuildConfigs | None = None,
     ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
         user: hikari.User = await rest.fetch_user(self.author_id)
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "components.suggestions.suggestion",
-                    ctx,
+                    (
+                        guild_config.primary_language
+                        if use_guild_locale
+                        else ctx.interaction.locale
+                    ),
                     extras={"SUGGESTION": self.suggestion},
-                    use_guild_locale=use_guild_locale,
                     guild_config=guild_config,
                 )
             ),
@@ -269,9 +282,12 @@ class Suggestions(Table, AuditMixin):
                 hikari.impl.TextDisplayComponentBuilder(
                     content=localisations.get_localized_string(
                         "components.suggestions.submitter",
-                        ctx,
+                        (
+                            guild_config.primary_language
+                            if use_guild_locale
+                            else ctx.interaction.locale
+                        ),
                         extras={"AUTHOR_DISPLAY": self.author_display_name},
-                        use_guild_locale=use_guild_locale,
                         guild_config=guild_config,
                     )
                 )
@@ -284,9 +300,12 @@ class Suggestions(Table, AuditMixin):
                         hikari.impl.TextDisplayComponentBuilder(
                             content=localisations.get_localized_string(
                                 "components.suggestions.submitter",
-                                ctx,
+                                (
+                                    guild_config.primary_language
+                                    if use_guild_locale
+                                    else ctx.interaction.locale
+                                ),
                                 extras={"AUTHOR_DISPLAY": self.author_display_name},
-                                use_guild_locale=use_guild_locale,
                                 guild_config=guild_config,
                             )
                         ),
@@ -306,12 +325,15 @@ class Suggestions(Table, AuditMixin):
             )
             content = localisations.get_localized_string(
                 "components.suggestions.moderator_note",
-                ctx,
+                (
+                    guild_config.primary_language
+                    if use_guild_locale
+                    else ctx.interaction.locale
+                ),
                 extras={
                     "MODERATOR_NOTE_BY_DISPLAY": self.moderator_note_added_by_display_text,
                     "MODERATOR_NOTE": self.moderator_note,
                 },
-                use_guild_locale=use_guild_locale,
                 guild_config=guild_config,
             )
             components.append(hikari.impl.TextDisplayComponentBuilder(content=content))
@@ -325,21 +347,27 @@ class Suggestions(Table, AuditMixin):
             )
             content = localisations.get_localized_string(
                 "components.suggestions.resolved",
-                ctx,
+                (
+                    guild_config.primary_language
+                    if use_guild_locale
+                    else ctx.interaction.locale
+                ),
                 extras={
                     "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
                 },
-                use_guild_locale=use_guild_locale,
                 guild_config=guild_config,
             )
             if self.resolved_note is not None:
                 content += localisations.get_localized_string(
                     "components.suggestions.resolved_note",
-                    ctx,
+                    (
+                        guild_config.primary_language
+                        if use_guild_locale
+                        else ctx.interaction.locale
+                    ),
                     extras={
                         "RESOLVED_BY_NOTE": self.resolved_note,
                     },
-                    use_guild_locale=use_guild_locale,
                     guild_config=guild_config,
                 )
 
@@ -377,15 +405,25 @@ class Suggestions(Table, AuditMixin):
                             if as_resolved
                             else "components.suggestions.results"
                         ),
-                        ctx,
+                        (
+                            guild_config.primary_language
+                            if use_guild_locale
+                            else ctx.interaction.locale
+                        ),
                         extras={
                             "VOTES": votes.getvalue(),
                         },
-                        use_guild_locale=use_guild_locale,
                         guild_config=guild_config,
                     )
                 )
             )
+
+        extras = {
+            "SID": self.footer_sid,
+            "CREATED": (int(self.created_at.timestamp())),
+        }
+        if self.resolved_at is not None:
+            extras["RESOLVED"] = int(self.resolved_at.timestamp())
 
         components.append(
             hikari.impl.TextDisplayComponentBuilder(
@@ -395,13 +433,12 @@ class Suggestions(Table, AuditMixin):
                         if as_resolved
                         else "components.suggestions.footer"
                     ),
-                    ctx,
-                    extras={
-                        "SID": self.footer_sid,
-                        "CREATED": (int(self.created_at.timestamp())),
-                        "RESOLVED": (int(self.resolved_at.timestamp())),
-                    },
-                    use_guild_locale=use_guild_locale,
+                    (
+                        guild_config.primary_language
+                        if use_guild_locale
+                        else ctx.interaction.locale
+                    ),
+                    extras=extras,
                     guild_config=guild_config,
                 ),
             )

@@ -11,7 +11,6 @@ from shared.tables import (
     UserConfigs,
     Suggestions,
     SuggestionStateEnum,
-    QueuedSuggestions,
 )
 from web.util.table_mixins import utc_now
 
@@ -65,7 +64,8 @@ async def resolve_suggestion(
                 # Thread is not already archived or locked
                 await thread.send(
                     localisations.get_localized_string(
-                        "commands.resolve.responses.locking_thread", ctx
+                        "commands.resolve.responses.locking_thread",
+                        ctx.interaction.locale,
                     )
                 )
                 await thread.edit(locked=True, archived=True)
@@ -83,10 +83,11 @@ async def resolve_suggestion(
         # Simple! The Dream.
         await suggestion.save()
         await suggestion.queue_message_edit(exclude_buttons=True, as_resolved=True)
+        await suggestion.notify_users_of_resolution()
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.keep_logs_edit_soon",
-                ctx,
+                ctx.interaction.locale,
                 extras={"SID": suggestion.sID},
             )
         )
@@ -99,7 +100,7 @@ async def resolve_suggestion(
     except (hikari.NotFoundError, hikari.ForbiddenError):
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.cant_get_log_channel", ctx
+                "commands.resolve.responses.cant_get_log_channel", ctx.interaction.locale
             )
         )
         return None
@@ -118,7 +119,7 @@ async def resolve_suggestion(
     except (hikari.NotFoundError, hikari.ForbiddenError):
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.cant_get_log_channel", ctx
+                "commands.resolve.responses.cant_get_log_channel", ctx.interaction.locale
             )
         )
         return None
@@ -137,17 +138,19 @@ async def resolve_suggestion(
         except hikari.ForbiddenError:
             await ctx.respond(
                 localisations.get_localized_string(
-                    "commands.resolve.responses.missing_suggestion_channel_perms", ctx
+                    "commands.resolve.responses.missing_suggestion_channel_perms",
+                    ctx.interaction.locale,
                 ),
             )
 
     suggestion.channel_id = log_message.channel_id
     suggestion.message_id = log_message.id
     await suggestion.save()
+    await suggestion.notify_users_of_resolution()
     await ctx.respond(
         localisations.get_localized_string(
             "commands.resolve.responses.resolved_immediately",
-            ctx,
+            ctx.interaction.locale,
             extras={"SID": suggestion.sID, "JUMP": suggestion.message_jump_link},
         )
     )
@@ -249,7 +252,7 @@ class ResolveCmd(
 
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.suggestion_not_found", ctx
+                "commands.resolve.responses.suggestion_not_found", ctx.interaction.locale
             )
         )
 
@@ -311,7 +314,7 @@ class ApproveCmd(
 
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.suggestion_not_found", ctx
+                "commands.resolve.responses.suggestion_not_found", ctx.interaction.locale
             )
         )
 
@@ -373,6 +376,6 @@ class RejectCmd(
 
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.suggestion_not_found", ctx
+                "commands.resolve.responses.suggestion_not_found", ctx.interaction.locale
             )
         )

@@ -6,12 +6,19 @@ from bot.localisation import Localisation
 
 
 def test_expected_lookup(localisation: Localisation, context: lightbulb.Context):
-    assert localisation.get_localized_string("commands.suggest.name", context) == "suggest"
+    assert (
+        localisation.get_localized_string(
+            "commands.suggest.name", context.interaction.locale
+        )
+        == "suggest"
+    )
 
 
 def test_unexpected_lookup(localisation: Localisation, context: lightbulb.Context):
     with pytest.raises(MissingTranslation):
-        localisation.get_localized_string("commands.doesnt_exist.name", context)
+        localisation.get_localized_string(
+            "commands.doesnt_exist.name", context.interaction.locale
+        )
 
 
 def test_falls_back(localisation: Localisation, context: lightbulb.Context):
@@ -20,7 +27,7 @@ def test_falls_back(localisation: Localisation, context: lightbulb.Context):
     assert (
         localisation.get_localized_string(
             "errors.suggest.content_too_long.title",
-            context,
+            context.interaction.locale,
         )
         == "Command Failed"
     )

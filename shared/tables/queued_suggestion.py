@@ -157,7 +157,7 @@ class QueuedSuggestions(Table, AuditMixin):
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "components.queued_suggestions.suggestion",
-                    ctx,
+                    ctx.interaction.locale,
                     extras={"SUGGESTION": self.suggestion},
                 )
             ),
@@ -184,7 +184,7 @@ class QueuedSuggestions(Table, AuditMixin):
                 hikari.impl.TextDisplayComponentBuilder(
                     content=localisations.get_localized_string(
                         "components.queued_suggestions.submitter",
-                        ctx,
+                        ctx.interaction.locale,
                         extras={"AUTHOR_DISPLAY": self.author_display_name},
                     )
                 )
@@ -197,7 +197,7 @@ class QueuedSuggestions(Table, AuditMixin):
                         hikari.impl.TextDisplayComponentBuilder(
                             content=localisations.get_localized_string(
                                 "components.queued_suggestions.submitter",
-                                ctx,
+                                ctx.interaction.locale,
                                 extras={"AUTHOR_DISPLAY": self.author_display_name},
                             )
                         ),
@@ -218,7 +218,7 @@ class QueuedSuggestions(Table, AuditMixin):
             )
             content = localisations.get_localized_string(
                 "components.queued_suggestions.resolved",
-                ctx,
+                ctx.interaction.locale,
                 extras={
                     "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
                 },
@@ -226,7 +226,7 @@ class QueuedSuggestions(Table, AuditMixin):
             if self.resolved_note is not None:
                 content += localisations.get_localized_string(
                     "components.queued_suggestions.resolved_note",
-                    ctx,
+                    ctx.interaction.locale,
                     extras={
                         "RESOLVED_BY_NOTE": self.resolved_note,
                     },
@@ -240,7 +240,7 @@ class QueuedSuggestions(Table, AuditMixin):
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "components.queued_suggestions.footer",
-                    ctx,
+                    ctx.interaction.locale,
                     extras={
                         "SID": sid_text,
                         "TIMESTAMP": int(self.created_at.timestamp()),
@@ -259,14 +259,14 @@ class QueuedSuggestions(Table, AuditMixin):
                     hikari.impl.InteractiveButtonBuilder(
                         style=hikari.ButtonStyle.SUCCESS,
                         label=localisations.get_localized_string(
-                            "values.suggest.queue_approve", ctx
+                            "values.suggest.queue_approve", ctx.interaction.locale
                         ),
                         custom_id=f"queue_approve:{self.sID}",
                     ),
                     hikari.impl.InteractiveButtonBuilder(
                         style=hikari.ButtonStyle.DANGER,
                         label=localisations.get_localized_string(
-                            "values.suggest.queue_reject", ctx
+                            "values.suggest.queue_reject", ctx.interaction.locale
                         ),
                         custom_id=f"queue_reject:{self.sID}",
                     ),

@@ -5,11 +5,10 @@ import lightbulb
 
 import shared.utils
 from bot import utils
-from bot.constants import NOTES_GROUP, EMBED_COLOR, BLOCKLIST_GROUP
+from bot.constants import BLOCKLIST_GROUP
 from bot.localisation import Localisation
 from shared.tables import (
     GuildConfigs,
-    UserConfigs,
     Suggestions,
     QueuedSuggestions,
 )
@@ -71,10 +70,11 @@ class BlocklistAddCmd(
                 await ctx.respond(
                     embed=utils.error_embed(
                         localisations.get_localized_string(
-                            "menus.suggestion.not_found.title", ctx
+                            "menus.suggestion.not_found.title", ctx.interaction.locale
                         ),
                         localisations.get_localized_string(
-                            "menus.suggestion.not_found.description", ctx
+                            "menus.suggestion.not_found.description",
+                            ctx.interaction.locale,
                         ),
                     ),
                     ephemeral=True,
@@ -85,7 +85,8 @@ class BlocklistAddCmd(
         if author_to_block in guild_config.blocked_users:
             await ctx.respond(
                 localisations.get_localized_string(
-                    "commands.blocklist.add.responses.already_blocked", ctx
+                    "commands.blocklist.add.responses.already_blocked",
+                    ctx.interaction.locale,
                 ),
                 ephemeral=True,
             )
@@ -95,7 +96,8 @@ class BlocklistAddCmd(
         await guild_config.save()
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.blocklist.add.responses.added_to_blocklist", ctx
+                "commands.blocklist.add.responses.added_to_blocklist",
+                ctx.interaction.locale,
             ),
             ephemeral=True,
         )
@@ -150,7 +152,8 @@ class BlocklistRemoveCmd(
         if self.suggestion_id is None and self.user is None:
             await ctx.respond(
                 localisations.get_localized_string(
-                    "commands.blocklist.remove.responses.argument_required", ctx
+                    "commands.blocklist.remove.responses.argument_required",
+                    ctx.interaction.locale,
                 ),
                 ephemeral=True,
             )
@@ -159,7 +162,8 @@ class BlocklistRemoveCmd(
         if self.suggestion_id is not None and self.user is not None:
             await ctx.respond(
                 localisations.get_localized_string(
-                    "commands.blocklist.remove.responses.too_many_arguments", ctx
+                    "commands.blocklist.remove.responses.too_many_arguments",
+                    ctx.interaction.locale,
                 ),
                 ephemeral=True,
             )
@@ -191,10 +195,11 @@ class BlocklistRemoveCmd(
                     await ctx.respond(
                         embed=utils.error_embed(
                             localisations.get_localized_string(
-                                "menus.suggestion.not_found.title", ctx
+                                "menus.suggestion.not_found.title", ctx.interaction.locale
                             ),
                             localisations.get_localized_string(
-                                "menus.suggestion.not_found.description", ctx
+                                "menus.suggestion.not_found.description",
+                                ctx.interaction.locale,
                             ),
                         ),
                         ephemeral=True,
@@ -206,7 +211,8 @@ class BlocklistRemoveCmd(
         if user_to_unblock not in guild_config.blocked_users:
             await ctx.respond(
                 localisations.get_localized_string(
-                    "commands.blocklist.remove.responses.not_blocked", ctx
+                    "commands.blocklist.remove.responses.not_blocked",
+                    ctx.interaction.locale,
                 ),
                 ephemeral=True,
             )
@@ -216,7 +222,8 @@ class BlocklistRemoveCmd(
         await guild_config.save()
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.blocklist.remove.responses.now_unblocked", ctx
+                "commands.blocklist.remove.responses.now_unblocked",
+                ctx.interaction.locale,
             ),
             ephemeral=True,
         )

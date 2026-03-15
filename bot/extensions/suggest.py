@@ -1,26 +1,15 @@
-import asyncio
 import io
 import logging
-import uuid
-from datetime import timedelta
-from typing import cast
 
 import hikari
 import lightbulb
-import orjson
-from fastnanoid import generate
-from hikari.impl import MessageActionRowBuilder, special_endpoints
-from lightbulb.components import base
-from opentelemetry import trace
 
-import shared
-import web.constants
-from bot import utils, constants, menus
+from bot import utils, menus
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MessageTooLong, MissingQueueChannel
 from bot.localisation import Localisation
 from bot.tables import InternalErrors
-from shared.tables import GuildConfigs, UserConfigs, QueuedSuggestions
+from shared.tables import GuildConfigs, UserConfigs
 
 loader = lightbulb.Loader()
 logger = logging.getLogger(__name__)
@@ -33,17 +22,13 @@ def handle_suggestions_errors(func):
         command_data,
         ctx: lightbulb.Context,
         guild_config: GuildConfigs,
-        user_config: UserConfigs,
         localisations: Localisation,
-        bot: hikari.RESTBot | hikari.GatewayBot,
     ):
         try:
             return await func(
                 command_data,
                 ctx=ctx,
-                bot=bot,
                 guild_config=guild_config,
-                user_config=user_config,
                 localisations=localisations,
             )
         except Exception as exception:
@@ -65,11 +50,11 @@ def handle_suggestions_errors(func):
                             embed=utils.error_embed(
                                 localisations.get_localized_string(
                                     "errors.suggest.content_too_long.title",
-                                    ctx=ctx,
+                                    ctx.interaction.locale,
                                 ),
                                 localisations.get_localized_string(
                                     "errors.suggest.content_too_long.description",
-                                    ctx=ctx,
+                                    ctx.interaction.locale,
                                     extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
                                 ),
                                 error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
@@ -86,11 +71,11 @@ def handle_suggestions_errors(func):
                             embed=utils.error_embed(
                                 localisations.get_localized_string(
                                     "errors.suggest.missing_queue_channel.title",
-                                    ctx=ctx,
+                                    ctx.interaction.locale,
                                 ),
                                 localisations.get_localized_string(
                                     "errors.suggest.missing_queue_channel.description",
-                                    ctx=ctx,
+                                    ctx.interaction.locale,
                                 ),
                                 error_code=ErrorCode.MISSING_QUEUE_CHANNEL,
                                 internal_error_reference=internal_error,
@@ -117,20 +102,18 @@ class Suggest(
     async def invoke(
         self,
         ctx: lightbulb.Context,
-        client: lightbulb.Client,
         guild_config: GuildConfigs,
-        user_config: UserConfigs,
         localisations: Localisation,
-        bot: hikari.RESTBot | hikari.GatewayBot,
     ) -> None:
         if ctx.user.id in guild_config.blocked_users:
             await ctx.respond(
                 embed=utils.error_embed(
                     localisations.get_localized_string(
-                        "commands.suggest.responses.blocked.title", ctx
+                        "commands.suggest.responses.blocked.title", ctx.interaction.locale
                     ),
                     localisations.get_localized_string(
-                        "commands.suggest.responses.blocked.description", ctx
+                        "commands.suggest.responses.blocked.description",
+                        ctx.interaction.locale,
                     ),
                 ),
                 ephemeral=True,
@@ -147,3 +130,4 @@ class Suggest(
             f"suggest_modal:{link_id}",
             components=components,
         )
+        return None
