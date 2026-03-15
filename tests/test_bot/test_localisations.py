@@ -39,7 +39,6 @@ def test_templating(localisation: Localisation, context: lightbulb.Context):
         localisation.inject_locale_values(
             "$TEST",
             extras={"TEST": "test"},
-            ctx=context,
         )
         == "test"
     )

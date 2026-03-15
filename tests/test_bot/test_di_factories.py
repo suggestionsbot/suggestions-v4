@@ -1,5 +1,6 @@
 from unittest.mock import AsyncMock
 
+import hikari
 import lightbulb
 
 from bot.bot import create_guild_config, create_user_config
@@ -26,6 +27,7 @@ async def test_get_user_config():
 
     ctx: lightbulb.Context = AsyncMock(spec=lightbulb.Context)
     ctx.user.id = 12345
+    ctx.interaction.locale = hikari.Locale.EN_GB
     await create_user_config(ctx)
 
     r_2 = await UserConfigs.count()
