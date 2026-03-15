@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -633,6 +633,11 @@ dependencies = [
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/84/85/57c314a6b35336efbbdc13e5fc9ae13f6b60a0647cfa7c1221178ac6d8ae/brotlicffi-1.2.0.0.tar.gz", hash = "sha256:34345d8d1f9d534fcac2249e57a4c3c8801a33c9942ff9f8574f67a175e17adb", size = 476682, upload-time = "2025-11-21T18:17:57.334Z" }
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/7c/87/ba6298c3d7f8d66ce80d7a487f2a487ebae74a79c6049c7c2990178ce529/brotlicffi-1.2.0.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:b13fb476a96f02e477a506423cb5e7bc21e0e3ac4c060c20ba31c44056e38c68", size = 433038, upload-time = "2026-03-05T17:57:37.96Z" },
+    { url = "https://files.pythonhosted.org/packages/00/49/16c7a77d1cae0519953ef0389a11a9c2e2e62e87d04f8e7afbae40124255/brotlicffi-1.2.0.0-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:17db36fb581f7b951635cd6849553a95c6f2f53c1a707817d06eae5aeff5f6af", size = 1541124, upload-time = "2026-03-05T17:57:39.488Z" },
+    { url = "https://files.pythonhosted.org/packages/e8/17/fab2c36ea820e2288f8c1bf562de1b6cd9f30e28d66f1ce2929a4baff6de/brotlicffi-1.2.0.0-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:40190192790489a7b054312163d0ce82b07d1b6e706251036898ce1684ef12e9", size = 1541983, upload-time = "2026-03-05T17:57:41.061Z" },
+    { url = "https://files.pythonhosted.org/packages/78/c9/849a669b3b3bb8ac96005cdef04df4db658c33443a7fc704a6d4a2f07a56/brotlicffi-1.2.0.0-cp314-cp314t-win32.whl", hash = "sha256:a8079e8ecc32ecef728036a1d9b7105991ce6a5385cf51ee8c02297c90fb08c2", size = 349046, upload-time = "2026-03-05T17:57:42.76Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/25/09c0fd21cfc451fa38ad538f4d18d8be566746531f7f27143f63f8c45a9f/brotlicffi-1.2.0.0-cp314-cp314t-win_amd64.whl", hash = "sha256:ca90c4266704ca0a94de8f101b4ec029624273380574e4cf19301acfa46c61a0", size = 385653, upload-time = "2026-03-05T17:57:44.224Z" },
     { url = "https://files.pythonhosted.org/packages/e4/df/a72b284d8c7bef0ed5756b41c2eb7d0219a1dd6ac6762f1c7bdbc31ef3af/brotlicffi-1.2.0.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:9458d08a7ccde8e3c0afedbf2c70a8263227a68dea5ab13590593f4c0a4fd5f4", size = 432340, upload-time = "2025-11-21T18:17:42.277Z" },
     { url = "https://files.pythonhosted.org/packages/74/2b/cc55a2d1d6fb4f5d458fba44a3d3f91fb4320aa14145799fd3a996af0686/brotlicffi-1.2.0.0-cp38-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:84e3d0020cf1bd8b8131f4a07819edee9f283721566fe044a20ec792ca8fd8b7", size = 1534002, upload-time = "2025-11-21T18:17:43.746Z" },
     { url = "https://files.pythonhosted.org/packages/e4/9c/d51486bf366fc7d6735f0e46b5b96ca58dc005b250263525a1eea3cd5d21/brotlicffi-1.2.0.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:33cfb408d0cff64cd50bef268c0fed397c46fbb53944aa37264148614a62e990", size = 1536547, upload-time = "2025-11-21T18:17:45.729Z" },
@@ -2142,11 +2147,11 @@ wheels = [
 
 [[package]]
 name = "multipart"
-version = "1.3.0"
+version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6d/c9/c6f5ab81bae667d4fe42a58df29f4c2db6ad8377cfd0e9baa729e4fa3ebb/multipart-1.3.0.tar.gz", hash = "sha256:a46bd6b0eb4c1ba865beb88ddd886012a3da709b6e7b86084fc37e99087e5cf1", size = 38816, upload-time = "2025-07-26T15:09:38.056Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8e/d6/9c4f366d6f9bb8f8fb5eae3acac471335c39510c42b537fd515213d7d8c3/multipart-1.3.1.tar.gz", hash = "sha256:211d7cfc1a7a43e75c4d24ee0e8e0f4f61d522f1a21575303ae85333dea687bf", size = 38929, upload-time = "2026-02-27T10:17:13.7Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/d6/d547a7004b81fa0b2aafa143b09196f6635e4105cd9d2c641fa8a4051c05/multipart-1.3.0-py3-none-any.whl", hash = "sha256:439bf4b00fd7cb2dbff08ae13f49f4f49798931ecd8d496372c63537fa19f304", size = 14938, upload-time = "2025-07-26T15:09:36.884Z" },
+    { url = "https://files.pythonhosted.org/packages/19/ed/e1f03200ee1f0bf4a2b9b72709afefbf5319b68df654e0b84b35c65613ee/multipart-1.3.1-py3-none-any.whl", hash = "sha256:a82b59e1befe74d3d30b3d3f70efd5a2eba4d938f845dcff9faace968888ff29", size = 15061, upload-time = "2026-02-27T10:17:11.943Z" },
 ]
 
 [[package]]
