@@ -1,32 +1,42 @@
 import hikari
 
 from bot.constants import LOCALISATIONS
+from shared.tables import UserConfigs, Suggestions
 
 
-def build_user_resolution_notification():
+async def build_user_resolution_notification(
+    *, user_config: UserConfigs, suggestion: Suggestions
+):
     return [
         hikari.impl.ContainerComponentBuilder(
-            accent_color=hikari.Color.from_hex_code("#C34949"),
+            accent_color=suggestion.color,
             components=[
                 hikari.impl.TextDisplayComponentBuilder(
-                    content=LOCALISATIONS.get_localized_string()
+                    content=LOCALISATIONS.get_localized_string(
+                        "saq.suggestion_resolved_notifications.responses.suggestion_resolved.description",
+                        user_config.primary_language,
+                        extras={
+                            "AUTHOR": suggestion.author_display_name,
+                            "STATE": suggestion.state.value,
+                            "JUMP_TO": suggestion.message_jump_link,
+                            "RESOLVED_BY": suggestion.resolved_by_display_text,
+                            "SID": f"**{suggestion.sID}**",
+                        },
+                    ),
                 ),
                 hikari.impl.SeparatorComponentBuilder(
                     divider=True,
                     spacing=hikari.SpacingType.SMALL,
                 ),
-                hikari.impl.SectionComponentBuilder(
-                    accessory=hikari.impl.ThumbnailComponentBuilder(
-                        media="",
-                    ),
-                    components=[
-                        hikari.impl.TextDisplayComponentBuilder(
-                            content="Always scream into the void before you vanish."
-                        ),
-                    ],
-                ),
                 hikari.impl.TextDisplayComponentBuilder(
-                    content="They said I couldn't sing opera, so I went to a parallel universe and became a alien."
+                    content=LOCALISATIONS.get_localized_string(
+                        "commands.note.add.responses.dm_change_footer",
+                        user_config.primary_language,
+                        extras={
+                            "GUILD_ID": suggestion.guild_id,
+                            "SID": suggestion.footer_sid,
+                        },
+                    )
                 ),
             ],
         ),

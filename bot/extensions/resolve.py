@@ -107,9 +107,8 @@ async def resolve_suggestion(
 
     try:
         components = await suggestion.as_components(
-            use_guild_locale=True,
             guild_config=guild_config,
-            ctx=ctx,
+            locale=guild_config.primary_language,
             rest=ctx.client.rest,
             localisations=localisations,
             exclude_buttons=True,

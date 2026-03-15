@@ -55,15 +55,10 @@ async def edit_suggestion_message(
     async with constants.DISCORD_REST_CLIENT.acquire(
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
-        fake_ctx: lightbulb.Context = MagicMock(spec=lightbulb.Context)
-        fake_ctx.user.id = suggestion.author_id  # noqa
-        fake_ctx.guild_id = suggestion.guild_id  # noqa
-        fake_ctx.channel_id = suggestion.channel_id  # noqa
         guild_config = await ensure_guild_config(suggestion.guild_id)
         components = await suggestion.as_components(
-            use_guild_locale=True,
             guild_config=guild_config,
-            ctx=fake_ctx,
+            locale=guild_config.primary_language,
             rest=client,
             localisations=b_constants.LOCALISATIONS,
             exclude_buttons=exclude_buttons,
@@ -137,28 +132,6 @@ async def populate_sid_autocomplete(_):
                         suggestion_id=row.sID,
                         index="queue_sid_autocomplete_index",
                     )
-
-
-async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int):
-    """Notifies users of when there suggestion has been resolved"""
-    # TODO Support dm'ing subscribed users
-    suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-        suggestion_id, guild_id
-    )
-    if not suggestion:
-        log.error(
-            "Suggestion was none when notifying user",
-            extra={"suggestion.id": suggestion_id},
-        )
-        return
-
-    async with constants.DISCORD_REST_CLIENT.acquire(
-        constants.BOT_TOKEN, hikari.TokenType.BOT
-    ) as client:
-        dm_channel = await client.create_dm_channel(
-            hikari.Snowflake(suggestion.author_id)
-        )
-        await dm_channel.send()
 
 
 async def test_message_send(_):

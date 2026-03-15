@@ -9,6 +9,7 @@
   "commands.suggest.options.anonymously.description": "Submit your suggestion anonymously.",
   "commands.suggest.responses.blocked.title": "Blocked Action",
   "commands.suggest.responses.blocked.description": "Administrators from this guild have removed your ability to run this action.",
+  "commands.suggest.responses.menu_title": "Create Suggestion",
   "commands.blocklist.name": "user",
   "commands.blocklist.description": "Block or unblock a user.",
   "commands.blocklist.add.name": "block",
@@ -63,7 +64,6 @@
   "commands.resolve.responses.keep_logs_edit_soon": "Thank you for resolving the `$SID` suggestion. It will be edited in a few seconds to reflect the new state.",
   "commands.resolve.responses.resolved_immediately": "Thank you for resolving the `$SID` suggestion. It has been resolved and sent here: $JUMP",
   "commands.resolve.responses.suggestion_not_found": "I cannot find a suggestion with that ID to resolve.",
-  "saq.suggestion_resolved_notifications.responses.suggestion_resolved": "",
   "commands.note.name": "note",
   "commands.note.description": "Add or remove notes from suggestions.",
   "commands.note.add.name": "add",
@@ -278,5 +278,7 @@
   "values.suggest.queue_approve": "Approve queued suggestion",
   "values.suggest.queue_reject": "Reject queued suggestion",
   "values.suggest.ping_author_in_thread": "Hey $AUTHOR, I have created this thread for you to discuss your suggestion in.",
-  "dms.suggest.suggestion_created": "Hey, $AUTHOR. Your suggestion has been sent to $CHANNEL to be voted on!\n\nI have attached a copy of your suggestion below for reference. You can also find the version containing votes here: $SUGGESTION_LINK"
+  "saq.notify_users_of_new_suggestion.responses.suggestion_created": "Hey, $AUTHOR. Your suggestion has been sent to $CHANNEL to be voted on!\n\nI have attached a copy of your suggestion below for reference. You can also find the version containing votes here: $SUGGESTION_LINK",
+  "saq.suggestion_resolved_notifications.responses.suggestion_resolved.description": "Hey $AUTHOR.\nA suggestion of yours has been marked as **$STATE** by $RESOLVED_BY.\n\nYou can view the relevant suggestion at this link: $JUMP_TO",
+  "saq.suggestion_resolved_notifications.responses.suggestion_resolved.footer": "Guild ID: $GUILD_ID | sID: $SID"
 }

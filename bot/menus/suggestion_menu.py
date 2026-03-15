@@ -365,9 +365,8 @@ class SuggestionMenu:
             content=prefix,
             components=await s.as_components(
                 rest=bot.rest,
-                ctx=ctx,
+                locale=guild_config.primary_language,
                 localisations=localisations,
-                use_guild_locale=True,
                 guild_config=guild_config,
             ),
         )
@@ -422,44 +421,7 @@ class SuggestionMenu:
                     # I'd consider it 'fine' if the bot can't send this message
                     pass
 
-        if not (
-            guild_config.generic_dm_messages_disabled
-            or user_config.generic_dm_messages_disabled
-        ):
-            try:
-                dm_channel = await bot.rest.create_dm_channel(ctx.user)
-                await dm_channel.send(
-                    localisations.get_localized_string(
-                        "dms.suggest.suggestion_created",
-                        ctx.interaction.locale,
-                        extras={
-                            "AUTHOR": s.author_display_name,
-                            "CHANNEL": channel.mention,
-                            "SUGGESTION_LINK": f"https://discord.com/channels/{ctx.guild_id}/{channel.id}/{message.id}",
-                        },
-                    ),
-                )
-                await dm_channel.send(
-                    components=await s.as_components(
-                        rest=bot.rest,
-                        ctx=ctx,
-                        localisations=localisations,
-                        exclude_buttons=True,
-                        exclude_votes=True,
-                    ),
-                )
-            except (hikari.ForbiddenError,):
-                # I'd consider it 'fine' if the bot can't send this message
-                logger.debug(
-                    "Failed to dm user about a suggestion",
-                    extra={
-                        "interaction.user.id": ctx.user.id,
-                        "interaction.user.username": ctx.user.display_name,
-                        "interaction.guild.id": ctx.guild_id,
-                        "suggestion.id": s.sID,
-                    },
-                )
-
+        await s.notify_users_of_new_suggestion()
         await ctx.respond(
             localisations.get_localized_string(
                 "values.suggest.suggestion_sent",

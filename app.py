@@ -31,6 +31,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from web import constants, guards
 from shared.saq import worker as saq_worker
 from shared.saq import suggestions as suggestions_worker
+from shared.saq import user_notifications as suggestions_user_notifications_worker
 from web.admin_portal import configure_piccolo_admin
 from web.constants import IS_PRODUCTION
 from web.controllers import (
@@ -179,8 +180,9 @@ saq = SAQPlugin(
                     suggestions_worker.queue_suggestion_edit,
                     suggestions_worker.edit_suggestion_message,
                     suggestions_worker.populate_sid_autocomplete,
-                    suggestions_worker.suggestion_resolved_notifications,
                     suggestions_worker.test_message_send,
+                    suggestions_user_notifications_worker.suggestion_resolved_notifications,
+                    suggestions_user_notifications_worker.notify_users_of_new_suggestion,
                 ],
                 # https://crontab.guru
                 scheduled_tasks=[

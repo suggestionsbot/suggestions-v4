@@ -224,6 +224,15 @@ class Suggestions(Table, AuditMixin):
             as_resolved=as_resolved,
         )
 
+    async def notify_users_of_new_suggestion(self):
+        """Helper to queue user creation notifications"""
+        await SAQ_QUEUE.enqueue(
+            "notify_users_of_new_suggestion",
+            suggestion_id=self.sID,
+            guild_id=self.guild_id,
+            scheduled=time.time() + 5,
+        )
+
     async def notify_users_of_resolution(self):
         """Helper to queue user resolution notifications"""
         await SAQ_QUEUE.enqueue(
@@ -236,25 +245,19 @@ class Suggestions(Table, AuditMixin):
     async def as_components(
         self,
         rest: hikari.api.RESTClient,
-        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        locale: hikari.Locale | str,
         localisations: Localisation,
         *,
         as_resolved: bool = False,
         exclude_buttons: bool = False,
         exclude_votes: bool = False,
-        use_guild_locale: bool = False,
         guild_config: GuildConfigs | None = None,
     ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
-        user: hikari.User = await rest.fetch_user(self.author_id)
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "components.suggestions.suggestion",
-                    (
-                        guild_config.primary_language
-                        if use_guild_locale
-                        else ctx.interaction.locale
-                    ),
+                    locale,
                     extras={"SUGGESTION": self.suggestion},
                     guild_config=guild_config,
                 )
@@ -282,11 +285,7 @@ class Suggestions(Table, AuditMixin):
                 hikari.impl.TextDisplayComponentBuilder(
                     content=localisations.get_localized_string(
                         "components.suggestions.submitter",
-                        (
-                            guild_config.primary_language
-                            if use_guild_locale
-                            else ctx.interaction.locale
-                        ),
+                        locale,
                         extras={"AUTHOR_DISPLAY": self.author_display_name},
                         guild_config=guild_config,
                     )
@@ -294,17 +293,16 @@ class Suggestions(Table, AuditMixin):
             )
 
         else:
+            user: hikari.User = await rest.fetch_user(
+                self.author_id
+            )  # TODO Cache avatar URL
             components.append(
                 hikari.impl.SectionComponentBuilder(
                     components=[
                         hikari.impl.TextDisplayComponentBuilder(
                             content=localisations.get_localized_string(
                                 "components.suggestions.submitter",
-                                (
-                                    guild_config.primary_language
-                                    if use_guild_locale
-                                    else ctx.interaction.locale
-                                ),
+                                locale,
                                 extras={"AUTHOR_DISPLAY": self.author_display_name},
                                 guild_config=guild_config,
                             )
@@ -325,11 +323,7 @@ class Suggestions(Table, AuditMixin):
             )
             content = localisations.get_localized_string(
                 "components.suggestions.moderator_note",
-                (
-                    guild_config.primary_language
-                    if use_guild_locale
-                    else ctx.interaction.locale
-                ),
+                locale,
                 extras={
                     "MODERATOR_NOTE_BY_DISPLAY": self.moderator_note_added_by_display_text,
                     "MODERATOR_NOTE": self.moderator_note,
@@ -347,11 +341,7 @@ class Suggestions(Table, AuditMixin):
             )
             content = localisations.get_localized_string(
                 "components.suggestions.resolved",
-                (
-                    guild_config.primary_language
-                    if use_guild_locale
-                    else ctx.interaction.locale
-                ),
+                locale,
                 extras={
                     "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
                 },
@@ -360,11 +350,7 @@ class Suggestions(Table, AuditMixin):
             if self.resolved_note is not None:
                 content += localisations.get_localized_string(
                     "components.suggestions.resolved_note",
-                    (
-                        guild_config.primary_language
-                        if use_guild_locale
-                        else ctx.interaction.locale
-                    ),
+                    locale,
                     extras={
                         "RESOLVED_BY_NOTE": self.resolved_note,
                     },
@@ -405,11 +391,7 @@ class Suggestions(Table, AuditMixin):
                             if as_resolved
                             else "components.suggestions.results"
                         ),
-                        (
-                            guild_config.primary_language
-                            if use_guild_locale
-                            else ctx.interaction.locale
-                        ),
+                        locale,
                         extras={
                             "VOTES": votes.getvalue(),
                         },
@@ -433,11 +415,7 @@ class Suggestions(Table, AuditMixin):
                         if as_resolved
                         else "components.suggestions.footer"
                     ),
-                    (
-                        guild_config.primary_language
-                        if use_guild_locale
-                        else ctx.interaction.locale
-                    ),
+                    locale,
                     extras=extras,
                     guild_config=guild_config,
                 ),
