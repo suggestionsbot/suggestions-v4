@@ -115,6 +115,25 @@ class QueuedSuggestions(Table, AuditMixin):
     def is_anonymous(self) -> bool:
         return self.author_display_name == "Anonymous"
 
+    @classmethod
+    async def fetch_guild_queued_suggestions(
+        cls, guild_id: int, *, still_in_queue: bool
+    ) -> list[typing.Self]:
+        query = cls.objects(
+            QueuedSuggestions.user_configuration,
+            QueuedSuggestions.guild_configuration,
+        ).where(
+            And(
+                Where(QueuedSuggestions.still_in_queue, still_in_queue, operator=Equal),
+                Where(
+                    QueuedSuggestions.guild_configuration.guild_id,
+                    guild_id,
+                    operator=Equal,
+                ),
+            )
+        )
+        return await query
+
     # noinspection PyPep8Naming
     @classmethod
     async def fetch_queued_suggestion(cls, sID: str, guild_id: int) -> typing.Self:

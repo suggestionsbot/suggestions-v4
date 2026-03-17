@@ -8,7 +8,7 @@ import lightbulb
 from dotenv import load_dotenv
 
 from bot import create_bot
-from bot.constants import CONFIGURE_GROUP, NOTES_GROUP, BLOCKLIST_GROUP
+from bot.constants import CONFIGURE_GROUP, NOTES_GROUP, BLOCKLIST_GROUP, QUEUE_GROUP
 from shared.tables import GuildConfigs
 from web import constants as t_constants
 
@@ -48,10 +48,12 @@ async def main():
         from bot.extensions.configure_guild import ConfigureGuildCmd  # noqa
         from bot.extensions.notes import NotesAddCmd, NotesRemoveCmd  # noqa
         from bot.extensions.blocklist import BlocklistAddCmd, BlocklistRemoveCmd  # noqa
+        from bot.extensions.queue import QueueInfoCmd # noqa
 
         client.register(CONFIGURE_GROUP)
         client.register(NOTES_GROUP)
         client.register(BLOCKLIST_GROUP)
+        client.register(QUEUE_GROUP)
         await client.load_extensions(
             "bot.extensions.suggest",
             "bot.extensions.resolve",

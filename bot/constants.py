@@ -49,6 +49,13 @@ BLOCKLIST_GROUP = lightbulb.Group(
     default_member_permissions=hikari.Permissions.MANAGE_GUILD,
     contexts=[hikari.ApplicationContextType.GUILD],
 )
+QUEUE_GROUP = lightbulb.Group(
+    name="commands.queue.name",
+    description="commands.queue.description",
+    localize=True,
+    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
+    contexts=[hikari.ApplicationContextType.GUILD],
+)
 
 # TODO Set these IDs based on current env
 DEFAULT_UP_VOTE = hikari.CustomEmoji(
