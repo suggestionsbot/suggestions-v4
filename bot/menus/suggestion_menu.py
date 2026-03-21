@@ -319,7 +319,7 @@ class SuggestionMenu:
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         localisations: Localisation,
-    ):
+    ) -> Suggestions | None:
         """Specific helper for handling queued suggestions"""
         bot = ctx.client.app
         from shared.tables import SuggestionStateEnum
@@ -405,6 +405,7 @@ class SuggestionMenu:
                         error_code=ErrorCode.MISSING_THREAD_CREATE_PERMISSIONS,
                     ),
                 )
+                await s.delete()
                 return None
 
             if guild_config.ping_on_thread_creation and not s.is_anonymous:
@@ -434,7 +435,7 @@ class SuggestionMenu:
             ),
             ephemeral=True,
         )
-        return None
+        return s
 
     @classmethod
     async def handle_queued_suggestion(
