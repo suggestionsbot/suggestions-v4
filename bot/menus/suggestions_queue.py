@@ -8,12 +8,14 @@ from piccolo.columns.operators import Equal
 from bot import utils
 from bot.constants import ErrorCode
 from bot.localisation import Localisation
+from bot.menus import SuggestionMenu
 from bot.utils.cv2 import build_queued_user_resolution_notification
 from shared.tables import (
     GuildConfigs,
     QueuedSuggestions,
     UserConfigs,
     QueuedSuggestionStateEnum,
+    Suggestions,
 )
 from shared.tables.mixins.audit import utc_now
 from shared.utils import configs
@@ -94,7 +96,7 @@ class SuggestionsQueueMenu:
             )
 
         else:
-            await cls.reject_queued_suggestion(
+            await cls.approve_queued_suggestion(
                 queued_suggestion,
                 ctx=ctx,
                 localisations=localisations,
@@ -102,6 +104,49 @@ class SuggestionsQueueMenu:
                 event=event,
                 user_config=user_config,
             )
+
+    @classmethod
+    async def approve_queued_suggestion(
+        cls,
+        queued_suggestion: QueuedSuggestions,
+        *,
+        ctx: lightbulb.components.MenuContext,
+        localisations: Localisation,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        event: hikari.ComponentInteractionCreateEvent,
+    ):
+        queued_suggestion.state_raw = QueuedSuggestionStateEnum.APPROVED
+        queued_suggestion.resolved_at = utc_now()
+        queued_suggestion.resolved_by = event.interaction.user
+        queued_suggestion.resolved_by_display_text = (
+            f"<@{ctx.user.id}>"
+            if guild_config.allow_anonymous_moderators is False
+            else "Anonymous"
+        )
+        queued_suggestion.still_in_queue = False
+        suggestion: Suggestions | None = await SuggestionMenu.handle_suggestion(
+            suggestion=queued_suggestion.suggestion,
+            image_urls=queued_suggestion.image_urls,
+            author_display_name=queued_suggestion.author_display_name,
+            ctx=ctx,
+            guild_config=queued_suggestion.guild_configuration,
+            user_config=queued_suggestion.user_configuration,
+            localisations=localisations,
+            send_final_response=False,
+        )
+        if suggestion is None:
+            # upstream errored in a handled way
+            return
+
+        queued_suggestion.related_suggestion = suggestion
+        await queued_suggestion.save()
+        await queued_suggestion.notify_users_of_resolution()
+        await ctx.respond(
+            localisations.get_localized_string(
+                "menus.queue.responses.approved", user_config.primary_language
+            ),
+        )
 
     @classmethod
     async def reject_queued_suggestion(

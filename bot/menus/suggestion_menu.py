@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import io
 import logging
 import typing
@@ -247,7 +248,9 @@ class SuggestionMenu:
                 return await cls.handle_suggestion(
                     suggestion=suggestion_content,
                     image_urls=image_urls,
-                    is_anonymous=anonymously,
+                    author_display_name=(
+                        f"<@{ctx.user.id}>" if anonymously is False else "Anonymous"
+                    ),
                     ctx=ctx,
                     guild_config=guild_config,
                     user_config=user_config,
@@ -314,11 +317,12 @@ class SuggestionMenu:
         *,
         suggestion: str,
         image_urls: list[str],
-        is_anonymous: bool,
+        author_display_name: str,
         ctx: lightbulb.components.MenuContext,
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         localisations: Localisation,
+        send_final_response: bool = True,
     ) -> Suggestions | None:
         """Specific helper for handling queued suggestions"""
         bot = ctx.client.app
@@ -330,9 +334,7 @@ class SuggestionMenu:
             user_configuration=user_config,
             suggestion=suggestion,
             image_urls=image_urls,
-            author_display_name=(
-                f"<@{ctx.user.id}>" if is_anonymous is False else "Anonymous"
-            ),
+            author_display_name=author_display_name,
             state_raw=SuggestionStateEnum.PENDING,
         )
         await s.save()
@@ -423,18 +425,20 @@ class SuggestionMenu:
                     pass
 
         await s.notify_users_of_new_suggestion()
-        await ctx.respond(
-            localisations.get_localized_string(
-                "values.suggest.suggestion_sent",
-                ctx.interaction.locale,
-                extras={
-                    "AUTHOR": s.author_display_name,
-                    "CHANNEL": channel.mention,
-                    "SID": s.sID,
-                },
-            ),
-            ephemeral=True,
-        )
+        if send_final_response:
+            # We only want to send on /suggest and not queued suggestions
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "values.suggest.suggestion_sent",
+                    ctx.interaction.locale,
+                    extras={
+                        "AUTHOR": s.author_display_name,
+                        "CHANNEL": channel.mention,
+                        "SID": s.sID,
+                    },
+                ),
+                ephemeral=True,
+            )
         return s
 
     @classmethod

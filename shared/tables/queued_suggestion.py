@@ -211,7 +211,7 @@ class QueuedSuggestions(Table, AuditMixin):
             "queued_suggestion_resolved_notifications",
             suggestion_id=self.sID,
             guild_id=self.guild_id,
-            scheduled=time.time() + 5,
+            scheduled=time.time() + 1,
         )
 
     async def as_components(

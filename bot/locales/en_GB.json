@@ -141,7 +141,8 @@
   "menus.queue.responses.queue_log_channel_not_found.description": "The bot does not have permissions to interact with the queue log channel.\nPlease contact an administrator and ask them to ensure the channel exists and that the bot can see it.",
   "menus.queue.responses.queue_channel_no_perms.title": "Command Failed",
   "menus.queue.responses.queue_channel_no_perms.description": "The bot does not have permissions to interact with the queue channel.\nPlease contact an administrator and ask them to ensure the bot can delete messages from the channel.",
-"menus.queue.responses.rejected": "I have removed that suggestion from the queue.",
+  "menus.queue.responses.approved": "I have accepted that suggestion from the queue.",
+  "menus.queue.responses.rejected": "I have removed that suggestion from the queue.",
 
   "commands.clear.name": "clear",
   "commands.clear.description": "Remove a suggestion and any associated messages.",
