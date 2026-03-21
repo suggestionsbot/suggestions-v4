@@ -17,7 +17,6 @@ async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_
     suggestion: QueuedSuggestions | None = (
         await QueuedSuggestions.fetch_queued_suggestion(suggestion_id, guild_id)
     )
-    print(suggestion, suggestion.guild_configuration)
     if not suggestion:
         logger.error(
             "Queued Suggestion was none when notifying user of resolution",

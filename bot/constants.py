@@ -1,17 +1,23 @@
 from __future__ import annotations
 
 import os
+from datetime import timedelta
 from enum import IntEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import hikari
 import lightbulb
 from commons import value_to_bool
+from commons.caching import TimedCache
 from dotenv import load_dotenv
 from hikari import Color
 from opentelemetry import trace
 
 from bot.localisation import Localisation
+
+if TYPE_CHECKING:
+    from bot.utils import QueuedSuggestionsPaginator
 
 load_dotenv()
 
@@ -27,6 +33,11 @@ EMBED_COLOR = Color.of((255, 214, 99))
 OTEL_TRACER = trace.get_tracer(__name__)
 LOCALISATIONS = Localisation(
     base_path=Path("bot"),
+)
+PAGINATOR_OBJECTS: TimedCache[str, QueuedSuggestionsPaginator] = TimedCache(
+    global_ttl=timedelta(minutes=15),
+    lazy_eviction=False,
+    ttl_from_last_access=True,
 )
 CONFIGURE_GROUP = lightbulb.Group(
     name="commands.configure.name",
@@ -57,7 +68,6 @@ QUEUE_GROUP = lightbulb.Group(
     contexts=[hikari.ApplicationContextType.GUILD],
 )
 
-# TODO Set these IDs based on current env
 DEFAULT_UP_VOTE = hikari.CustomEmoji(
     id=(
         hikari.Snowflake(1470358301555294320)

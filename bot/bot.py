@@ -12,7 +12,12 @@ from piccolo.columns.operators import Equal
 
 from bot import overrides, utils, constants
 from bot.constants import OTEL_TRACER
-from bot.menus import GuildConfigurationMenus, SuggestionMenu, SuggestionsQueueMenu
+from bot.menus import (
+    GuildConfigurationMenus,
+    SuggestionMenu,
+    SuggestionsQueueMenu,
+    SuggestionsQueueViewerMenu,
+)
 from shared.tables import GuildConfigs, UserConfigs, QueuedSuggestions
 from shared.utils import configs
 from web import constants as t_constants
@@ -157,10 +162,18 @@ async def create_bot(
             queued_suggestion_id = None
             to_approve = custom_id.endswith("approve")
 
-        elif custom_id.startswith("v4_queue"):
+        elif custom_id.startswith("v4_queued_suggestion"):
             _, approve, queued_suggestion_id = custom_id.split(":", maxsplit=2)
             to_approve = approve == "approve"
             component_key = f"queue {approve}"
+
+        elif custom_id.startswith("v4_queue:"):
+            _, action, pid, queued_suggestion_id, link_id = custom_id.split(
+                ":", maxsplit=4
+            )
+            queued_suggestion_id = queued_suggestion_id if queued_suggestion_id else None
+            otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+            component_key = f"queue paginator {action}"
 
         elif custom_id.startswith("suggestions_up_vote") or custom_id.startswith(
             "suggestions_down_vote"
@@ -219,6 +232,16 @@ async def create_bot(
                     link_id=link_id,
                 )
 
+            elif custom_id.startswith("v4_queue:"):
+                await SuggestionsQueueViewerMenu.handle_paginator_interaction(
+                    queue_id=pid,  # noqa
+                    action=action,  # noqa
+                    queued_suggestion_id=queued_suggestion_id,  # noqa
+                    ctx=ctx,
+                    localisations=constants.LOCALISATIONS,
+                    event=event,
+                )
+
             elif component_key in ("queue approve", "queue reject"):
                 guild_config = await configs.ensure_guild_config(ctx.guild_id)
                 await SuggestionsQueueMenu.handle_physical_interaction(
@@ -242,7 +265,8 @@ async def create_bot(
                 await ctx.respond(
                     embed=utils.error_embed(
                         "Unknown Event",
-                        f"Please contact support if this keeps happening.",
+                        f"Please contact support if this keeps happening "
+                        f"and describe what you did before seeing this error.",
                     ),
                     ephemeral=True,
                 )

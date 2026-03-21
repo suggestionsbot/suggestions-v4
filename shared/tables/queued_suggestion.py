@@ -221,6 +221,8 @@ class QueuedSuggestions(Table, AuditMixin):
         localisations: Localisation,
         *,
         include_buttons: bool = True,
+        paginator_id: str | None = None,
+        link_id: str | None = None,
     ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
@@ -332,6 +334,13 @@ class QueuedSuggestions(Table, AuditMixin):
             ),
         ]
         if include_buttons:
+            if paginator_id:
+                approved = f"v4_queue:approve:{paginator_id}:{self.sID}:{link_id}"
+                rejected = f"v4_queue:reject:{paginator_id}:{self.sID}:{link_id}"
+            else:
+                approved = f"v4_queued_suggestion:approve:{self.sID}"
+                rejected = f"v4_queued_suggestion:reject:{self.sID}"
+
             data.append(
                 hikari.impl.MessageActionRowBuilder(
                     components=[
@@ -340,14 +349,14 @@ class QueuedSuggestions(Table, AuditMixin):
                             label=localisations.get_localized_string(
                                 "values.suggest.queue_approve", locale
                             ),
-                            custom_id=f"v4_queue:approve:{self.sID}",
+                            custom_id=approved,
                         ),
                         hikari.impl.InteractiveButtonBuilder(
                             style=hikari.ButtonStyle.DANGER,
                             label=localisations.get_localized_string(
                                 "values.suggest.queue_reject", locale
                             ),
-                            custom_id=f"v4_queue:reject:{self.sID}",
+                            custom_id=rejected,
                         ),
                     ]
                 )

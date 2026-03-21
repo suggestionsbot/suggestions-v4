@@ -61,7 +61,8 @@ class GuildConfigurationMenus:
 
                 elif id_data in (
                     "queued_suggestion_channel_id",
-                    "queued_suggestion_log_channel_id",
+                    # Can set logs channel without breaking virtual queue
+                    # "queued_suggestion_log_channel_id",
                 ):
                     guild_config.uses_suggestion_queue = True
                     guild_config.virtual_suggestions_queue = False
@@ -177,7 +178,8 @@ class GuildConfigurationMenus:
                 guild_config.uses_suggestion_queue = True
                 guild_config.virtual_suggestions_queue = True
                 guild_config.queued_suggestion_channel_id = None
-                guild_config.queued_suggestion_log_channel_id = None
+                # Leave log channel alone so they keep getting logged
+                # guild_config.queued_suggestion_log_channel_id = None
                 await guild_config.save()
                 return await ctx.respond(
                     localisations.get_localized_string(

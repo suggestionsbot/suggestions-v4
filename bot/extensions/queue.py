@@ -5,8 +5,9 @@ import hikari
 import lightbulb
 
 from bot import utils
-from bot.constants import QUEUE_GROUP, EMBED_COLOR
+from bot.constants import QUEUE_GROUP, EMBED_COLOR, PAGINATOR_OBJECTS
 from bot.localisation import Localisation
+from bot.utils import QueuedSuggestionsPaginator, generate_id
 from shared.tables import (
     GuildConfigs,
     Suggestions,
@@ -80,3 +81,49 @@ class QueueInfoCmd(
             icon=guild.make_icon_url(),
         )
         await ctx.respond(embed=embed)
+
+
+@QUEUE_GROUP.register
+class QueueViewCmd(
+    lightbulb.SlashCommand,
+    name="commands.queue.view.name",
+    description="commands.queue.view.description",
+    localize=True,
+    contexts=[hikari.ApplicationContextType.GUILD],
+):
+
+    @lightbulb.invoke
+    async def invoke(
+        self,
+        ctx: lightbulb.Context,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        localisations: Localisation,
+    ) -> None:
+        await ctx.defer(ephemeral=True)
+        queued_suggestions_for_guild: list[QueuedSuggestions] = (
+            await QueuedSuggestions.fetch_guild_queued_suggestions(
+                guild_id=guild_config.guild_id, still_in_queue=True
+            )
+        )
+        if not queued_suggestions_for_guild:
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "commands.queue.view.responses.empty", user_config.primary_language
+                )
+            )
+            return None
+
+        queued_suggestion_ids: list[str] = [qs.sID for qs in queued_suggestions_for_guild]
+        pid = generate_id()
+        link_id = await utils.otel.generate_trace_link_state()
+        paginator = QueuedSuggestionsPaginator(
+            data=queued_suggestion_ids,
+            ctx=ctx,
+            locale=user_config.primary_language,
+            pid=pid,
+            link_id=link_id,
+        )
+        PAGINATOR_OBJECTS.add_entry(pid, paginator)
+        await ctx.respond(components=await paginator.format_page())
+        return None

@@ -239,7 +239,7 @@ async def test_queued_suggestion_missing_queue_channel_config(localisation):
             "Command Failed",
             "This command requires a queue channel to use.\n"
             "Please contact an administrator and ask them to set one up "
-            "using the following command.\n`/config queue_channel`",
+            "using the following command.\n`/configure guild`",
             error_code=ErrorCode.MISSING_QUEUE_CHANNEL,
             internal_error_reference=internal_error,
         ),

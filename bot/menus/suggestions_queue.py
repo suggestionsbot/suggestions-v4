@@ -1,15 +1,11 @@
-import dataclasses
-
 import hikari
 import lightbulb
 from piccolo.columns import Where, And
 from piccolo.columns.operators import Equal
 
 from bot import utils
-from bot.constants import ErrorCode
 from bot.localisation import Localisation
 from bot.menus import SuggestionMenu
-from bot.utils.cv2 import build_queued_user_resolution_notification
 from shared.tables import (
     GuildConfigs,
     QueuedSuggestions,
@@ -21,28 +17,7 @@ from shared.tables.mixins.audit import utc_now
 from shared.utils import configs
 
 
-@dataclasses.dataclass
-class QueueSession:
-    session_id: str
-    previous_page_cursor: int
-    next_page_cursor: int
-
-    def as_dict(self) -> dict:
-        return dataclasses.asdict(self)
-
-
 class SuggestionsQueueMenu:
-    @classmethod
-    async def handle_paginator_interaction(
-        cls,
-        queue_session: QueueSession,
-        *,
-        ctx: lightbulb.components.MenuContext,
-        localisations: Localisation,
-        guild_config: GuildConfigs,
-        event: hikari.ComponentInteractionCreateEvent,
-    ):
-        pass
 
     @classmethod
     async def handle_physical_interaction(

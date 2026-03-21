@@ -22,3 +22,7 @@ class InvalidFileType(SuggestionException):
 
 class MissingQueueChannel(SuggestionException):
     """Tried to send a queued suggestion to a non-existent channel."""
+
+
+class QueueImbalance(SuggestionException):
+    """This queued suggestion has already been dealt with."""
