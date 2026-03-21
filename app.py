@@ -183,6 +183,7 @@ saq = SAQPlugin(
                     suggestions_worker.test_message_send,
                     suggestions_user_notifications_worker.suggestion_resolved_notifications,
                     suggestions_user_notifications_worker.notify_users_of_new_suggestion,
+                    suggestions_user_notifications_worker.queued_suggestion_resolved_notifications,
                 ],
                 # https://crontab.guru
                 scheduled_tasks=[

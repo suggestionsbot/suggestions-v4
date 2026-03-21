@@ -1,7 +1,8 @@
+import time
 import typing
+from enum import Enum
 
 import hikari
-import lightbulb
 from hikari.impl import ContainerComponentBuilder, MessageActionRowBuilder
 from piccolo.columns import (
     Serial,
@@ -20,11 +21,18 @@ from piccolo.columns.indexes import IndexMethod
 from piccolo.columns.operators import Equal
 from piccolo.table import Table
 
-from bot.constants import EMBED_COLOR
+from bot.constants import PENDING_COLOR, APPROVED_COLOR, REJECTED_COLOR
 from bot.localisation import Localisation
+from bot.utils import generate_id
+from shared.saq.worker import SAQ_QUEUE
 from shared.tables import GuildConfigs, UserConfigs
 from shared.tables.mixins import AuditMixin
-from bot.utils import generate_id
+
+
+class QueuedSuggestionStateEnum(Enum):
+    PENDING = "Pending"
+    APPROVED = "Approved"
+    REJECTED = "Rejected"
 
 
 class QueuedSuggestions(Table, AuditMixin):
@@ -39,6 +47,13 @@ class QueuedSuggestions(Table, AuditMixin):
         index=True,
         index_method=IndexMethod.hash,
         help_text="The user facing id. This should be used everywhere.",
+    )
+    state_raw = Varchar(
+        help_text="The current state of this suggestion",
+        choices=QueuedSuggestionStateEnum,
+        null=False,
+        required=True,
+        default=QueuedSuggestionStateEnum.PENDING,
     )
     suggestion = Text(help_text="The actual content of this suggestion")
     guild_configuration = ForeignKey(GuildConfigs, index=True)
@@ -112,8 +127,16 @@ class QueuedSuggestions(Table, AuditMixin):
     )
 
     @property
+    def is_physical(self):
+        return self.channel_id is not None and self.message_id is not None
+
+    @property
     def is_anonymous(self) -> bool:
         return self.author_display_name == "Anonymous"
+
+    @property
+    def state(self) -> QueuedSuggestionStateEnum:
+        return QueuedSuggestionStateEnum(self.state_raw)
 
     @classmethod
     async def fetch_guild_queued_suggestions(
@@ -122,6 +145,7 @@ class QueuedSuggestions(Table, AuditMixin):
         query = cls.objects(
             QueuedSuggestions.user_configuration,
             QueuedSuggestions.guild_configuration,
+            QueuedSuggestions.related_suggestion,
         ).where(
             And(
                 Where(QueuedSuggestions.still_in_queue, still_in_queue, operator=Equal),
@@ -142,6 +166,7 @@ class QueuedSuggestions(Table, AuditMixin):
             cls.objects(
                 QueuedSuggestions.user_configuration,
                 QueuedSuggestions.guild_configuration,
+                QueuedSuggestions.related_suggestion,
             )
             .where(
                 And(
@@ -158,6 +183,11 @@ class QueuedSuggestions(Table, AuditMixin):
         return await query
 
     @property
+    def footer_sid(self) -> str:
+        # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/suggestions/{self.sID})"
+        return f"`{self.sID}`"
+
+    @property
     def guild_id(self) -> int:
         return self.guild_configuration.guild_id
 
@@ -165,18 +195,38 @@ class QueuedSuggestions(Table, AuditMixin):
     def author_id(self) -> int:
         return self.user_configuration.user_id
 
+    @property
+    def color(self) -> hikari.Color:
+        if self.state == QueuedSuggestionStateEnum.APPROVED:
+            return APPROVED_COLOR
+
+        elif self.state == QueuedSuggestionStateEnum.REJECTED:
+            return REJECTED_COLOR
+
+        return PENDING_COLOR
+
+    async def notify_users_of_resolution(self):
+        """Helper to queue user resolution notifications"""
+        await SAQ_QUEUE.enqueue(
+            "queued_suggestion_resolved_notifications",
+            suggestion_id=self.sID,
+            guild_id=self.guild_id,
+            scheduled=time.time() + 5,
+        )
+
     async def as_components(
         self,
-        bot: hikari.RESTAware,
-        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        rest: hikari.api.RESTClient,
+        locale: hikari.Locale | str,
         localisations: Localisation,
+        *,
+        include_buttons: bool = True,
     ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
-        user: hikari.User = await bot.rest.fetch_user(self.author_id)
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "components.queued_suggestions.suggestion",
-                    ctx.interaction.locale,
+                    locale,
                     extras={"SUGGESTION": self.suggestion},
                 )
             ),
@@ -203,20 +253,21 @@ class QueuedSuggestions(Table, AuditMixin):
                 hikari.impl.TextDisplayComponentBuilder(
                     content=localisations.get_localized_string(
                         "components.queued_suggestions.submitter",
-                        ctx.interaction.locale,
+                        locale,
                         extras={"AUTHOR_DISPLAY": self.author_display_name},
                     )
                 )
             )
 
         else:
+            user: hikari.User = await rest.fetch_user(self.author_id)  # TODO Cache
             components.append(
                 hikari.impl.SectionComponentBuilder(
                     components=[
                         hikari.impl.TextDisplayComponentBuilder(
                             content=localisations.get_localized_string(
                                 "components.queued_suggestions.submitter",
-                                ctx.interaction.locale,
+                                locale,
                                 extras={"AUTHOR_DISPLAY": self.author_display_name},
                             )
                         ),
@@ -237,7 +288,7 @@ class QueuedSuggestions(Table, AuditMixin):
             )
             content = localisations.get_localized_string(
                 "components.queued_suggestions.resolved",
-                ctx.interaction.locale,
+                locale,
                 extras={
                     "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
                 },
@@ -245,7 +296,7 @@ class QueuedSuggestions(Table, AuditMixin):
             if self.resolved_note is not None:
                 content += localisations.get_localized_string(
                     "components.queued_suggestions.resolved_note",
-                    ctx.interaction.locale,
+                    locale,
                     extras={
                         "RESOLVED_BY_NOTE": self.resolved_note,
                     },
@@ -253,42 +304,53 @@ class QueuedSuggestions(Table, AuditMixin):
 
             components.append(hikari.impl.TextDisplayComponentBuilder(content=content))
 
-        sid_text = f"`{self.sID}`"
-        # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/queue/{self.sID})"
+        extras = {
+            "SID": self.footer_sid,
+            "CREATED": (int(self.created_at.timestamp())),
+        }
+        if self.resolved_at is not None:
+            extras["RESOLVED"] = int(self.resolved_at.timestamp())
+
         components.append(
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
-                    "components.queued_suggestions.footer",
-                    ctx.interaction.locale,
-                    extras={
-                        "SID": sid_text,
-                        "TIMESTAMP": int(self.created_at.timestamp()),
-                    },
+                    (
+                        "components.queued_suggestions.footer_resolved"
+                        if self.state != QueuedSuggestionStateEnum.PENDING
+                        else "components.queued_suggestions.footer"
+                    ),
+                    locale,
+                    extras=extras,
                 ),
             )
         )
 
-        return [
+        data: list = [
             hikari.impl.ContainerComponentBuilder(
-                accent_color=EMBED_COLOR,
+                accent_color=self.color,
                 components=components,
             ),
-            hikari.impl.MessageActionRowBuilder(
-                components=[
-                    hikari.impl.InteractiveButtonBuilder(
-                        style=hikari.ButtonStyle.SUCCESS,
-                        label=localisations.get_localized_string(
-                            "values.suggest.queue_approve", ctx.interaction.locale
-                        ),
-                        custom_id=f"queue_approve:{self.sID}",
-                    ),
-                    hikari.impl.InteractiveButtonBuilder(
-                        style=hikari.ButtonStyle.DANGER,
-                        label=localisations.get_localized_string(
-                            "values.suggest.queue_reject", ctx.interaction.locale
-                        ),
-                        custom_id=f"queue_reject:{self.sID}",
-                    ),
-                ]
-            ),
         ]
+        if include_buttons:
+            data.append(
+                hikari.impl.MessageActionRowBuilder(
+                    components=[
+                        hikari.impl.InteractiveButtonBuilder(
+                            style=hikari.ButtonStyle.SUCCESS,
+                            label=localisations.get_localized_string(
+                                "values.suggest.queue_approve", locale
+                            ),
+                            custom_id=f"v4_queue:approve:{self.sID}",
+                        ),
+                        hikari.impl.InteractiveButtonBuilder(
+                            style=hikari.ButtonStyle.DANGER,
+                            label=localisations.get_localized_string(
+                                "values.suggest.queue_reject", locale
+                            ),
+                            custom_id=f"v4_queue:reject:{self.sID}",
+                        ),
+                    ]
+                )
+            )
+
+        return data

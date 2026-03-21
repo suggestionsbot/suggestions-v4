@@ -3,7 +3,7 @@ from shared.tables.user_config import UserConfigs
 from shared.tables.guild_config import GuildConfigs
 from shared.tables.suggestion import Suggestions, SuggestionStateEnum
 from shared.tables.suggestions_vote import SuggestionVotes, SuggestionsVoteTypeEnum
-from shared.tables.queued_suggestion import QueuedSuggestions
+from shared.tables.queued_suggestion import QueuedSuggestions, QueuedSuggestionStateEnum
 
 __all__ = [
     "UserConfigs",
@@ -14,4 +14,5 @@ __all__ = [
     "SuggestionVotes",
     "QueuedSuggestions",
     "PremiumGuildConfigs",
+    "QueuedSuggestionStateEnum",
 ]

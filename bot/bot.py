@@ -7,11 +7,13 @@ import lightbulb
 from hikari.impl import CacheSettings, config
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
+from piccolo.columns import Where, And
+from piccolo.columns.operators import Equal
 
 from bot import overrides, utils, constants
 from bot.constants import OTEL_TRACER
-from bot.menus import GuildConfigurationMenus, SuggestionMenu
-from shared.tables import GuildConfigs, UserConfigs
+from bot.menus import GuildConfigurationMenus, SuggestionMenu, SuggestionsQueueMenu
+from shared.tables import GuildConfigs, UserConfigs, QueuedSuggestions
 from shared.utils import configs
 from web import constants as t_constants
 
@@ -137,17 +139,28 @@ async def create_bot(
         custom_id: str = event.interaction.custom_id
 
         # TODO Handle legacy logic
-        if ":" not in custom_id:
-            # Not a handled custom button so let it go
-            return
-
-        # TODO Handle legacy logic
         otel_ctx = None
         component_key = f"component {custom_id}"
         if custom_id.startswith("gcm"):
             _, link_id, setting = custom_id.split(":", maxsplit=2)
             component_key = f"editing guild setting '{setting}'"
             otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+
+        elif custom_id.startswith("queue_approve") or custom_id.startswith(
+            "queue_approve"
+        ):
+            # Legacy physical queue
+            if not custom_id.endswith("e"):
+                custom_id = custom_id[:-1]
+
+            component_key = custom_id.replace("_", " ")
+            queued_suggestion_id = None
+            to_approve = custom_id.endswith("approve")
+
+        elif custom_id.startswith("v4_queue"):
+            _, approve, queued_suggestion_id = custom_id.split(":", maxsplit=2)
+            to_approve = approve == "approve"
+            component_key = f"queue {approve}"
 
         elif custom_id.startswith("suggestions_up_vote") or custom_id.startswith(
             "suggestions_down_vote"
@@ -204,6 +217,17 @@ async def create_bot(
                     event=event,
                     guild_config=guild_config,
                     link_id=link_id,
+                )
+
+            elif component_key in ("queue approve", "queue reject"):
+                guild_config = await configs.ensure_guild_config(ctx.guild_id)
+                await SuggestionsQueueMenu.handle_physical_interaction(
+                    queued_suggestion_id,  # noqa
+                    to_approve,  # noqa
+                    ctx=ctx,
+                    localisations=constants.LOCALISATIONS,
+                    event=event,
+                    guild_config=guild_config,
                 )
 
             elif component_key in ("suggestion UpVote", "suggestion DownVote"):
