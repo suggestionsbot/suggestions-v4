@@ -57,6 +57,10 @@ class QueuedSuggestionsPaginator:
         """How many pages exist in this paginator."""
         return len(self._paged_data)
 
+    @property
+    def pages(self) -> list[str]:
+        return self._paged_data
+
     async def remove_current_page(self):
         wrap = self.current_page == self.total_pages
         self._paged_data.pop(self._current_page_index)

@@ -31,54 +31,59 @@ class SuggestionsQueueMenu:
         event: hikari.ComponentInteractionCreateEvent,
     ):
         await ctx.defer(ephemeral=True)
-        user_config: UserConfigs = await configs.ensure_user_config(
-            user_id=event.interaction.user.id, locale=event.interaction.locale
-        )
-        if queued_suggestion_id is None:
-            # Legacy ids did not contain
-            queued_suggestion = await QueuedSuggestions.objects(
-                QueuedSuggestions.user_configuration,
-                QueuedSuggestions.guild_configuration,
-                QueuedSuggestions.related_suggestion,
-            ).get(
-                And(
-                    Where(
-                        QueuedSuggestions.channel_id,
-                        event.interaction.channel_id,
-                        operator=Equal,
-                    ),
-                    Where(
-                        QueuedSuggestions.message_id,
-                        event.interaction.message.id,
-                        operator=Equal,
-                    ),
+        async with UserConfigs._meta.db.transaction():
+            user_config: UserConfigs = await configs.ensure_user_config(
+                user_id=event.interaction.user.id, locale=event.interaction.locale
+            )
+            if queued_suggestion_id is None:
+                # Legacy ids did not contain
+                queued_suggestion = (
+                    await QueuedSuggestions.objects(
+                        QueuedSuggestions.user_configuration,
+                        QueuedSuggestions.guild_configuration,
+                        QueuedSuggestions.related_suggestion,
+                    )
+                    .lock_rows("NO KEY UPDATE", of=(QueuedSuggestions,))
+                    .get(
+                        And(
+                            Where(
+                                QueuedSuggestions.channel_id,
+                                event.interaction.channel_id,
+                                operator=Equal,
+                            ),
+                            Where(
+                                QueuedSuggestions.message_id,
+                                event.interaction.message.id,
+                                operator=Equal,
+                            ),
+                        )
+                    )
                 )
-            )
 
-        else:
-            queued_suggestion = await QueuedSuggestions.fetch_queued_suggestion(
-                queued_suggestion_id, event.interaction.guild_id
-            )
+            else:
+                queued_suggestion = await QueuedSuggestions.fetch_queued_suggestion(
+                    queued_suggestion_id, event.interaction.guild_id, lock_rows=True
+                )
 
-        if not to_approve:
-            await cls.reject_queued_suggestion(
-                queued_suggestion,
-                ctx=ctx,
-                localisations=localisations,
-                guild_config=guild_config,
-                event=event,
-                user_config=user_config,
-            )
+            if not to_approve:
+                await cls.reject_queued_suggestion(
+                    queued_suggestion,
+                    ctx=ctx,
+                    localisations=localisations,
+                    guild_config=guild_config,
+                    event=event,
+                    user_config=user_config,
+                )
 
-        else:
-            await cls.approve_queued_suggestion(
-                queued_suggestion,
-                ctx=ctx,
-                localisations=localisations,
-                guild_config=guild_config,
-                event=event,
-                user_config=user_config,
-            )
+            else:
+                await cls.approve_queued_suggestion(
+                    queued_suggestion,
+                    ctx=ctx,
+                    localisations=localisations,
+                    guild_config=guild_config,
+                    event=event,
+                    user_config=user_config,
+                )
 
     @classmethod
     async def approve_queued_suggestion(

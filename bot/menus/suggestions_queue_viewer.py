@@ -85,6 +85,15 @@ class SuggestionsQueueViewerMenu:
             return
 
         elif action == "approve":
+            if queued_suggestion_id not in paginator.pages:
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.queue_paginator.responses.already_resolved",
+                        user_config.primary_language,
+                    )
+                )
+                return
+
             await paginator.remove_current_page()
             await SuggestionsQueueMenu.handle_physical_interaction(
                 queued_suggestion_id,
@@ -97,6 +106,15 @@ class SuggestionsQueueViewerMenu:
             return
 
         elif action == "reject":
+            if queued_suggestion_id not in paginator.pages:
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.queue_paginator.responses.already_resolved",
+                        user_config.primary_language,
+                    )
+                )
+                return
+
             await paginator.remove_current_page()
             await SuggestionsQueueMenu.handle_physical_interaction(
                 queued_suggestion_id,

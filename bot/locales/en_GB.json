@@ -152,6 +152,7 @@
   "menus.queue_paginator.responses.cancelled": "I have cancelled this queue for you.",
   "menus.queue_paginator.responses.next": "I have advanced the queue to the next page.",
   "menus.queue_paginator.responses.back": "I have gone back to the previous queue page.",
+  "menus.queue_paginator.responses.already_resolved": "This queued suggestion has already been resolved.",
 
 
   "commands.clear.name": "clear",

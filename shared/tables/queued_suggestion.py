@@ -19,6 +19,7 @@ from piccolo.columns import (
 )
 from piccolo.columns.indexes import IndexMethod
 from piccolo.columns.operators import Equal
+from piccolo.query import Query
 from piccolo.table import Table
 
 from bot.constants import PENDING_COLOR, APPROVED_COLOR, REJECTED_COLOR
@@ -160,26 +161,28 @@ class QueuedSuggestions(Table, AuditMixin):
 
     # noinspection PyPep8Naming
     @classmethod
-    async def fetch_queued_suggestion(cls, sID: str, guild_id: int) -> typing.Self:
+    async def fetch_queued_suggestion(
+        cls, sID: str, guild_id: int, *, lock_rows: bool = False
+    ) -> typing.Self:
         """Simple helper method to also ensure configurations are prefetched"""
-        query = (
-            cls.objects(
-                QueuedSuggestions.user_configuration,
-                QueuedSuggestions.guild_configuration,
-                QueuedSuggestions.related_suggestion,
+        query = cls.objects(
+            QueuedSuggestions.user_configuration,
+            QueuedSuggestions.guild_configuration,
+            QueuedSuggestions.related_suggestion,
+        ).where(
+            And(
+                Where(QueuedSuggestions.sID, sID, operator=Equal),
+                Where(
+                    QueuedSuggestions.guild_configuration.guild_id,
+                    guild_id,
+                    operator=Equal,
+                ),
             )
-            .where(
-                And(
-                    Where(QueuedSuggestions.sID, sID, operator=Equal),
-                    Where(
-                        QueuedSuggestions.guild_configuration.guild_id,
-                        guild_id,
-                        operator=Equal,
-                    ),
-                )
-            )
-            .first()
         )
+        if lock_rows:
+            query = query.lock_rows("NO KEY UPDATE", of=(cls,))
+
+        query = query.first()
         return await query
 
     @property
