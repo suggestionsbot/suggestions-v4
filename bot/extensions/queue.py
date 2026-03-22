@@ -38,7 +38,7 @@ class QueueInfoCmd(
         await ctx.defer(ephemeral=True)
         queued_suggestions_for_guild: list[QueuedSuggestions] = (
             await QueuedSuggestions.fetch_guild_queued_suggestions(
-                guild_id=guild_config.guild_id, still_in_queue=True
+                guild_id=guild_config.guild_id
             )
         )
         virtual_count = physical_count = 0
@@ -103,7 +103,7 @@ class QueueViewCmd(
         await ctx.defer(ephemeral=True)
         queued_suggestions_for_guild: list[QueuedSuggestions] = (
             await QueuedSuggestions.fetch_guild_queued_suggestions(
-                guild_id=guild_config.guild_id, still_in_queue=True
+                guild_id=guild_config.guild_id
             )
         )
         if not queued_suggestions_for_guild:

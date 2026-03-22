@@ -72,11 +72,6 @@ class QueuedSuggestions(Table, AuditMixin):
         required=False,
         help_text="If this suggestion has been sent to discord, what is it's message id?",
     )
-    still_in_queue = Boolean(
-        default=True,
-        help_text="Is this still in the queue or is it a suggestion now?",
-        index=True,
-    )
     related_suggestion = ForeignKey(
         LazyTableReference(
             table_class_name="Suggestions",
@@ -149,7 +144,11 @@ class QueuedSuggestions(Table, AuditMixin):
             QueuedSuggestions.related_suggestion,
         ).where(
             And(
-                Where(QueuedSuggestions.still_in_queue, still_in_queue, operator=Equal),
+                Where(
+                    QueuedSuggestions.state_raw,
+                    QueuedSuggestionStateEnum.PENDING,
+                    operator=Equal,
+                ),
                 Where(
                     QueuedSuggestions.guild_configuration.guild_id,
                     guild_id,
