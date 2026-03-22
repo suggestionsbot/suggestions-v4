@@ -93,6 +93,7 @@ async def populate_sid_autocomplete(_):
 
         return base_query
 
+    await utils.delete_autocomplete_cache()
     for table in [Suggestions, QueuedSuggestions]:
         next_cursor = None
         has_next_queued: bool = True

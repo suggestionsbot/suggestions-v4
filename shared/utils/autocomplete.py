@@ -5,6 +5,11 @@ from redis.commands.search.suggestion import Suggestion
 from web.constants import REDIS_CLIENT
 
 
+async def delete_autocomplete_cache():
+    """Deletes the autocomplete cache"""
+    await REDIS_CLIENT.delete(f"ac:*")
+
+
 async def cache_sid_in_autocomplete(
     *,
     guild_id: int,
@@ -16,7 +21,7 @@ async def cache_sid_in_autocomplete(
     ],
 ):
     await REDIS_CLIENT.ft(index).sugadd(
-        f"{guild_id}:{index}", Suggestion(string=suggestion_id)
+        f"ac:{guild_id}:{index}", Suggestion(string=suggestion_id)
     )
 
 
@@ -32,6 +37,6 @@ async def get_sid_autocomplete_for_guild(
     max_return: int = 20,
 ) -> list[str]:
     results = await REDIS_CLIENT.ft(index).sugget(
-        f"{guild_id}:{index}", search, num=max_return
+        f"ac:{guild_id}:{index}", search, num=max_return
     )
     return [r.string for r in results]
