@@ -15,12 +15,12 @@ from bot import constants, utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MissingQueueChannel, MessageTooLong
 from bot.localisation import Localisation
-from bot.tables import InternalErrors
+from bot.tables import InternalErrors, MessageAddons, PossibleMessageAddons
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
 )
-from shared.utils import r2
+from shared.utils import r2, configs
 
 if typing.TYPE_CHECKING:
     from shared.tables import (
@@ -138,7 +138,22 @@ class SuggestionMenu:
         vote_obj.vote_type = vote
         await vote_obj.save()
         await suggestion.queue_message_edit()
-        await ctx.respond(localisations.get_localized_string(key, ctx.interaction.locale))
+
+        content = io.StringIO()
+        content.write(localisations.get_localized_string(key, ctx.interaction.locale))
+        user_config: UserConfigs = await configs.ensure_user_config(
+            ctx.user.id, locale=ctx.interaction.locale
+        )
+        if (
+            ma := await MessageAddons.get_message(
+                user_config,
+                hint=PossibleMessageAddons.SUGGESTION_RESOLUTION_NOTIFICATIONS,
+            )
+        ) is not None:
+            content.write("\n\n")
+            content.write(await ma.as_string())
+
+        await ctx.respond(content.getvalue(), ephemeral=True)
         return None
 
     @classmethod
@@ -337,7 +352,25 @@ class SuggestionMenu:
             author_display_name=author_display_name,
             state_raw=SuggestionStateEnum.PENDING,
         )
-        await s.save()
+        await s.save()  # This is needed for components
+
+        if guild_config.suggestions_channel_id is None:
+            await ctx.respond(
+                embed=utils.error_embed(
+                    localisations.get_localized_string(
+                        "errors.suggest.suggest_channel_not_found.title",
+                        ctx.interaction.locale,
+                    ),
+                    localisations.get_localized_string(
+                        "errors.suggest.suggest_channel_not_found.description",
+                        ctx.interaction.locale,
+                    ),
+                    error_code=ErrorCode.MISSING_FETCH_PERMISSIONS_IN_SUGGESTIONS_CHANNEL,
+                ),
+            )
+            await s.delete()
+            return None
+
         try:
             channel = await bot.rest.fetch_channel(guild_config.suggestions_channel_id)
             channel = cast(hikari.GuildTextChannel, channel)
@@ -355,6 +388,7 @@ class SuggestionMenu:
                     error_code=ErrorCode.MISSING_FETCH_PERMISSIONS_IN_SUGGESTIONS_CHANNEL,
                 ),
             )
+            await s.delete()
             return None
 
         prefix = (
@@ -427,7 +461,8 @@ class SuggestionMenu:
         await s.notify_users_of_new_suggestion()
         if send_final_response:
             # We only want to send on /suggest and not queued suggestions
-            await ctx.respond(
+            content = io.StringIO()
+            content.write(
                 localisations.get_localized_string(
                     "values.suggest.suggestion_sent",
                     ctx.interaction.locale,
@@ -436,9 +471,14 @@ class SuggestionMenu:
                         "CHANNEL": channel.mention,
                         "SID": s.sID,
                     },
-                ),
-                ephemeral=True,
+                )
             )
+            if (ma := await MessageAddons.get_message(user_config)) is not None:
+                content.write("\n\n\n")
+                content.write(await ma.as_string())
+
+            await ctx.respond(content.getvalue(), ephemeral=True)
+
         return s
 
     @classmethod
@@ -529,14 +569,20 @@ class SuggestionMenu:
                 "interaction.guild.id": ctx.guild_id,
             },
         )
-        await ctx.respond(
+
+        content = io.StringIO()
+        content.write(
             localisations.get_localized_string(
                 "values.suggest.sent_to_queue",
                 ctx.interaction.locale,
                 guild_config=guild_config,
-            ),
-            ephemeral=True,
+            )
         )
+        if (ma := await MessageAddons.get_message(user_config)) is not None:
+            content.write("\n\n\n")
+            content.write(await ma.as_string())
+
+        await ctx.respond(content.getvalue(), ephemeral=True)
         return None
 
     @classmethod
