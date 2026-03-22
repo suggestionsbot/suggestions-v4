@@ -132,16 +132,21 @@ async def resolve_suggestion(
         return None
 
     try:
-        original_suggestion_message: hikari.Message = await ctx.client.rest.fetch_message(
-            suggestion.channel_id, suggestion.message_id
-        )
+        original_suggestion_message: hikari.Message | None = None
+        if suggestion.channel_id is not None and suggestion.message_id is not None:
+            original_suggestion_message: hikari.Message = (
+                await ctx.client.rest.fetch_message(
+                    suggestion.channel_id, suggestion.message_id
+                )
+            )
     except (hikari.NotFoundError, hikari.ForbiddenError):
         # Looks like the original was deleted
         # But eh thats fine as we can make our new log anyway
         pass
     else:
         try:
-            await original_suggestion_message.delete()
+            if original_suggestion_message is not None:
+                await original_suggestion_message.delete()
         except hikari.ForbiddenError:
             await ctx.respond(
                 localisations.get_localized_string(
