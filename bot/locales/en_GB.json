@@ -154,6 +154,9 @@
   "menus.queue_paginator.responses.back": "I have gone back to the previous queue page.",
   "menus.queue_paginator.responses.already_resolved": "This queued suggestion has already been resolved.",
 
+  "message_addons.read_changelog": "We have recently released a new version of the bot. We'd recommend reading our changelog at <https://docs.suggestions.gg/> to learn about what has changed.",
+  "message_addons.product_updates": "Want to be in the know when new features drop? Join our discord at <https://suggestions.gg/discord>",
+
 
   "commands.clear.name": "clear",
   "commands.clear.description": "Remove a suggestion and any associated messages.",
