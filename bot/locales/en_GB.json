@@ -60,6 +60,7 @@
   "commands.resolve.options.resolution.menu.choices.4.name": "Duplicate",
   "commands.resolve.responses.locking_thread": "Locking this thread as the suggestion has reached a resolution.",
   "commands.resolve.responses.cant_get_log_channel": "Failed to locate and send the suggestion to your log channel. Please ensure the bot has the correct permissions in the log channel and try again.",
+  "commands.resolve.responses.no_log_channel": "With your current configuration this command requires a log channel. Please run `/configure guild menu:'Change Log Channel'` and set one before re-running this command.",
   "commands.resolve.responses.missing_suggestion_channel_perms": "I cannot delete the original suggestion. Please ensure the bot has the correct permissions in the channel and try again.",
   "commands.resolve.responses.keep_logs_edit_soon": "Thank you for resolving the `$SID` suggestion. It will be edited in a few seconds to reflect the new state.",
   "commands.resolve.responses.resolved_immediately": "Thank you for resolving the `$SID` suggestion. It has been resolved and sent here: $JUMP",

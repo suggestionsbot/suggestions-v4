@@ -94,6 +94,14 @@ async def resolve_suggestion(
         return None
 
     # Need to delete from the original channel and move to new one
+    if guild_config.log_channel_id is None:
+        await ctx.respond(
+            localisations.get_localized_string(
+                "commands.resolve.responses.no_log_channel", ctx.interaction.locale
+            )
+        )
+        return None
+
     try:
         log_channel = await ctx.client.rest.fetch_channel(guild_config.log_channel_id)
         log_channel = cast(hikari.GuildTextChannel, log_channel)
