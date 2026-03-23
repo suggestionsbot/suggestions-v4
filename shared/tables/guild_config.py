@@ -11,7 +11,6 @@ from piccolo.columns import (
 )
 from piccolo.table import Table
 
-from shared.tables import PremiumGuildConfigs
 from shared.tables.mixins import AuditMixin
 from shared.tables.mixins.audit import utc_now
 
@@ -102,7 +101,7 @@ class GuildConfigs(AuditMixin, Table):
         choices=hikari.Locale,
         help_text="The language to use when translating non ephemeral messages",
     )
-    premium: PremiumGuildConfigs = ForeignKey(
+    premium = ForeignKey(
         LazyTableReference(
             table_class_name="PremiumGuildConfigs",
             app_name="shared",

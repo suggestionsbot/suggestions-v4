@@ -19,14 +19,11 @@ from piccolo.columns import (
 )
 from piccolo.columns.indexes import IndexMethod
 from piccolo.columns.operators import Equal
-from piccolo.query import Query
 from piccolo.table import Table
 
-from bot.constants import PENDING_COLOR, APPROVED_COLOR, REJECTED_COLOR
 from bot.localisation import Localisation
-from bot.utils import generate_id
+from bot.utils.id import generate_id
 from shared.saq.worker import SAQ_QUEUE
-from shared.tables import GuildConfigs, UserConfigs
 from shared.tables.mixins import AuditMixin
 
 
@@ -57,9 +54,15 @@ class QueuedSuggestions(Table, AuditMixin):
         default=QueuedSuggestionStateEnum.PENDING,
     )
     suggestion = Text(help_text="The actual content of this suggestion")
-    guild_configuration = ForeignKey(GuildConfigs, index=True)
+    guild_configuration = ForeignKey(
+        LazyTableReference("GuildConfigs", module_path="shared.tables"), index=True
+    )
     # Secret as if anon we don't want to reveal
-    user_configuration = ForeignKey(UserConfigs, index=True, secret=True)
+    user_configuration = ForeignKey(
+        LazyTableReference("UserConfigs", module_path="shared.tables"),
+        index=True,
+        secret=True,
+    )
     channel_id = BigInt(
         null=True,
         default=None,
@@ -199,6 +202,8 @@ class QueuedSuggestions(Table, AuditMixin):
 
     @property
     def color(self) -> hikari.Color:
+        from bot.constants import PENDING_COLOR, APPROVED_COLOR, REJECTED_COLOR
+
         if self.state == QueuedSuggestionStateEnum.APPROVED:
             return APPROVED_COLOR
 

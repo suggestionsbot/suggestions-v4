@@ -18,7 +18,7 @@ from bot.menus import (
     SuggestionsQueueMenu,
     SuggestionsQueueViewerMenu,
 )
-from shared.tables import GuildConfigs, UserConfigs, QueuedSuggestions
+from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
 from web import constants as t_constants
 

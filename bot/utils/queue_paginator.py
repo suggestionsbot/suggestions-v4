@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-
+from typing import TYPE_CHECKING
 
 import hikari
 import lightbulb
@@ -13,7 +13,9 @@ from hikari.api import (
 
 from bot.constants import LOCALISATIONS
 from bot.exceptions import QueueImbalance
-from shared.tables import QueuedSuggestions, QueuedSuggestionStateEnum, GuildConfigs
+
+if TYPE_CHECKING:
+    from shared.tables import QueuedSuggestions, QueuedSuggestionStateEnum
 
 log = logging.getLogger(__name__)
 
@@ -87,6 +89,8 @@ class QueuedSuggestionsPaginator:
         return None
 
     async def get_current_queued_suggestion(self) -> QueuedSuggestions:
+        from shared.tables import QueuedSuggestions, QueuedSuggestionStateEnum
+
         qs: QueuedSuggestions | None = await QueuedSuggestions.fetch_queued_suggestion(
             self._paged_data[self._current_page_index], self._guild_id
         )
