@@ -3,9 +3,11 @@ import time
 from itertools import batched
 from typing import cast
 
+import orjson
 from alaric import Document, AQ
 from alaric.comparison import EQ
 from motor.motor_asyncio import AsyncIOMotorClient
+from piccolo.columns.combination import WhereRaw
 from pymongo import UpdateMany
 from tqdm.asyncio import tqdm
 
@@ -47,6 +49,18 @@ async def get_ids_from_suggestions():
         all_user_ids.add(s.resolved_by)
         all_user_ids.add(s.note_added_by)
         all_guild_ids.add(s.guild_id)
+
+
+async def fix_guild_configs():
+    """Fixes blocked_users_json"""
+    to_update = (
+        await GuildConfigs.objects()
+        .where(GuildConfigs.blocked_users_json.is_not_null())
+        .where(WhereRaw("blocked_users_json::text != '[]'"))
+    )
+    for gc in to_update:
+        gc.blocked_users = orjson.loads(gc.blocked_users_json)
+        await gc.save()
 
 
 async def create_users(pbar):
@@ -128,6 +142,7 @@ async def main():
         tg.create_task(create_guilds(pbar))
 
     pbar.close()
+    await fix_guild_configs()
     print("--- %s seconds to complete ---" % (round(time.time() - start_time, 5)))
 
 
