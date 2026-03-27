@@ -5,23 +5,6 @@ from typing import Optional
 
 
 class QueuedSuggestion:
-    __slots__ = [
-        "guild_id",
-        "suggestion",
-        "suggestion_author_id",
-        "created_at",
-        "_id",
-        "is_anonymous",
-        "still_in_queue",
-        "image_url",
-        "resolved_by",
-        "resolution_note",
-        "resolved_at",
-        "related_suggestion_id",
-        "message_id",
-        "channel_id",
-    ]
-
     def __init__(
         self,
         guild_id: int,
@@ -39,6 +22,8 @@ class QueuedSuggestion:
         related_suggestion_id: Optional[str] = None,
         message_id: Optional[int] = None,
         channel_id: Optional[int] = None,
+        guild_config_id=None,
+        user_config_id=None,
         **kwargs,
     ):
         self._id: str = _id
@@ -59,6 +44,9 @@ class QueuedSuggestion:
         # If this queued suggestion get approved,
         # this field will be the id of the created suggestion
         self.related_suggestion_id: Optional[str] = related_suggestion_id
+
+        self.user_config_id = user_config_id
+        self.guild_config_id = guild_config_id
 
 
 import datetime
