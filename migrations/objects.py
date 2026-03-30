@@ -89,31 +89,6 @@ class SuggestionState(Enum):
 class Suggestion:
     """An abstract wrapper encapsulating all suggestion functionality."""
 
-    __slots__ = [
-        "_id",
-        "guild_id",
-        "suggestion",
-        "suggestion_author_id",
-        "created_at",
-        "state",
-        "note",
-        "note_added_by",
-        "_total_up_votes",
-        "_total_down_votes",
-        "up_voted_by",
-        "down_voted_by",
-        "channel_id",
-        "message_id",
-        "resolved_by",
-        "resolution_note",
-        "resolved_at",
-        "image_url",
-        "uses_views_for_votes",
-        "is_anonymous",
-        "anonymous_resolution",
-        "thread_id",
-    ]
-
     def __init__(
         self,
         _id: str,
@@ -142,80 +117,10 @@ class Suggestion:
         is_anonymous: bool = False,
         anonymous_resolution: Optional[bool] = None,
         thread_id: Optional[int] = None,
+        guild_config_id=None,
+        user_config_id=None,
         **kwargs,
     ):
-        """
-
-        Parameters
-        ----------
-        guild_id: int
-            The guild this suggestion is in
-        suggestion: str
-            The suggestion content itself
-        _id: str
-            The id of the suggestion
-        suggestion_author_id: int
-            The id of the person who created the suggestion
-        created_at: datetime.datetime
-            When this suggestion was created
-        state: Union[Literal["open", "approved", "rejected"], SuggestionState]
-            The current state of the suggestion itself
-
-        Other Parameters
-        ----------------
-        note: Optional[str]
-            A note to add to the suggestion embed
-        note_added_by: Optional[int]
-            Who added the note.
-
-            Should be marked as hidden if not shown.
-        resolved_by: Optional[int]
-            Who changed the final state of this suggestion
-        resolution_note: Optional[str]
-            A note to add to the suggestion on resolve
-        resolved_at: Optional[datetime.datetime]
-            When this suggestion was resolved
-        channel_id: Optional[int]
-            The channel this suggestion is currently in
-        message_id: Optional[int]
-            The current message ID. This could be the suggestion
-            or the log channel message.
-        total_up_votes: Optional[int]
-            How many up votes this had when closed
-
-            This is based off the old reaction system.
-        total_down_votes: Optional[int]
-            How many down votes this had when closed
-
-            This is based off the old reaction system.
-        up_voted_by: Optional[list[int]]
-            A list of people who up voted this suggestion
-
-            This is based off the new button system
-        up_voted_by: Optional[list[int]]
-            A list of people who up voted this suggestion
-
-            This is based off the new button system
-        down_voted_by: Optional[list[int]]
-            A list of people who down voted this suggestion
-
-            This is based off the new button system
-        image_url: Optional[str]
-            An optional url for an image attached to the suggestion
-        uses_views_for_votes: bool
-            A simple flag to make backwards compatibility easier.
-
-            Defaults to `False` as all old suggestions will use this
-            value since they don't have the field in the database
-        is_anonymous: bool
-            Whether or not this suggestion
-            should be displayed anonymous
-        anonymous_resolution: Optional[bool]
-            Whether or not to show who resolved this suggestion
-            to the end suggester
-        thread_id: Optional[str]
-            The ID of the thread to resolve directly
-        """
         self._id: str = _id
         self.guild_id: int = guild_id
         self.suggestion: str = suggestion
@@ -243,3 +148,54 @@ class Suggestion:
         self.anonymous_resolution: Optional[bool] = anonymous_resolution
         self.note: Optional[str] = note
         self.note_added_by: Optional[int] = note_added_by
+        self.user_config_id = user_config_id
+        self.guild_config_id = guild_config_id
+
+    def as_dict(self) -> dict:
+        data = {
+            "guild_id": self.guild_id,
+            "state": self.state.as_str(),
+            "suggestion": self.suggestion,
+            "_id": self._id,
+            "suggestion_author_id": self.suggestion_author_id,
+            "created_at": self.created_at,
+            "uses_views_for_votes": self.uses_views_for_votes,
+            "is_anonymous": self.is_anonymous,
+            "anonymous_resolution": self.anonymous_resolution,
+        }
+
+        if self.note:
+            data["note"] = self.note
+            data["note_added_by"] = self.note_added_by
+
+        if self.resolved_by:
+            data["resolved_by"] = self.resolved_by
+            data["resolution_note"] = self.resolution_note
+
+        if self.resolved_at:
+            data["resolved_at"] = self.resolved_at
+
+        if self.message_id:
+            data["message_id"] = self.message_id
+
+        if self.channel_id:
+            data["channel_id"] = self.channel_id
+
+        if self.thread_id:
+            data["thread_id"] = self.thread_id
+
+        if self.uses_views_for_votes:
+            data["up_voted_by"] = list(self.up_voted_by)
+            data["down_voted_by"] = list(self.down_voted_by)
+
+        else:
+            data["total_up_votes"] = self._total_up_votes
+            data["total_down_votes"] = self._total_down_votes
+
+        if self.image_url is not None:
+            data["image_url"] = self.image_url
+
+        data["user_config_id"] = self.user_config_id
+        data["guild_config_id"] = self.guild_config_id
+
+        return data

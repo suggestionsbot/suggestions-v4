@@ -16,6 +16,7 @@ from piccolo.columns import (
     Array,
     Where,
     And,
+    OnDelete,
 )
 from piccolo.columns.indexes import IndexMethod
 from piccolo.columns.operators import Equal
@@ -62,9 +63,13 @@ class Suggestions(Table, AuditMixin):
         help_text="The user facing id. This should be used everywhere.",
     )
     suggestion = Text(help_text="The actual content of this suggestion")
-    guild_configuration = ForeignKey(GuildConfigs, index=True)
+    guild_configuration = ForeignKey(
+        GuildConfigs, index=True, on_delete=OnDelete.restrict
+    )
     # Secret as if anon we don't want to reveal
-    user_configuration = ForeignKey(UserConfigs, index=True, secret=True)
+    user_configuration = ForeignKey(
+        UserConfigs, index=True, secret=True, on_delete=OnDelete.restrict
+    )
     state_raw = Varchar(
         help_text="The current state of this suggestion",
         choices=SuggestionStateEnum,
@@ -76,7 +81,13 @@ class Suggestions(Table, AuditMixin):
         required=False,
         help_text="An optional note that was added by a moderator",
     )
-    moderator_note_added_by = ForeignKey(UserConfigs, index=True, secret=True)
+    moderator_note_added_by = BigInt(
+        null=True,
+        default=None,
+        required=False,
+        secret=True,
+        help_text="Who added the note to this user?",
+    )
     moderator_note_added_by_display_text = Text(
         null=True,
         default=None,

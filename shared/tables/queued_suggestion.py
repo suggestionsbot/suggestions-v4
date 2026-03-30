@@ -16,6 +16,7 @@ from piccolo.columns import (
     Array,
     And,
     Where,
+    OnDelete,
 )
 from piccolo.columns.indexes import IndexMethod
 from piccolo.columns.operators import Equal
@@ -55,13 +56,16 @@ class QueuedSuggestions(Table, AuditMixin):
     )
     suggestion = Text(help_text="The actual content of this suggestion")
     guild_configuration = ForeignKey(
-        LazyTableReference("GuildConfigs", module_path="shared.tables"), index=True
+        LazyTableReference("GuildConfigs", module_path="shared.tables"),
+        index=True,
+        on_delete=OnDelete.restrict,
     )
     # Secret as if anon we don't want to reveal
     user_configuration = ForeignKey(
         LazyTableReference("UserConfigs", module_path="shared.tables"),
         index=True,
         secret=True,
+        on_delete=OnDelete.restrict,
     )
     channel_id = BigInt(
         null=True,

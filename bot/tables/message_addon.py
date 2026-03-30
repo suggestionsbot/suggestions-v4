@@ -5,7 +5,14 @@ from typing import TYPE_CHECKING
 
 import arrow
 import hikari
-from piccolo.columns import Serial, Text, BigInt, Timestamptz, ForeignKey
+from piccolo.columns import (
+    Serial,
+    Text,
+    BigInt,
+    Timestamptz,
+    ForeignKey,
+    LazyTableReference,
+)
 from piccolo.table import Table
 
 from bot.constants import LOCALISATIONS
@@ -45,7 +52,9 @@ class MessageAddons(Table):
         required=True,
         null=False,
     )
-    user = ForeignKey(UserConfigs, index=True)
+    user = ForeignKey(
+        LazyTableReference("UserConfigs", module_path="shared.tables"), index=True
+    )
     shown_at = Timestamptz(
         default=utc_now, help_text="When this message was shown to the user", index=True
     )
