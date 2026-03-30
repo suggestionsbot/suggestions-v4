@@ -37,7 +37,7 @@ async def get_ids_from_queued():
     suggestions_count = await suggestions.count({})
 
 
-async def get_ids_from_suggestions():
+async def get_votes_from_suggestions():
     global votes
     async for s in suggestions.create_cursor():
         s = cast(Suggestion, s)
@@ -148,6 +148,10 @@ async def build_initial_objects(pbar):
 
 
 async def build_votes(pbar):
+    postgres_mapping: dict[str, int] = {}
+    for suggestion_obj in await Suggestions.objects():
+        postgres_mapping[suggestion_obj.sID] = suggestion_obj.id
+
     to_insert: list[SuggestionVotes] = []
     async for s in suggestions.create_cursor():
         s = cast(Suggestion, s)
@@ -158,7 +162,7 @@ async def build_votes(pbar):
             # None left anywho
             continue
 
-        postgres_s = await Suggestions.objects().get(Suggestions.sID == s._id)
+        postgres_s = postgres_mapping[s._id]
 
         for up_vote_id in s.up_voted_by:
             to_insert.append(
@@ -178,10 +182,10 @@ async def build_votes(pbar):
                 )
             )
 
-        if to_insert:
+        if len(to_insert) > 1500:
             await SuggestionVotes.insert(*to_insert).on_conflict(action="DO NOTHING")
-            to_insert = []
             pbar.update(len(to_insert))
+            to_insert = []
 
     if to_insert:
         await SuggestionVotes.insert(*to_insert).on_conflict(action="DO NOTHING")
@@ -191,18 +195,18 @@ async def build_votes(pbar):
 async def main():
     start_time = time.time()
     await get_ids_from_queued()
-    await get_ids_from_suggestions()
+    await get_votes_from_suggestions()
     print(f"{intcomma(suggestions_count)} suggestions found")
     print(f"{intcomma(votes)} votes found")
     await asyncio.sleep(1)
 
-    pbar = tqdm(total=suggestions_count)
+    pbar = tqdm(total=suggestions_count, bar_format="{l_bar}{bar:25}{r_bar}{bar:-10b}")
     await build_initial_objects(pbar)
     pbar.close()
-    print(f"Inserted all suggestions")
+    print(f"Inserted all suggestions\n")
     await asyncio.sleep(1)
 
-    pbar = tqdm(total=votes)
+    pbar = tqdm(total=votes, bar_format="{l_bar}{bar:25}{r_bar}{bar:-10b}")
     await build_votes(pbar)
     pbar.close()
     print("--- %s seconds to complete ---" % (round(time.time() - start_time, 5)))
