@@ -12,3 +12,6 @@ wheels/
 .venv
 
 .idea
+
+migrations/votes.csv
+migrations/suggestions.json

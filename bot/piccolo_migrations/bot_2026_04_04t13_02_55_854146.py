@@ -29,7 +29,7 @@ class UserConfigs(Table, tablename="user_configs", schema=None):
     )
 
 
-ID = "2026-03-30T18:28:34:825372"
+ID = "2026-04-04T13:02:55:854146"
 VERSION = "1.30.0"
 DESCRIPTION = ""
 

@@ -63,6 +63,7 @@ async def build_initial_objects(pbar):
                 resolved_note=qs.resolution_note,
                 resolved_at=qs.resolved_at,
                 image_urls=[qs.image_url] if qs.image_url else [],
+                related_suggestion_id=qs.related_suggestion_id,
             )
         )
 

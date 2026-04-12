@@ -79,6 +79,9 @@ class QueuedSuggestions(Table, AuditMixin):
         required=False,
         help_text="If this suggestion has been sent to discord, what is it's message id?",
     )
+    related_suggestion_id = Text(
+        help_text="Migration helpers, to delete later", default=None, null=True
+    )
     related_suggestion = ForeignKey(
         LazyTableReference(
             table_class_name="Suggestions",

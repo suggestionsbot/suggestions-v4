@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import time
 from itertools import batched
 from pathlib import Path
@@ -12,13 +13,15 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from tqdm.asyncio import tqdm
 
 from bot.utils import generate_id
-from migrations.objects import Suggestion, SuggestionState
+from migrations.objects import Suggestion, SuggestionState, QueuedSuggestion
 from shared.tables import (
     Suggestions,
     SuggestionStateEnum,
     SuggestionVotes,
     SuggestionsVoteTypeEnum,
+    QueuedSuggestions,
 )
+from shared.tables.mixins.audit import utc_now
 
 __mongo = AsyncIOMotorClient("mongodb://localhost:27017")
 db = __mongo["suggestions"]
@@ -28,8 +31,19 @@ suggestions: Document = Document(
     f"suggestions{small}",
     converter=Suggestion,
 )
+queued_suggestions: Document = Document(
+    db,
+    f"queued_suggestions{small}",
+    converter=QueuedSuggestion,
+)
 suggestions_count: int = 0
 votes: int = 0
+queued_suggestions_count: int = 0
+
+
+async def get_queued_ids_from_queued():
+    global queued_suggestions_count
+    queued_suggestions_count = await queued_suggestions.count({})
 
 
 async def get_ids_from_queued():
@@ -147,56 +161,13 @@ async def build_initial_objects(pbar):
         pbar.update(len(to_insert))
 
 
-async def build_votes(pbar):
-    postgres_mapping: dict[str, int] = {}
-    for suggestion_obj in await Suggestions.objects():
-        postgres_mapping[suggestion_obj.sID] = suggestion_obj.id
-
-    to_insert: list[SuggestionVotes] = []
-    async for s in suggestions.create_cursor():
-        s = cast(Suggestion, s)
-        assert s.guild_config_id is not None
-        assert s.user_config_id is not None
-        if not s.uses_views_for_votes:
-            # We no longer support reaction voting
-            # None left anywho
-            continue
-
-        postgres_s = postgres_mapping[s._id]
-
-        for up_vote_id in s.up_voted_by:
-            to_insert.append(
-                SuggestionVotes(
-                    suggestion=postgres_s,
-                    user_id=up_vote_id,
-                    vote_type=SuggestionsVoteTypeEnum.UpVote,
-                )
-            )
-
-        for down_vote_id in s.down_voted_by:
-            to_insert.append(
-                SuggestionVotes(
-                    suggestion=postgres_s,
-                    user_id=down_vote_id,
-                    vote_type=SuggestionsVoteTypeEnum.DownVote,
-                )
-            )
-
-        if len(to_insert) > 1500:
-            await SuggestionVotes.insert(*to_insert).on_conflict(action="DO NOTHING")
-            pbar.update(len(to_insert))
-            to_insert = []
-
-    if to_insert:
-        await SuggestionVotes.insert(*to_insert).on_conflict(action="DO NOTHING")
-        pbar.update(len(to_insert))
-
-
 async def main():
     start_time = time.time()
     await get_ids_from_queued()
     await get_votes_from_suggestions()
+    await get_queued_ids_from_queued()
     print(f"{intcomma(suggestions_count)} suggestions found")
+    print(f"{intcomma(queued_suggestions_count)} queued suggestions found")
     print(f"{intcomma(votes)} votes found")
     await asyncio.sleep(1)
 
@@ -204,11 +175,8 @@ async def main():
     await build_initial_objects(pbar)
     pbar.close()
     print(f"Inserted all suggestions\n")
+    print(f"Building queued suggestions relations\n")
     await asyncio.sleep(1)
-
-    pbar = tqdm(total=votes, bar_format="{l_bar}{bar:25}{r_bar}{bar:-10b}")
-    await build_votes(pbar)
-    pbar.close()
     print("--- %s seconds to complete ---" % (round(time.time() - start_time, 5)))
 
 
