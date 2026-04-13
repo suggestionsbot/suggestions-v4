@@ -4,7 +4,6 @@ from typing import Literal
 
 import orjson
 from fastnanoid import generate
-from opentelemetry import trace
 from opentelemetry.context import Context
 from opentelemetry.trace import Status, StatusCode
 

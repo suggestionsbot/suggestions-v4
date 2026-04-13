@@ -42,7 +42,9 @@ UNIQUE_GLOBAL_GUILDS_QUERY = [
 
 def build_trace_query(query, timespan: timedelta) -> dict:
     return {
-        "start": int(arrow.utcnow().shift(seconds=timespan.total_seconds()).float_timestamp * 1000),
+        "start": int(
+            arrow.utcnow().shift(seconds=timespan.total_seconds()).float_timestamp * 1000
+        ),
         "end": int(arrow.utcnow().float_timestamp * 1000),
         "requestType": "scalar",
         "compositeQuery": {"queries": query},

@@ -8,12 +8,10 @@ import lightbulb
 from hikari import snowflakes
 
 import shared.utils
-from bot import utils, menus
 from bot.constants import TOTAL_SHARDS, CLUSTER_ID, VERSION, EMBED_COLOR, LOADED_AT
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs, UserConfigs
 from shared.tables.mixins.audit import utc_now
-from web.constants import IS_PRODUCTION
 
 loader = lightbulb.Loader()
 logger = logging.getLogger(__name__)

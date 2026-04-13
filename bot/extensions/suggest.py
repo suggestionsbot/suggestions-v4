@@ -9,7 +9,7 @@ from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MessageTooLong, MissingQueueChannel
 from bot.localisation import Localisation
 from bot.tables import InternalErrors
-from shared.tables import GuildConfigs, UserConfigs
+from shared.tables import GuildConfigs
 
 loader = lightbulb.Loader()
 logger = logging.getLogger(__name__)

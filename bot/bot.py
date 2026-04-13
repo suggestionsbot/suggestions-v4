@@ -1,14 +1,9 @@
 import asyncio
 import logging
-from pathlib import Path
 
 import hikari
 import lightbulb
 from hikari.impl import CacheSettings, config
-from opentelemetry import trace
-from opentelemetry.trace import Status, StatusCode
-from piccolo.columns import Where, And
-from piccolo.columns.operators import Equal
 
 from bot import overrides, utils, constants
 from bot.constants import OTEL_TRACER
@@ -79,7 +74,7 @@ async def create_bot(
             # If we have yet to send some form of response
             await ctx.defer(ephemeral=True)
 
-        with utils.start_error_span(exc.causes[0], "global error handler") as child:
+        with utils.start_error_span(exc.causes[0], "global error handler"):
             # TODO Implement
             await ctx.respond("Something went wrong")
 
@@ -265,8 +260,8 @@ async def create_bot(
                 await ctx.respond(
                     embed=utils.error_embed(
                         "Unknown Event",
-                        f"Please contact support if this keeps happening "
-                        f"and describe what you did before seeing this error.",
+                        "Please contact support if this keeps happening "
+                        "and describe what you did before seeing this error.",
                     ),
                     ephemeral=True,
                 )

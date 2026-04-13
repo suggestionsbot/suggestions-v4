@@ -11,7 +11,6 @@ from piccolo.columns import (
     ForeignKey,
     BigInt,
     Timestamptz,
-    Boolean,
     LazyTableReference,
     Array,
     And,

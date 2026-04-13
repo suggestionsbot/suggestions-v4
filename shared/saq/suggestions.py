@@ -1,10 +1,8 @@
 import logging
 import time
 from datetime import timedelta
-from unittest.mock import MagicMock
 
 import hikari
-import lightbulb
 
 from bot import constants as b_constants
 from shared import utils

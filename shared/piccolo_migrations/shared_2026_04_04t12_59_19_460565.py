@@ -2,7 +2,6 @@ from piccolo.apps.migrations.auto.migration_manager import MigrationManager
 from piccolo.columns.column_types import Text
 from piccolo.columns.indexes import IndexMethod
 
-
 ID = "2026-04-04T12:59:19:460565"
 VERSION = "1.30.0"
 DESCRIPTION = ""

@@ -7,7 +7,6 @@ from pathlib import Path
 from string import Template
 
 import hikari
-import lightbulb
 from lightbulb import DictLocalizationProvider
 
 from bot.exceptions import MissingTranslation

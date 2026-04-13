@@ -92,7 +92,9 @@ class CRUDClient(Generic[MODEL_IN, MODEL_PATCH_IN, MODEL_OUT]):
             data.extend(entry)
         return data
 
-    async def get_all_records(self, page_size: int = 500) -> AsyncGenerator[list[MODEL_OUT], None]:
+    async def get_all_records(
+        self, page_size: int = 500
+    ) -> AsyncGenerator[list[MODEL_OUT], None]:
         result = await self.get_record_page(page_size)
         yield result.data
 

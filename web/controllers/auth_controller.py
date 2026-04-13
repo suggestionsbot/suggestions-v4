@@ -40,7 +40,9 @@ class AuthController(Controller):
     account_lockout_period = timedelta(minutes=10)
     account_lockout_limit = 5
 
-    async def do_turnstile_checks(self, request: Request, template: str) -> Template | None:
+    async def do_turnstile_checks(
+        self, request: Request, template: str
+    ) -> Template | None:
         body = await request.form()
         token = body.get("turnstile-token", None)
         if not token:
@@ -77,7 +79,8 @@ class AuthController(Controller):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_random(min=1, max=2),
-        retry=retry_if_not_exception_type(ValueError) | retry_if_not_exception_type(AssertionError),
+        retry=retry_if_not_exception_type(ValueError)
+        | retry_if_not_exception_type(AssertionError),
         reraise=True,
     )
     async def validate_cf_turnstile_token(request: Request, token: str) -> bool:
@@ -98,7 +101,10 @@ class AuthController(Controller):
                 )
                 resp.raise_for_status()
                 data = resp.json()
-                if data["hostname"] not in constants.SERVING_DOMAIN and constants.IS_PRODUCTION:
+                if (
+                    data["hostname"] not in constants.SERVING_DOMAIN
+                    and constants.IS_PRODUCTION
+                ):
                     log.warning(
                         "Someone found a way to get CF tokens from %s on ip %s",
                         data["hostname"],
@@ -165,7 +171,9 @@ class AuthController(Controller):
         """
         if (not username) or (not password):
             alert(request, "Missing username or password", level="error")
-            return None, cls._render_template(request, "auth/sign_in.jinja", status_code=400)
+            return None, cls._render_template(
+                request, "auth/sign_in.jinja", status_code=400
+            )
 
         user_id = await cls.auth_table.login(
             username=username,
@@ -178,12 +186,18 @@ class AuthController(Controller):
                 "The username, password or mfa is incorrect.",
                 level="error",
             )
-            return None, cls._render_template(request, "auth/sign_in.jinja", status_code=401)
+            return None, cls._render_template(
+                request, "auth/sign_in.jinja", status_code=401
+            )
 
-        user_is_active = await Users.exists().where((Users.id == user_id) & (Users.active.eq(True)))
+        user_is_active = await Users.exists().where(
+            (Users.id == user_id) & (Users.active.eq(True))
+        )
         if not user_is_active:
             alert(request, "User is currently disabled.", level="error")
-            return None, cls._render_template(request, "auth/sign_in.jinja", status_code=403)
+            return None, cls._render_template(
+                request, "auth/sign_in.jinja", status_code=403
+            )
 
         return (
             await cls.auth_table.objects().get(cls.auth_table.id == user_id),
@@ -259,7 +273,9 @@ class AuthController(Controller):
         return None
 
     @get("/sign_in/select_provider", name="select_auth_provider")
-    async def get_select_auth_provider(self, request: Request, next_route: str = "/") -> Template:
+    async def get_select_auth_provider(
+        self, request: Request, next_route: str = "/"
+    ) -> Template:
         return self._render_template(
             request,
             "auth/select_provider.jinja",
@@ -408,7 +424,9 @@ class AuthController(Controller):
                 name = body.get("name", None)
                 failed = False
                 if name is None or not name:
-                    alert(request, "Sorry but we need your name to proceed", level="error")
+                    alert(
+                        request, "Sorry but we need your name to proceed", level="error"
+                    )
                     failed = True
 
                 if failed:
@@ -498,7 +516,9 @@ class AuthController(Controller):
         elif response is not None:
             return response
 
-        if constants.CHECK_PASSWORD_AGAINST_HIBP and await has_password_been_pwned(password):
+        if constants.CHECK_PASSWORD_AGAINST_HIBP and await has_password_been_pwned(
+            password
+        ):
             alert(
                 request,
                 "Your password appears in breach databases, consider changing it.",
@@ -532,7 +552,9 @@ class AuthController(Controller):
 
     @get("/mfa/totp/create", name="create_totp_mfa", middleware=[])
     async def totp_mfa_create_get(self, request: Request) -> Template | Redirect:
-        if request.user and await constants.MFA_TOTP_PROVIDER.is_user_enrolled(request.user):
+        if request.user and await constants.MFA_TOTP_PROVIDER.is_user_enrolled(
+            request.user
+        ):
             alert(
                 request,
                 "MFA must be explicitly deleted before we will "
@@ -602,7 +624,9 @@ class AuthController(Controller):
     async def totp_mfa_delete(self, request: Request) -> Template | Redirect:
         form = await request.form()
         password = form.get("password")
-        algorithm, iterations_, salt, hashed = Users.split_stored_password(request.user.password)
+        algorithm, iterations_, salt, hashed = Users.split_stored_password(
+            request.user.password
+        )
         iterations = int(iterations_)
         if not Users.hash_password(password, salt, iterations) == request.user.password:
             alert(
@@ -633,7 +657,9 @@ class AuthController(Controller):
 
         await cls.session_table.remove_session(token=cookie)
 
-        response: Redirect = Redirect(cls.default_redirect_to, status_code=HTTP_303_SEE_OTHER)
+        response: Redirect = Redirect(
+            cls.default_redirect_to, status_code=HTTP_303_SEE_OTHER
+        )
         response.set_cookie(cls.cookie_name, "", max_age=0)
         return response
 
@@ -682,7 +708,9 @@ class AuthController(Controller):
         name = body.get("name")
         if not name:
             alert(request, "Setting a name is required", level="error")
-            return self._render_template(request, "auth/change_details.jinja", status_code=400)
+            return self._render_template(
+                request, "auth/change_details.jinja", status_code=400
+            )
 
         phone = body.get("phone")
         signed_up_for_newsletter = body.get("newsletter") == "on"
@@ -732,10 +760,13 @@ class AuthController(Controller):
             alert(request, "Your current password was wrong.", level="error")
             return Redirect(request.url_for("change_password"))
 
-        if constants.CHECK_PASSWORD_AGAINST_HIBP and await has_password_been_pwned(new_password):
+        if constants.CHECK_PASSWORD_AGAINST_HIBP and await has_password_been_pwned(
+            new_password
+        ):
             alert(
                 request,
-                "Your new password appears in breach databases, " "please pick a unique password.",
+                "Your new password appears in breach databases, "
+                "please pick a unique password.",
                 level="error",
             )
             return Redirect(request.url_for("change_password"))

@@ -85,7 +85,9 @@ async def test_guild_access_as_non_guild_member(
     redis_client: aioredis.Redis,
 ):
     """Tests if non guild members can access items"""
-    session_cookie = Given.user("test@suggestions.gg", admin=dashboard_admin).session_cookie
+    session_cookie = Given.user(
+        "test@suggestions.gg", admin=dashboard_admin
+    ).session_cookie
     when = BaseWhen()
     when.bot_is_in_guild(12345, redis_client)
     when.patches_discord_get_requests(patch_discord_get)
@@ -158,7 +160,9 @@ async def test_guild_access_as_guild_member(
     redis_client: aioredis.Redis,
 ):
     """Tests if non guild members can access items"""
-    session_cookie = Given.user("test@suggestions.gg", admin=dashboard_admin).session_cookie
+    session_cookie = Given.user(
+        "test@suggestions.gg", admin=dashboard_admin
+    ).session_cookie
     when = BaseWhen()
     when.bot_is_in_guild(12345, redis_client)
     when.patches_discord_get_requests(patch_discord_get)
@@ -231,7 +235,9 @@ async def test_guild_access_as_admin_guild_member(
     redis_client: aioredis.Redis,
 ):
     """Tests if non guild members can access items"""
-    session_cookie = Given.user("test@suggestions.gg", admin=dashboard_admin).session_cookie
+    session_cookie = Given.user(
+        "test@suggestions.gg", admin=dashboard_admin
+    ).session_cookie
     when = BaseWhen()
     when.bot_is_in_guild(12345, redis_client)
     when.patches_discord_get_requests(patch_discord_get)

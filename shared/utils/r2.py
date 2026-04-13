@@ -1,7 +1,6 @@
 import hashlib
 import logging
 import mimetypes
-import os
 import secrets
 
 from aiobotocore.session import get_session

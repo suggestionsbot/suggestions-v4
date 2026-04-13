@@ -1,15 +1,12 @@
 import logging
-from typing import Sequence
 
 import hikari
 import lightbulb
-from hikari.api import special_endpoints
 
 from bot.constants import CONFIGURE_GROUP
 from bot.localisation import Localisation
 from bot.menus.guild_configuration_menu import GuildConfigurationMenus
 from shared.tables import GuildConfigs, UserConfigs
-
 
 logger = logging.getLogger(__name__)
 

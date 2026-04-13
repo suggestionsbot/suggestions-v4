@@ -15,7 +15,7 @@ from bot.constants import LOCALISATIONS
 from bot.exceptions import QueueImbalance
 
 if TYPE_CHECKING:
-    from shared.tables import QueuedSuggestions, QueuedSuggestionStateEnum
+    from shared.tables import QueuedSuggestions
 
 log = logging.getLogger(__name__)
 

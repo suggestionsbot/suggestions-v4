@@ -310,7 +310,9 @@ class BaseWhen:
         }
         return self
 
-    def contains_guild(self, guild_id: int, *, permissions: int = 1095564657024577) -> Self:
+    def contains_guild(
+        self, guild_id: int, *, permissions: int = 1095564657024577
+    ) -> Self:
         if "users/@me/guilds" not in self.data:
             self.data["users/@me/guilds"] = []
 

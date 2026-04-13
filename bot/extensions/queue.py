@@ -10,7 +10,6 @@ from bot.localisation import Localisation
 from bot.utils import QueuedSuggestionsPaginator, generate_id
 from shared.tables import (
     GuildConfigs,
-    Suggestions,
     QueuedSuggestions,
     UserConfigs,
 )

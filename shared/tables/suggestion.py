@@ -4,7 +4,6 @@ import typing
 from enum import Enum
 
 import hikari
-import lightbulb
 from hikari.impl import ContainerComponentBuilder, MessageActionRowBuilder
 from piccolo.columns import (
     Serial,

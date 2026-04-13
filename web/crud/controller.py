@@ -82,7 +82,9 @@ class GetCountResponseModel(BaseModel):
 
 class SearchItemInNulls(BaseModel):
     column_name: str = Field(description="The name of the column")
-    operation: Literal["is_null", "is_not_null"] = Field(description="The operation to filter by")
+    operation: Literal["is_null", "is_not_null"] = Field(
+        description="The operation to filter by"
+    )
 
 
 class SearchItemIn(SearchItemInNulls):
@@ -106,7 +108,9 @@ class SearchModel(BaseModel):
 class RawSearchOption(BaseModel):
     column_name: str = Field(description="The name of the column")
     expected_type: Any = Field(description="Python type input must validate against")
-    supported_filters: list[str] = Field(description="The operations supported for this column")
+    supported_filters: list[str] = Field(
+        description="The operations supported for this column"
+    )
 
 
 class SearchTableModel(BaseModel):
@@ -114,14 +118,20 @@ class SearchTableModel(BaseModel):
 
     column: Column
     column_name: str = Field(description="How users will reference this table")
-    expected_value_type: type[Any] = Field(description="Python type input must validate against")
+    expected_value_type: type[Any] = Field(
+        description="Python type input must validate against"
+    )
 
 
 class SearchableColumn(BaseModel):
-    columns: list[SearchTableModel] = Field(description="Columns to apply this search config to")
+    columns: list[SearchTableModel] = Field(
+        description="Columns to apply this search config to"
+    )
     # All opposites are derived from these
     #   i.e. if supports_equals is True then supports_not_equals is also True
-    supports_is_null: bool = Field(default=False, description="is column null or not null")
+    supports_is_null: bool = Field(
+        default=False, description="is column null or not null"
+    )
     supports_equals: bool = Field(default=False, description="== check as well as !=")
     supports_greater_than: bool = Field(default=False, description="> check")
     supports_greater_than_equal: bool = Field(default=False, description=">= check")
@@ -261,7 +271,9 @@ class SearchAddons:
         for entry in search_filters:
             if isinstance(entry, JoinModel):
                 if entry.operand not in ["and", "or"]:
-                    issues.append(f"Value {repr(entry.operand)} is not a supported join operand.")
+                    issues.append(
+                        f"Value {repr(entry.operand)} is not a supported join operand."
+                    )
 
                 if len(entry.filters) != 2:
                     issues.append(f"Join {repr(entry.operand)} requires two parameters")
@@ -342,7 +354,9 @@ class SearchAddons:
             else:
                 # Safer then an eval
                 dynamic_model = create_model("TestCastModel", search_value=wrapper)
-                search_value = dynamic_model(search_value=entry.search_value).search_value  # noqa
+                search_value = dynamic_model(
+                    search_value=entry.search_value
+                ).search_value  # noqa
 
             output.append(
                 Where(
@@ -418,7 +432,9 @@ class CRUDController(Controller, Generic[ModelOutT]):
         if value is None:
             return None
 
-        return self._value_to_cursor_value(base64.urlsafe_b64decode(value.encode("ascii")))
+        return self._value_to_cursor_value(
+            base64.urlsafe_b64decode(value.encode("ascii"))
+        )
 
     def _value_to_cursor_value(self, value: Any) -> Any:
         return self._value_to_col_value(self.META.BASE_CLASS_CURSOR_COL, value)
@@ -512,7 +528,9 @@ class CRUDController(Controller, Generic[ModelOutT]):
         )
 
     async def get_available_search_filters(self, request: Request) -> SearchRequestModel:
-        return await SearchAddons.get_available_search_filters(self.META.AVAILABLE_FILTERS)
+        return await SearchAddons.get_available_search_filters(
+            self.META.AVAILABLE_FILTERS
+        )
 
     async def search(
         self,
@@ -628,7 +646,9 @@ class CRUDController(Controller, Generic[ModelOutT]):
             base_query = (
                 self.META.BASE_CLASS.objects(*self.META.PREFETCH_COLUMNS)
                 .where(self.META.BASE_CLASS_PK == primary_key)
-                .lock_rows(self.PATCH_ROW_LOCK_LEVEL, nowait=True, of=(self.META.BASE_CLASS,))
+                .lock_rows(
+                    self.PATCH_ROW_LOCK_LEVEL, nowait=True, of=(self.META.BASE_CLASS,)
+                )
                 .first()
             )
             base_query = await self.add_custom_where(

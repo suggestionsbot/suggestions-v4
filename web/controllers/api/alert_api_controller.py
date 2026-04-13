@@ -65,7 +65,9 @@ crud_meta = CRUDMeta(
                 SearchTableModel(
                     column=Alerts.target, column_name="target", expected_value_type=int
                 ),
-                SearchTableModel(column=Alerts.level, column_name="level", expected_value_type=str),
+                SearchTableModel(
+                    column=Alerts.level, column_name="level", expected_value_type=str
+                ),
                 SearchTableModel(
                     column=Alerts.has_been_shown,
                     column_name="has_been_shown",
@@ -130,7 +132,9 @@ class APIAlertController[AlertOutModel](CRUDController):
         ),
         next_cursor: str | None = Parameter(query="_next_cursor", required=False),
     ) -> GetAllResponseModel[AlertOutModel]:
-        return await super().get_all_records(request, page_size=page_size, next_cursor=next_cursor)
+        return await super().get_all_records(
+            request, page_size=page_size, next_cursor=next_cursor
+        )
 
     @get(
         "/{primary_key:uuid}",

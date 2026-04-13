@@ -3,16 +3,13 @@ from piccolo.columns.column_types import Timestamptz
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.columns.indexes import IndexMethod
 
-
 ID = "2026-01-18T21:19:27:895619"
 VERSION = "1.30.0"
 DESCRIPTION = ""
 
 
 async def forwards():
-    manager = MigrationManager(
-        migration_id=ID, app_name="web", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="web", description=DESCRIPTION)
 
     manager.drop_column(
         table_class_name="GuildTokens",

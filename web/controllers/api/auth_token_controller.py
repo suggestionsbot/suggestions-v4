@@ -18,7 +18,9 @@ class TokenInModel(BaseModel):
 
 class TokenOutModel(BaseModel):
     token: str = Field(description="Your current API Token")
-    expiry_date: datetime.datetime = Field(description="When this token is scheduled to expire")
+    expiry_date: datetime.datetime = Field(
+        description="When this token is scheduled to expire"
+    )
     max_expiry_date: datetime.datetime = Field(
         description="The maximum time that this token validity can be extended until"
     )

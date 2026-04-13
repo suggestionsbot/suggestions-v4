@@ -48,7 +48,7 @@ async def main():
         from bot.extensions.configure_guild import ConfigureGuildCmd  # noqa
         from bot.extensions.notes import NotesAddCmd, NotesRemoveCmd  # noqa
         from bot.extensions.blocklist import BlocklistAddCmd, BlocklistRemoveCmd  # noqa
-        from bot.extensions.queue import QueueInfoCmd # noqa
+        from bot.extensions.queue import QueueInfoCmd  # noqa
 
         client.register(CONFIGURE_GROUP)
         client.register(NOTES_GROUP)

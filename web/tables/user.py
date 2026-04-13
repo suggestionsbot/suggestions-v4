@@ -33,11 +33,14 @@ class Users(AuditMixin, Table, tablename="users"):
     name = Varchar(null=True)
     email = Varchar(length=255, unique=True)
     active = Boolean(default=False, help_text="Can this user sign in?")
-    admin = Boolean(default=False, help_text="An admin can log into the Piccolo admin GUI.")
+    admin = Boolean(
+        default=False, help_text="An admin can log into the Piccolo admin GUI."
+    )
     superuser = Boolean(
         default=False,
         help_text=(
-            "If True, this user can manage other users's passwords in the " "Piccolo admin GUI."
+            "If True, this user can manage other users's passwords in the "
+            "Piccolo admin GUI."
         ),
     )
     last_login = Timestamptz(
@@ -101,10 +104,14 @@ class Users(AuditMixin, Table, tablename="users"):
             raise ValueError("A password must be provided.")
 
         if len(password) < cls._min_password_length:
-            raise ValueError(f"The password is too short. (min {cls._min_password_length})")
+            raise ValueError(
+                f"The password is too short. (min {cls._min_password_length})"
+            )
 
         if len(password) > cls._max_password_length:
-            raise ValueError(f"The password is too long. (max {cls._max_password_length})")
+            raise ValueError(
+                f"The password is too long. (max {cls._max_password_length})"
+            )
 
         if password.startswith("pbkdf2_sha256"):
             logger.warning("Tried to create a user with an already hashed password.")
@@ -129,7 +136,9 @@ class Users(AuditMixin, Table, tablename="users"):
         await cls.update({cls.password: password}).where(clause).run()
 
     @classmethod
-    def hash_password(cls, password: str, salt: str = "", iterations: Optional[int] = None) -> str:
+    def hash_password(
+        cls, password: str, salt: str = "", iterations: Optional[int] = None
+    ) -> str:
         """
         Hashes the password, ready for storage, and for comparing during
         login.
@@ -182,7 +191,9 @@ class Users(AuditMixin, Table, tablename="users"):
             The id of the user if a match is found, otherwise ``None``.
 
         """
-        if (max_username_length := cls.username.length) and len(username) > max_username_length:
+        if (max_username_length := cls.username.length) and len(
+            username
+        ) > max_username_length:
             logger.warning("Excessively long username provided.")
             return None
 

@@ -7,7 +7,7 @@ from web.constants import REDIS_CLIENT
 
 async def delete_autocomplete_cache():
     """Deletes the autocomplete cache"""
-    await REDIS_CLIENT.delete(f"ac:*")
+    await REDIS_CLIENT.delete("ac:*")
 
 
 async def cache_sid_in_autocomplete(

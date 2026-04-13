@@ -8,7 +8,6 @@ import hikari
 from piccolo.columns import (
     Serial,
     Text,
-    BigInt,
     Timestamptz,
     ForeignKey,
     LazyTableReference,
@@ -17,7 +16,6 @@ from piccolo.table import Table
 
 from bot.constants import LOCALISATIONS
 from shared.tables import UserConfigs
-from shared.tables.mixins import AuditMixin
 from shared.tables.mixins.audit import utc_now
 
 

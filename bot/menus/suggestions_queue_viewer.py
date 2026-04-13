@@ -1,25 +1,16 @@
-import dataclasses
 from typing import Literal
 
 import hikari
 import lightbulb
 from commons.caching import NonExistentEntry
-from piccolo.columns import Where, And
-from piccolo.columns.operators import Equal
 
 from bot import utils
-from bot.constants import ErrorCode, PAGINATOR_OBJECTS
+from bot.constants import PAGINATOR_OBJECTS
 from bot.localisation import Localisation
-from bot.menus import SuggestionMenu, SuggestionsQueueMenu
-from bot.utils.cv2 import build_queued_user_resolution_notification
+from bot.menus import SuggestionsQueueMenu
 from shared.tables import (
-    GuildConfigs,
-    QueuedSuggestions,
     UserConfigs,
-    QueuedSuggestionStateEnum,
-    Suggestions,
 )
-from shared.tables.mixins.audit import utc_now
 from shared.utils import configs
 
 

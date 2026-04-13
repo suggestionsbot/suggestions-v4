@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import datetime
 import io
 import logging
 import typing
 from typing import cast
 
-import commons
 import hikari
 import lightbulb
 
@@ -27,7 +25,6 @@ if typing.TYPE_CHECKING:
         Suggestions,
         SuggestionVotes,
         SuggestionsVoteTypeEnum,
-        SuggestionStateEnum,
     )
 
 logger = logging.getLogger(__name__)
@@ -203,7 +200,7 @@ class SuggestionMenu:
                         )
                         if item is None:
                             logger.critical(
-                                f"failed to find an image in the resolved attachments"
+                                "failed to find an image in the resolved attachments"
                             )
                             continue
 

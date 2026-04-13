@@ -38,7 +38,9 @@ class EnsureAuth(AbstractAuthenticationMiddleware):
 
             return None
 
-        user_id = await cls.session_table.get_user_id(token, increase_expiry=cls.increase_expiry)
+        user_id = await cls.session_table.get_user_id(
+            token, increase_expiry=cls.increase_expiry
+        )
 
         if not user_id:
             if fail_on_not_set:
@@ -53,7 +55,9 @@ class EnsureAuth(AbstractAuthenticationMiddleware):
             .run()
         )
 
-    async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
+    async def authenticate_request(
+        self, connection: ASGIConnection
+    ) -> AuthenticationResult:
         if not self.requires_auth:
             return AuthenticationResult(user=None, auth=None)
 
@@ -89,7 +93,9 @@ class EnsureSuperUser(EnsureAdmin):
 
 # noinspection PyMethodMayBeStatic
 class UserFromAPIKey(AbstractAuthenticationMiddleware):
-    async def authenticate_request(self, connection: ASGIConnection) -> AuthenticationResult:
+    async def authenticate_request(
+        self, connection: ASGIConnection
+    ) -> AuthenticationResult:
         raw_token = connection.headers.get("X-API-KEY")
         if not raw_token:
             raise NotAuthorizedException("This route requires an API Token")

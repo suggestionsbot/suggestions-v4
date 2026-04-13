@@ -1,7 +1,6 @@
 import logging
 
 import hikari
-from stripe import LoginLink
 
 from bot.constants import LOCALISATIONS
 from bot.utils import cv2
