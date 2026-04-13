@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import datetime
 from datetime import timedelta
 from enum import IntEnum
 from pathlib import Path
@@ -31,6 +32,7 @@ DUPLICATE_COLOR = Color.of((200, 89, 255))
 PENDING_COLOR = Color.of((255, 214, 99))
 EMBED_COLOR = Color.of((255, 214, 99))
 OTEL_TRACER = trace.get_tracer(__name__)
+LOADED_AT = datetime.datetime.now(datetime.timezone.utc)  # Uptime calc
 LOCALISATIONS = Localisation(
     base_path=Path("bot"),
 )

@@ -56,6 +56,7 @@ async def main():
         client.register(QUEUE_GROUP)
         await client.load_extensions(
             "bot.extensions.suggest",
+            "bot.extensions.generic",
             "bot.extensions.resolve",
             "bot.tasks.store_guilds_in_redis",
         )

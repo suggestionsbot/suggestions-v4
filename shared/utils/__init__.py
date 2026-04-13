@@ -4,6 +4,7 @@ from .autocomplete import (
     get_sid_autocomplete_for_guild,
     delete_autocomplete_cache,
 )
+from .redis import get_accurate_guild_count
 
 __all__ = [
     "upload_file_to_r2",
@@ -11,4 +12,5 @@ __all__ = [
     "configs",
     "get_sid_autocomplete_for_guild",
     "delete_autocomplete_cache",
+    "get_accurate_guild_count",
 ]
