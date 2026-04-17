@@ -11,6 +11,7 @@ import hikari
 import lightbulb
 from commons import value_to_bool
 from commons.caching import TimedCache
+from cooldowns import Cooldown
 from dotenv import load_dotenv
 from hikari import Color
 from opentelemetry import trace
@@ -68,6 +69,17 @@ QUEUE_GROUP = lightbulb.Group(
     localize=True,
     default_member_permissions=hikari.Permissions.MANAGE_GUILD,
     contexts=[hikari.ApplicationContextType.GUILD],
+)
+
+
+async def user_cooldown_bucket(interaction: hikari.CommandInteraction) -> tuple[int, int]:
+    return interaction.user.id, interaction.guild_id
+
+
+GLOBAL_COMMAND_COOLDOWN = Cooldown(
+    1,
+    time_period=timedelta(seconds=15),
+    bucket=user_cooldown_bucket,
 )
 
 DEFAULT_UP_VOTE = hikari.CustomEmoji(

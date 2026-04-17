@@ -6,7 +6,9 @@ import typing as t
 
 import commons
 import hikari
+import humanize
 import lightbulb
+from cooldowns import CallableOnCooldown
 from lightbulb import di as di_
 from lightbulb import localization
 from lightbulb.client import (
@@ -20,14 +22,34 @@ from lightbulb.client import (
 from lightbulb.commands import execution
 from lightbulb.internal import types as lb_types
 
+from bot import constants, utils
+from bot.tables import InternalErrors
+from shared.utils import configs
+
 if t.TYPE_CHECKING:
     from collections.abc import Sequence
 
     from lightbulb import features as features_
 
-from bot.constants import OTEL_TRACER
+from bot.constants import OTEL_TRACER, GLOBAL_COMMAND_COOLDOWN, ErrorCode
 
 LOGGER = logging.getLogger(__name__)
+
+
+def build_ctx(
+    interaction: (
+        hikari.ComponentInteraction | hikari.ModalInteraction | hikari.CommandInteraction
+    ),
+) -> lightbulb.components.MenuContext:
+    return lightbulb.components.MenuContext(
+        None,  # type: ignore
+        None,  # type: ignore
+        interaction,
+        None,  # type: ignore
+        None,  # type: ignore
+        None,  # type: ignore
+        asyncio.Event(),
+    )
 
 
 @t.overload
@@ -177,6 +199,52 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
             )
             if interaction.guild_id:
                 span.set_attribute("interaction.guild.id", interaction.guild_id)
+
+            try:
+                await GLOBAL_COMMAND_COOLDOWN.increment(interaction)
+            except CallableOnCooldown as exception:
+                link_id = await utils.otel.generate_trace_link_state()
+                otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+
+                with OTEL_TRACER.start_as_current_span(
+                    "global cooldown handler", otel_ctx
+                ) as error_span:
+                    internal_error: InternalErrors = await InternalErrors.persist_error(
+                        exception,
+                        command_name=localised_key,
+                        guild_id=interaction.guild_id,
+                        user_id=interaction.user.id,
+                    )
+                    error_span.set_attribute("error.id", internal_error.id)
+                    error_span.set_attribute("error.name", internal_error.error_name)
+                    error_span.set_attribute("error.handled", True)
+                    LOGGER.debug(
+                        "CallableOnCooldown",
+                        extra={
+                            "interaction.guild.id": interaction.guild_id,
+                            "interaction.author.id": interaction.user.id,
+                            "interaction.author.global_name": interaction.user.global_name,
+                            "error.code": ErrorCode.COMMAND_ON_COOLDOWN.value,
+                        },
+                    )
+                    natural_time = humanize.naturaldelta(exception.retry_after)
+                    user_config = await configs.ensure_user_config(interaction.user.id)
+                    await build_ctx(interaction).respond(
+                        embed=utils.error_embed(
+                            constants.LOCALISATIONS.get_localized_string(
+                                "errors.on_global_cooldown.title",
+                                user_config.primary_language,
+                            ),
+                            constants.LOCALISATIONS.get_localized_string(
+                                "errors.on_global_cooldown.description",
+                                user_config.primary_language,
+                                extras={"TIME": natural_time},
+                            ),
+                            internal_error_reference=internal_error,
+                        ),
+                        ephemeral=True,
+                    )
+                return
 
             await super().handle_application_command_interaction(
                 interaction, initial_response_sent

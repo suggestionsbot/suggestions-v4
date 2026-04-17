@@ -2,11 +2,13 @@ import asyncio
 import logging
 
 import hikari
+import humanize
 import lightbulb
+from cooldowns import CallableOnCooldown
 from hikari.impl import CacheSettings, config
 
 from bot import overrides, utils, constants
-from bot.constants import OTEL_TRACER
+from bot.constants import OTEL_TRACER, ErrorCode
 from bot.menus import (
     GuildConfigurationMenus,
     SuggestionMenu,
@@ -66,7 +68,7 @@ async def create_bot(
     )
 
     @client.error_handler
-    async def handler(
+    async def global_error_handler(
         exc: lightbulb.exceptions.ExecutionPipelineFailedException,
         ctx: lightbulb.Context,
     ) -> bool:
@@ -116,7 +118,11 @@ async def create_bot(
             )
 
     def build_ctx(
-        interaction: hikari.ComponentInteraction | hikari.ModalInteraction,
+        interaction: (
+            hikari.ComponentInteraction
+            | hikari.ModalInteraction
+            | hikari.CommandInteraction
+        ),
     ) -> lightbulb.components.MenuContext:
         return lightbulb.components.MenuContext(
             client,

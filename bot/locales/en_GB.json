@@ -333,5 +333,7 @@
   "saq.suggestion_resolved_notifications.responses.suggestion_resolved.footer": "Guild ID: $GUILD_ID | sID: $SID",
   "saq.queued_suggestion_resolved_notifications.responses.approved.description": "Hey $AUTHOR.\nA queued suggestion of yours has been approved by $RESOLVED_BY.\n\nYou can view the now public suggestion at this link: $JUMP_TO",
   "saq.queued_suggestion_resolved_notifications.responses.rejected.description": "Hey $AUTHOR.\nA queued suggestion of yours has been rejected by $RESOLVED_BY.\n\nThe suggestion which was rejected is attached for your convenience.",
-  "saq.queued_suggestion_resolved_notifications.responses.suggestion_resolved.footer": "Guild ID: $GUILD_ID | sID: $SID"
+  "saq.queued_suggestion_resolved_notifications.responses.suggestion_resolved.footer": "Guild ID: $GUILD_ID | sID: $SID",
+  "errors.on_global_cooldown.title": "Command On Cooldown",
+  "errors.on_global_cooldown.description": "Ahh man so fast! You must wait $TIME to run this command again"
 }
