@@ -159,6 +159,11 @@
   "message_addons.product_updates": "Want to be in the know when new features drop? Join our discord at <https://suggestions.gg/discord>",
   "message_addons.premium.notif_on_suggestion_resolution": "Want to get a notification when Suggestions you vote on are resolved by staff? If so have a look at our premium offerings, currently free for the first month. Enjoy it on us!",
 
+  "commands.error_info.name": "error_info",
+  "commands.error_info.description": "Retrieve information about a given error.",
+  "commands.error_info.options.error_id.name": "error_id",
+  "commands.error_info.options.error_id.description": "The DB ID of the error",
+
   "commands.clear.name": "clear",
   "commands.clear.description": "Remove a suggestion and any associated messages.",
   "commands.clear.options.suggestion.id": "The sID you wish to clear",
