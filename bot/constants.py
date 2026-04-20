@@ -78,7 +78,7 @@ async def user_cooldown_bucket(interaction: hikari.CommandInteraction) -> tuple[
 
 GLOBAL_COMMAND_COOLDOWN = Cooldown(
     1,
-    time_period=timedelta(seconds=15),
+    time_period=timedelta(seconds=3),
     bucket=user_cooldown_bucket,
 )
 
