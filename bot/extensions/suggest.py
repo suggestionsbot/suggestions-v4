@@ -105,7 +105,6 @@ class Suggest(
         guild_config: GuildConfigs,
         localisations: Localisation,
     ) -> None:
-        raise ValueError
         if ctx.user.id in guild_config.blocked_users:
             await ctx.respond(
                 embed=utils.error_embed(

@@ -31,6 +31,7 @@ class QueuedSuggestionStateEnum(Enum):
     PENDING = "Pending"
     APPROVED = "Approved"
     REJECTED = "Rejected"
+    CLEARED = "Cleared"
 
 
 class QueuedSuggestions(Table, AuditMixin):
@@ -142,6 +143,10 @@ class QueuedSuggestions(Table, AuditMixin):
     @property
     def state(self) -> QueuedSuggestionStateEnum:
         return QueuedSuggestionStateEnum(self.state_raw)
+
+    @state.setter
+    def state(self, value: QueuedSuggestionStateEnum):
+        self.state_raw = value.value
 
     @classmethod
     async def fetch_guild_queued_suggestions(

@@ -166,9 +166,15 @@
 
   "commands.clear.name": "clear",
   "commands.clear.description": "Remove a suggestion and any associated messages.",
-  "commands.clear.options.suggestion.id": "The sID you wish to clear",
+  "commands.clear.options.suggestion_id.name": "suggestion_id",
+  "commands.clear.options.suggestion_id.description": "The sID you wish to clear",
   "commands.clear.options.response.name": "response",
   "commands.clear.options.response.description": "An optional response to add to the suggestion",
+  "commands.clear.options.anonymously.name": "anonymously",
+  "commands.clear.options.anonymously.description": "Clear the suggestion anonymously.",
+  "commands.clear.responses.not_found": "I could not find any suggestions with that ID in your guild.",
+  "commands.clear.responses.cleared": "I have cleared $SID for you.",
+
   "commands.stats.name": "stats",
   "commands.stats.description": "Get bot stats!",
   "commands.stats.responses.guild": "Guilds",

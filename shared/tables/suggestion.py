@@ -165,6 +165,10 @@ class Suggestions(Table, AuditMixin):
     def state(self) -> SuggestionStateEnum:
         return SuggestionStateEnum(self.state_raw)
 
+    @state.setter
+    def state(self, value: SuggestionStateEnum):
+        self.state_raw = value.value
+
     @property
     def color(self) -> hikari.Color:
         if self.state is SuggestionStateEnum.REJECTED:
