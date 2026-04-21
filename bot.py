@@ -55,13 +55,21 @@ async def main():
         from bot.extensions.notes import NotesAddCmd, NotesRemoveCmd  # noqa
         from bot.extensions.blocklist import BlocklistAddCmd, BlocklistRemoveCmd  # noqa
         from bot.extensions.queue import QueueInfoCmd  # noqa
-        from bot.extensions.view_voters import ViewVotersCmd  # noqa
+        from bot.extensions.view_voters import (
+            ViewVotersCmd,  # noqa
+            ViewVoterMessageCommand,
+            ViewUpVoterMessageCommand,
+            ViewDownVoterMessageCommand,
+        )
 
         client.register(CONFIGURE_GROUP)
         client.register(NOTES_GROUP)
         client.register(BLOCKLIST_GROUP)
         client.register(QUEUE_GROUP)
         client.register(VIEW_GROUP)
+        client.register(ViewVoterMessageCommand)
+        client.register(ViewUpVoterMessageCommand)
+        client.register(ViewDownVoterMessageCommand)
         await client.load_extensions(
             "bot.extensions.suggest",
             "bot.extensions.generic",

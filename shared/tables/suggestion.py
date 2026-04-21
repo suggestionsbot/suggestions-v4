@@ -185,6 +185,31 @@ class Suggestions(Table, AuditMixin):
 
         return PENDING_COLOR
 
+    @classmethod
+    async def fetch_suggestion_by_message(
+        cls, *, channel_id: int, message_id: int, guild_id: int
+    ) -> typing.Self:
+        """Simple helper method to also ensure configurations are prefetched"""
+        query = (
+            cls.objects(Suggestions.user_configuration, Suggestions.guild_configuration)
+            .where(
+                And(
+                    Where(Suggestions.channel_id, channel_id, operator=Equal),
+                    And(
+                        Where(Suggestions.message_id, message_id, operator=Equal),
+                        Where(
+                            Suggestions.guild_configuration.guild_id,
+                            guild_id,
+                            operator=Equal,
+                        ),
+                    ),
+                )
+            )
+            .first()
+        )
+
+        return await query
+
     # noinspection PyPep8Naming
     @classmethod
     async def fetch_suggestion(

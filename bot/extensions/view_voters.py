@@ -42,6 +42,60 @@ async def autocomplete_callback(ctx: lightbulb.AutocompleteContext[str]) -> None
     await ctx.respond(values_to_recommend)
 
 
+async def get_vote_data(
+    *,
+    suggestion: Suggestions,
+    vote_type: SuggestionsVoteTypeEnum | None,
+    ctx,
+    localisations,
+    user_config,
+) -> list[str] | None:
+    votes = await SuggestionVotes.fetch_votes_for_suggestion(
+        suggestion, vote_type=vote_type
+    )
+    if not votes:
+        await ctx.respond(
+            localisations.get_localized_string(
+                "commands.view.voters.responses.no_votes",
+                user_config.primary_language,
+            ),
+            ephemeral=True,
+        )
+        return None
+
+    data = []
+    for group in batched(votes, 25):
+        text = io.StringIO()
+        for item in group:
+            emoji = (
+                DEFAULT_UP_VOTE
+                if item.vote_type_enum == SuggestionsVoteTypeEnum.UpVote
+                else DEFAULT_DOWN_VOTE
+            )
+            text.write(f"{emoji} <@{item.user_id}>")
+
+        data.append(text.getvalue())
+    return data
+
+
+async def view_voters_for_suggestion(
+    *, suggestion: Suggestions, data: list[str], ctx, user_config: UserConfigs
+) -> None:
+    pid = generate_id()
+    link_id = await utils.otel.generate_trace_link_state()
+    paginator = ViewVotersPaginator(
+        data=data,
+        ctx=ctx,
+        locale=user_config.primary_language,
+        pid=pid,
+        link_id=link_id,
+        sid=suggestion.sID,
+    )
+    PAGINATOR_OBJECTS.add_entry(pid, paginator)
+    await ctx.respond(components=await paginator.format_page())
+    return None
+
+
 @VIEW_GROUP.register
 class ViewVotersCmd(
     lightbulb.SlashCommand,
@@ -111,42 +165,156 @@ class ViewVotersCmd(
             if self.filter_raw == "Up"
             else SuggestionsVoteTypeEnum.DownVote if self.filter_raw == "Down" else None
         )
-        votes = await SuggestionVotes.fetch_votes_for_suggestion(
-            suggestion, vote_type=vote_type
+
+        data = await get_vote_data(
+            suggestion=suggestion,
+            ctx=ctx,
+            user_config=user_config,
+            vote_type=vote_type,
+            localisations=localisations,
         )
-        if not votes:
+        if data is None:
+            return None
+
+        await view_voters_for_suggestion(
+            suggestion=suggestion, data=data, ctx=ctx, user_config=user_config
+        )
+        return None
+
+
+class ViewVoterMessageCommand(
+    lightbulb.MessageCommand,
+    name="msg_cmds.view_voters.name",
+    localize=True,
+):
+    @lightbulb.invoke
+    async def invoke(
+        self,
+        ctx: lightbulb.Context,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        localisations: Localisation,
+    ) -> None:
+        # 'self.target' contains the message object the command was executed on
+        await ctx.defer(ephemeral=True)
+        suggestion: Suggestions | None = await Suggestions.fetch_suggestion_by_message(
+            channel_id=self.target.channel_id,
+            message_id=self.target.id,
+            guild_id=guild_config.guild_id,
+        )
+        if suggestion is None:
             await ctx.respond(
                 localisations.get_localized_string(
-                    "commands.view.voters.responses.no_votes",
+                    "commands.view.voters.responses.not_found",
                     user_config.primary_language,
                 ),
                 ephemeral=True,
             )
             return None
 
-        data = []
-        for group in batched(votes, 25):
-            text = io.StringIO()
-            for item in group:
-                emoji = (
-                    DEFAULT_UP_VOTE
-                    if item.vote_type_enum == SuggestionsVoteTypeEnum.UpVote
-                    else DEFAULT_DOWN_VOTE
-                )
-                text.write(f"{emoji} <@{item.user_id}>")
-
-            data.append(text.getvalue())
-
-        pid = generate_id()
-        link_id = await utils.otel.generate_trace_link_state()
-        paginator = ViewVotersPaginator(
-            data=data,
+        data = await get_vote_data(
+            suggestion=suggestion,
             ctx=ctx,
-            locale=user_config.primary_language,
-            pid=pid,
-            link_id=link_id,
-            sid=suggestion.sID,
+            user_config=user_config,
+            vote_type=None,
+            localisations=localisations,
         )
-        PAGINATOR_OBJECTS.add_entry(pid, paginator)
-        await ctx.respond(components=await paginator.format_page())
+        if data is None:
+            return None
+
+        await view_voters_for_suggestion(
+            suggestion=suggestion, data=data, ctx=ctx, user_config=user_config
+        )
+        return None
+
+
+class ViewUpVoterMessageCommand(
+    lightbulb.MessageCommand,
+    name="msg_cmds.view_up_voters.name",
+    localize=True,
+):
+    @lightbulb.invoke
+    async def invoke(
+        self,
+        ctx: lightbulb.Context,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        localisations: Localisation,
+    ) -> None:
+        # 'self.target' contains the message object the command was executed on
+        await ctx.defer(ephemeral=True)
+        suggestion: Suggestions | None = await Suggestions.fetch_suggestion_by_message(
+            channel_id=self.target.channel_id,
+            message_id=self.target.id,
+            guild_id=guild_config.guild_id,
+        )
+        if suggestion is None:
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "commands.view.voters.responses.not_found",
+                    user_config.primary_language,
+                ),
+                ephemeral=True,
+            )
+            return None
+
+        data = await get_vote_data(
+            suggestion=suggestion,
+            ctx=ctx,
+            user_config=user_config,
+            vote_type=SuggestionsVoteTypeEnum.UpVote,
+            localisations=localisations,
+        )
+        if data is None:
+            return None
+
+        await view_voters_for_suggestion(
+            suggestion=suggestion, data=data, ctx=ctx, user_config=user_config
+        )
+        return None
+
+
+class ViewDownVoterMessageCommand(
+    lightbulb.MessageCommand,
+    name="msg_cmds.view_down_voters.name",
+    localize=True,
+):
+    @lightbulb.invoke
+    async def invoke(
+        self,
+        ctx: lightbulb.Context,
+        guild_config: GuildConfigs,
+        user_config: UserConfigs,
+        localisations: Localisation,
+    ) -> None:
+        # 'self.target' contains the message object the command was executed on
+        await ctx.defer(ephemeral=True)
+        suggestion: Suggestions | None = await Suggestions.fetch_suggestion_by_message(
+            channel_id=self.target.channel_id,
+            message_id=self.target.id,
+            guild_id=guild_config.guild_id,
+        )
+        if suggestion is None:
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "commands.view.voters.responses.not_found",
+                    user_config.primary_language,
+                ),
+                ephemeral=True,
+            )
+            return None
+
+        data = await get_vote_data(
+            suggestion=suggestion,
+            ctx=ctx,
+            user_config=user_config,
+            vote_type=SuggestionsVoteTypeEnum.DownVote,
+            localisations=localisations,
+        )
+        if data is None:
+            return None
+
+        await view_voters_for_suggestion(
+            suggestion=suggestion, data=data, ctx=ctx, user_config=user_config
+        )
         return None
