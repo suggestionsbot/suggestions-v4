@@ -186,6 +186,7 @@ class ResolveCmd(
     description="commands.resolve.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
 ):
     suggestion_id = lightbulb.string(
         "commands.resolve.options.suggestion_id.name",
