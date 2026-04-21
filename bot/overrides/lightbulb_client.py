@@ -187,7 +187,11 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
             )
 
         localised_key = " ".join(localised_key)
-        with OTEL_TRACER.start_as_current_span(f"/{localised_key}") as span:
+        if localised_key not in ["View Voters", "View Up Voters", "View Down Voters"]:
+            # Slash command
+            localised_key = f"/{localised_key}"
+
+        with OTEL_TRACER.start_as_current_span(localised_key) as span:
             span.set_attribute("interaction.user.id", interaction.user.id)
             span.set_attribute(
                 "interaction.user.global_name",
