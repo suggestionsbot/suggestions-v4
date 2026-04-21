@@ -149,9 +149,7 @@ class QueuedSuggestions(Table, AuditMixin):
         self.state_raw = value.value
 
     @classmethod
-    async def fetch_guild_queued_suggestions(
-        cls, guild_id: int, *, still_in_queue: bool
-    ) -> list[typing.Self]:
+    async def fetch_guild_queued_suggestions(cls, guild_id: int) -> list[typing.Self]:
         query = cls.objects(
             QueuedSuggestions.user_configuration,
             QueuedSuggestions.guild_configuration,
