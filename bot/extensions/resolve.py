@@ -277,6 +277,7 @@ class ApproveCmd(
     description="commands.approve.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
 ):
     suggestion_id = lightbulb.string(
         "commands.approve.options.suggestion_id.name",
@@ -339,6 +340,7 @@ class RejectCmd(
     description="commands.reject.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
 ):
     suggestion_id = lightbulb.string(
         "commands.reject.options.suggestion_id.name",
