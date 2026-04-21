@@ -184,7 +184,7 @@ class ViewVotersCmd(
 
 class ViewVoterMessageCommand(
     lightbulb.MessageCommand,
-    name="msg_cmds.view_voters.name",
+    name="message_commands.view_voters.name",
     localize=True,
 ):
     @lightbulb.invoke
@@ -230,7 +230,7 @@ class ViewVoterMessageCommand(
 
 class ViewUpVoterMessageCommand(
     lightbulb.MessageCommand,
-    name="msg_cmds.view_up_voters.name",
+    name="message_commands.view_up_voters.name",
     localize=True,
 ):
     @lightbulb.invoke
@@ -276,7 +276,7 @@ class ViewUpVoterMessageCommand(
 
 class ViewDownVoterMessageCommand(
     lightbulb.MessageCommand,
-    name="msg_cmds.view_down_voters.name",
+    name="message_commands.view_down_voters.name",
     localize=True,
 ):
     @lightbulb.invoke
