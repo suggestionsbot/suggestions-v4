@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Self
 
 from piccolo.columns import Serial, ForeignKey, BigInt, Varchar, LazyTableReference
 from piccolo.columns.indexes import IndexMethod
@@ -33,3 +34,17 @@ class SuggestionVotes(Table, AuditMixin):
         index_method=IndexMethod.hash,
         index=True,
     )
+
+    @property
+    def vote_type_enum(self) -> SuggestionsVoteTypeEnum:
+        return SuggestionsVoteTypeEnum(self.vote_type)
+
+    @classmethod
+    async def fetch_votes_for_suggestion(
+        cls, suggestion, *, vote_type: SuggestionsVoteTypeEnum | None = None
+    ) -> list[Self]:
+        query = cls.objects().where(cls.suggestion == suggestion)
+        if vote_type is not None:
+            query = query.where(cls.vote_type == vote_type)
+
+        return await query

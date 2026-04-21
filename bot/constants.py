@@ -19,7 +19,7 @@ from opentelemetry import trace
 from bot.localisation import Localisation
 
 if TYPE_CHECKING:
-    from bot.utils import QueuedSuggestionsPaginator
+    from bot.utils import QueuedSuggestionsPaginator, ViewVotersPaginator
 
 load_dotenv()
 
@@ -37,7 +37,7 @@ LOADED_AT = datetime.datetime.now(datetime.timezone.utc)  # Uptime calc
 LOCALISATIONS = Localisation(
     base_path=Path("bot"),
 )
-PAGINATOR_OBJECTS: TimedCache[str, QueuedSuggestionsPaginator] = TimedCache(
+PAGINATOR_OBJECTS: TimedCache[str, QueuedSuggestionsPaginator|ViewVotersPaginator] = TimedCache(
     global_ttl=timedelta(minutes=15),
     lazy_eviction=False,
     ttl_from_last_access=True,
@@ -66,6 +66,13 @@ BLOCKLIST_GROUP = lightbulb.Group(
 QUEUE_GROUP = lightbulb.Group(
     name="commands.queue.name",
     description="commands.queue.description",
+    localize=True,
+    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
+    contexts=[hikari.ApplicationContextType.GUILD],
+)
+VIEW_GROUP = lightbulb.Group(
+    name="commands.view.name",
+    description="commands.view.description",
     localize=True,
     default_member_permissions=hikari.Permissions.MANAGE_GUILD,
     contexts=[hikari.ApplicationContextType.GUILD],
