@@ -601,7 +601,6 @@ class SuggestionMenu:
                 ),
                 component=hikari.impl.TextInputBuilder(
                     custom_id="suggestion",
-                    label="suggestion",
                     style=hikari.TextInputStyle.PARAGRAPH,
                     required=True,
                     min_length=1,
