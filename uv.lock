@@ -1440,7 +1440,7 @@ speedups = [
 
 [[package]]
 name = "hikari-lightbulb"
-version = "3.2.3"
+version = "3.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "async-timeout" },
@@ -1450,9 +1450,9 @@ dependencies = [
     { name = "linkd" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/db/0b/02ea547ed350cb8ae733afe5d77325b03cd488664daeb70b3e02e151b037/hikari_lightbulb-3.2.3.tar.gz", hash = "sha256:9db7747a93c0a1af7702a4acf078cc89afdee3a6914521609b4d7693b5244b91", size = 136755, upload-time = "2025-12-27T21:41:35.052Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ab/89/ce900e98e2ed625dba65846730581b7e1f9ae8d2187ec005a20f564f1f9f/hikari_lightbulb-3.2.4.tar.gz", hash = "sha256:725712dd2d367bb8d82cbe36106c54c12fcc4c9d87ede09e8e395f8495ce7cc5", size = 252627, upload-time = "2026-04-29T08:44:33.549Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/73/29/bd8b0b7b8475b02265a2862b43d2183f56e7cff36033852f86bd135bace7/hikari_lightbulb-3.2.3-py3-none-any.whl", hash = "sha256:b957e1cf804dbe3acd7b6127646e9ec2e5fe39d3d631dc4402f8dd2078057626", size = 105008, upload-time = "2025-12-27T21:41:33.451Z" },
+    { url = "https://files.pythonhosted.org/packages/32/3f/545d9dd852b024d59b9958e18c76af56c8fa36541261db0e6067142f7928/hikari_lightbulb-3.2.4-py3-none-any.whl", hash = "sha256:3e1a86b8f7425d756803352108148f34cab068d6c7338ed8d34437f5bf61ae1c", size = 104609, upload-time = "2026-04-29T08:44:31.278Z" },
 ]
 
 [[package]]
@@ -3557,7 +3557,7 @@ requires-dist = [
     { name = "fastnanoid", specifier = ">=0.4.3" },
     { name = "function-cooldowns", specifier = ">=2.2.0" },
     { name = "hikari", extras = ["speedups"], git = "https://github.com/mplatypus/hikari.git?rev=feature%2Finteraction-rebuild" },
-    { name = "hikari-lightbulb", specifier = ">=3.2.3" },
+    { name = "hikari-lightbulb", specifier = ">=3.2.4" },
     { name = "httpx-oauth", specifier = ">=0.16.1" },
     { name = "httpx-retries", specifier = ">=0.4.5" },
     { name = "humanize", specifier = ">=4.15.0" },
