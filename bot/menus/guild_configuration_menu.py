@@ -143,6 +143,38 @@ class GuildConfigurationMenus:
                     )
                 )
 
+        elif id_data == "send_suggestions_button":
+            channel = int(event_values[0])
+            await ctx.client.rest.create_message(
+                channel,
+                components=[
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.responses.sent_suggestions_button.description",
+                            ctx.interaction.locale,
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.PRIMARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.responses.sent_suggestions_button.button",
+                                    ctx.interaction.locale,
+                                ),
+                                custom_id="v4_suggest_button",
+                            ),
+                        ]
+                    ),
+                ],
+            )
+            return await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.responses.sent_suggestions_button",
+                    ctx.interaction.locale,
+                )
+            )
+
         elif id_data == "view_page_2":
             return await ctx.respond(
                 components=await cls.build_base_components_page_2(
@@ -154,7 +186,7 @@ class GuildConfigurationMenus:
             )
         elif id_data == "view_page_1":
             return await ctx.respond(
-                components=await cls.build_base_components_page_2(
+                components=await cls.build_base_components_page_1(
                     ctx=ctx,
                     localisations=localisations,
                     guild_config=guild_config,
@@ -565,8 +597,87 @@ class GuildConfigurationMenus:
                             ),
                         ]
                     ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.suggestions_via_button",
+                            ctx.interaction.locale,
+                        )
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.ChannelSelectMenuBuilder(
+                                custom_id=f"gcm:{link_id}:send_suggestions_button",
+                                channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ]
+                    ),
                 ]
             ),
+            hikari.impl.MessageActionRowBuilder(
+                components=[
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.PRIMARY,
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.responses.pagination.view_next",
+                            ctx.interaction.locale,
+                        ),
+                        custom_id=f"gcm:{link_id}:view_page_2",
+                    ),
+                ]
+            ),
+            hikari.impl.MessageActionRowBuilder(
+                components=[
+                    hikari.impl.LinkButtonBuilder(
+                        url="https://docs.suggestions.gg/docs/configuration",
+                        label="View the documentation here",
+                    ),
+                ]
+            ),
+        ]
+        # Add suggestions container
+
+        # Add log container
+
+        # Pagination
+
+        # Docs for extra info
+
+        return components
+
+    @classmethod
+    async def build_base_components_page_2(
+        cls,
+        *,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        guild_config: GuildConfigs,
+        localisations: Localisation,
+        link_id: str | None = None,
+    ) -> Sequence[special_endpoints.ComponentBuilder]:
+        if link_id is None:
+            link_id = await utils.otel.generate_trace_link_state()
+
+        components: list[special_endpoints.ComponentBuilder] = [
+            hikari.impl.TextDisplayComponentBuilder(
+                content=localisations.get_localized_string(
+                    "menus.guild_configuration.base_menu.overall_description",
+                    ctx.interaction.locale,
+                )
+            )
+        ]
+
+        # Add queue container
+        no_queue_is_default = not guild_config.uses_suggestion_queue
+        virtual_is_default = False
+        channel_is_default = False
+        if guild_config.uses_suggestion_queue:
+            if guild_config.virtual_suggestions_queue:
+                virtual_is_default = True
+            else:
+                channel_is_default = True
+
+        components.append(
             hikari.impl.ContainerComponentBuilder(
                 components=[
                     hikari.impl.TextDisplayComponentBuilder(
@@ -644,68 +755,7 @@ class GuildConfigurationMenus:
                     ),
                 ]
             ),
-            hikari.impl.MessageActionRowBuilder(
-                components=[
-                    hikari.impl.InteractiveButtonBuilder(
-                        style=hikari.ButtonStyle.PRIMARY,
-                        label=localisations.get_localized_string(
-                            "menus.guild_configuration.responses.pagination.view_next",
-                            ctx.interaction.locale,
-                        ),
-                        custom_id=f"gcm:{link_id}:view_page_2",
-                    ),
-                ]
-            ),
-            hikari.impl.MessageActionRowBuilder(
-                components=[
-                    hikari.impl.LinkButtonBuilder(
-                        url="https://docs.suggestions.gg/docs/configuration",
-                        label="View the documentation here",
-                    ),
-                ]
-            ),
-        ]
-        # Add suggestions container
-
-        # Add log container
-
-        # Pagination
-
-        # Docs for extra info
-
-        return components
-
-    @classmethod
-    async def build_base_components_page_2(
-        cls,
-        *,
-        ctx: lightbulb.Context | lightbulb.components.MenuContext,
-        guild_config: GuildConfigs,
-        localisations: Localisation,
-        link_id: str | None = None,
-    ) -> Sequence[special_endpoints.ComponentBuilder]:
-        if link_id is None:
-            link_id = await utils.otel.generate_trace_link_state()
-
-        components: list[special_endpoints.ComponentBuilder] = [
-            hikari.impl.TextDisplayComponentBuilder(
-                content=localisations.get_localized_string(
-                    "menus.guild_configuration.base_menu.overall_description",
-                    ctx.interaction.locale,
-                )
-            )
-        ]
-
-        # Add queue container
-        no_queue_is_default = not guild_config.uses_suggestion_queue
-        virtual_is_default = False
-        channel_is_default = False
-        if guild_config.uses_suggestion_queue:
-            if guild_config.virtual_suggestions_queue:
-                virtual_is_default = True
-            else:
-                channel_is_default = True
-
+        )
         components.append(
             hikari.impl.ContainerComponentBuilder(
                 components=[

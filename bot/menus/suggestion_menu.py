@@ -32,6 +32,25 @@ logger = logging.getLogger(__name__)
 
 class SuggestionMenu:
     @classmethod
+    async def handle_embedded_button(
+        cls,
+        ctx: lightbulb.components.MenuContext,
+        guild_config: GuildConfigs,
+        localisations: Localisation,
+    ):
+        components = await cls.build_suggest_modal(
+            guild_config=guild_config, localisations=localisations, ctx=ctx
+        )
+        link_id: str = await utils.otel.generate_trace_link_state()
+        await ctx.interaction.create_modal_response(
+            localisations.get_localized_string(
+                "commands.suggest.responses.menu_title", ctx.interaction.locale
+            ),
+            f"suggest_modal:{link_id}",
+            components=components,
+        )
+
+    @classmethod
     async def handle_vote(
         cls,
         sid: str,
@@ -586,7 +605,7 @@ class SuggestionMenu:
     async def build_suggest_modal(
         cls,
         *,
-        ctx: lightbulb.Context,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
         guild_config: GuildConfigs,
         localisations: Localisation,
     ):

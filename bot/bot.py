@@ -93,9 +93,11 @@ async def create_bot(
         component_key = f"{custom_id} modal"
         if custom_id.startswith("suggest_modal"):
             component_key = "suggestion modal"
-            otel_ctx = await utils.otel.get_context_from_link_state(
-                custom_id.split(":", maxsplit=1)[1]
-            )
+            link_id = custom_id.split(":", maxsplit=1)[1]
+            if link_id is not None and link_id:
+                otel_ctx = await utils.otel.get_context_from_link_state(
+                    custom_id.split(":", maxsplit=1)[1]
+                )
 
         with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
             span.set_attribute("interaction.user.id", ctx.user.id)
@@ -151,6 +153,9 @@ async def create_bot(
             _, link_id, setting = custom_id.split(":", maxsplit=2)
             component_key = f"editing guild setting '{setting}'"
             otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+
+        elif custom_id.startswith("v4_suggest_button"):
+            component_key = "creating suggestion from button"
 
         elif custom_id.startswith("queue_approve") or custom_id.startswith(
             "queue_approve"
@@ -231,6 +236,14 @@ async def create_bot(
                     event=event,
                     guild_config=guild_config,
                     link_id=link_id,
+                )
+
+            elif custom_id.startswith("v4_suggest_button"):
+                guild_config = await configs.ensure_guild_config(ctx.guild_id)
+                await SuggestionMenu.handle_embedded_button(
+                    ctx=ctx,
+                    localisations=constants.LOCALISATIONS,
+                    guild_config=guild_config,
                 )
 
             elif custom_id.startswith("v4_queue:"):
