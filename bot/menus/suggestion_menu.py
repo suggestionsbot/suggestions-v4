@@ -5,8 +5,15 @@ import logging
 import typing
 from typing import cast
 
+import commons
 import hikari
 import lightbulb
+from hikari.interactions.interaction_components import (
+    LabelInteractionComponent,
+    TextInputInteractionComponent,
+    FileUploadInteractionComponent,
+    TextSelectMenuInteractionComponent,
+)
 
 import shared.utils
 from bot import constants, utils
@@ -175,7 +182,7 @@ class SuggestionMenu:
     @classmethod
     async def handle_interaction(
         cls,
-        response_fields: list[hikari.LabelComponent],
+        response_fields: list[LabelInteractionComponent],
         *,
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
@@ -190,20 +197,22 @@ class SuggestionMenu:
             anonymously: bool = False
             for entry in response_fields:
                 if entry.component.custom_id == "suggestion":
-                    entry.component = cast(hikari.TextInputComponent, entry.component)
+                    entry.component = cast(
+                        TextInputInteractionComponent,
+                        entry.component,
+                    )
                     suggestion_content = entry.component.value
 
                 elif entry.component.custom_id == "anonymously":
                     entry.component = cast(
-                        hikari.TextSelectMenuComponent, entry.component
+                        FileUploadInteractionComponent, entry.component
                     )
-                    anonymously = False
-                    # anonymously = commons.value_to_bool(  # TODO Fix once upstream does
-                    #     entry.component.options[0]
-                    # )
+                    anonymously = commons.value_to_bool(entry.component.values[0])
 
                 elif entry.component.custom_id == "files":
-                    entry.component = cast(hikari.FileUploadComponent, entry.component)
+                    entry.component = cast(
+                        TextSelectMenuInteractionComponent, entry.component
+                    )
                     if guild_config.can_have_images_in_suggestions is False:
                         await ctx.respond(
                             localisations.get_localized_string(
@@ -624,6 +633,7 @@ class SuggestionMenu:
                     required=True,
                     min_length=1,
                     max_length=constants.MAX_CONTENT_LENGTH,
+                    label="suggestion",
                 ),
             ),
         ]

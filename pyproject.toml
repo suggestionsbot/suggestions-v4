@@ -57,4 +57,4 @@ line-length = 90
 profile = "black"
 
 [tool.uv.sources]
-hikari = { git = "https://github.com/mplatypus/hikari.git", rev = "feature/modals-v2" }
+hikari = { git = "https://github.com/mplatypus/hikari.git", rev = "feature/interaction-rebuild" }
