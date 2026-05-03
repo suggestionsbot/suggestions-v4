@@ -25,6 +25,7 @@ class PossibleMessageAddons(str, Enum):
     SUGGESTION_RESOLUTION_NOTIFICATIONS = (
         "message_addons.premium.notif_on_suggestion_resolution"
     )
+    LEGACY_RESOLUTION_COMMANDS = "message_addons.legacy_resolution_commands"
 
 
 GLOBAL_MESSAGES: list[PossibleMessageAddons] = [

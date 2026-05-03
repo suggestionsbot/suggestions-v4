@@ -1,3 +1,4 @@
+import io
 import logging
 from typing import cast
 
@@ -6,6 +7,7 @@ import lightbulb
 
 import shared
 from bot.localisation import Localisation
+from bot.tables import MessageAddons, PossibleMessageAddons
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
@@ -27,6 +29,7 @@ async def resolve_suggestion(
     guild_config: GuildConfigs,
     user_config: UserConfigs,
     localisations: Localisation,
+    apply_message_addon: bool = False,
 ) -> None:
     logger.debug(
         "Attempting to resolve suggestion %s",
@@ -84,13 +87,25 @@ async def resolve_suggestion(
         await suggestion.save()
         await suggestion.queue_message_edit(exclude_buttons=True, as_resolved=True)
         await suggestion.notify_users_of_resolution()
-        await ctx.respond(
+        content = io.StringIO()
+        content.write(
             localisations.get_localized_string(
                 "commands.resolve.responses.keep_logs_edit_soon",
                 ctx.interaction.locale,
                 extras={"SID": suggestion.sID},
             )
         )
+        if apply_message_addon:
+            if (
+                ma := await MessageAddons.get_message(
+                    user_config,
+                    hint=PossibleMessageAddons.LEGACY_RESOLUTION_COMMANDS,
+                )
+            ) is not None:
+                content.write("\n\n")
+                content.write(await ma.as_string())
+
+        await ctx.respond(content.getvalue())
         return None
 
     # Need to delete from the original channel and move to new one
@@ -159,13 +174,25 @@ async def resolve_suggestion(
     suggestion.message_id = log_message.id
     await suggestion.save()
     await suggestion.notify_users_of_resolution()
-    await ctx.respond(
+    content = io.StringIO()
+    content.write(
         localisations.get_localized_string(
             "commands.resolve.responses.resolved_immediately",
             ctx.interaction.locale,
             extras={"SID": suggestion.sID, "JUMP": suggestion.message_jump_link},
         )
     )
+    if apply_message_addon:
+        if (
+            ma := await MessageAddons.get_message(
+                user_config,
+                hint=PossibleMessageAddons.LEGACY_RESOLUTION_COMMANDS,
+            )
+        ) is not None:
+            content.write("\n\n")
+            content.write(await ma.as_string())
+
+    await ctx.respond(content.getvalue())
     return None
 
 
@@ -323,6 +350,7 @@ class ApproveCmd(
                 guild_config,
                 user_config,
                 localisations,
+                apply_message_addon=True,
             )
             return
 
@@ -386,6 +414,7 @@ class RejectCmd(
                 guild_config,
                 user_config,
                 localisations,
+                apply_message_addon=True,
             )
             return
 
