@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 load_dotenv()
 
 VERSION = "4.0"
-MAX_CONTENT_LENGTH = 1000
+MAX_CONTENT_LENGTH = 2000
 ERROR_COLOR = Color.of((214, 48, 49))
 REJECTED_COLOR = Color.of((207, 0, 15))
 APPROVED_COLOR = Color.of((0, 230, 64))
@@ -37,10 +37,12 @@ LOADED_AT = datetime.datetime.now(datetime.timezone.utc)  # Uptime calc
 LOCALISATIONS = Localisation(
     base_path=Path("bot"),
 )
-PAGINATOR_OBJECTS: TimedCache[str, QueuedSuggestionsPaginator|ViewVotersPaginator] = TimedCache(
-    global_ttl=timedelta(minutes=15),
-    lazy_eviction=False,
-    ttl_from_last_access=True,
+PAGINATOR_OBJECTS: TimedCache[str, QueuedSuggestionsPaginator | ViewVotersPaginator] = (
+    TimedCache(
+        global_ttl=timedelta(minutes=15),
+        lazy_eviction=False,
+        ttl_from_last_access=True,
+    )
 )
 CONFIGURE_GROUP = lightbulb.Group(
     name="commands.configure.name",
