@@ -15,6 +15,7 @@ from bot.menus import (
     SuggestionsQueueMenu,
     SuggestionsQueueViewerMenu,
 )
+from bot.tables import InternalErrors
 from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
 from web import constants as t_constants
@@ -78,7 +79,19 @@ async def create_bot(
 
         with utils.start_error_span(exc.causes[0], "global error handler"):
             # TODO Implement
-            await ctx.respond("Something went wrong")
+            internal_error: InternalErrors = await InternalErrors.persist_error(
+                exc.causes[0],
+                command_name=ctx.command_data.name,
+                guild_id=ctx.guild_id,
+                user_id=ctx.user.id,
+            )
+            await ctx.respond(
+                embed=utils.error_embed(
+                    "Something went wrong.",
+                    "Please contact support if this keeps happening.",
+                    internal_error_reference=internal_error,
+                )
+            )
 
         raise exc
         return False
@@ -280,7 +293,8 @@ async def create_bot(
                     embed=utils.error_embed(
                         "Unknown Event",
                         "Please contact support if this keeps happening "
-                        "and describe what you did before seeing this error.",
+                        "and describe what you did before seeing this error."
+                        f"\n\nComponent key: `{component_key}`",
                     ),
                     ephemeral=True,
                 )
