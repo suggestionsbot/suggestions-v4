@@ -137,6 +137,8 @@
   "menus.guild_configuration.responses.can_have_anonymous_suggestions.disabled": "I have disabled anonymous suggestions for this guild.",
   "menus.guild_configuration.responses.can_have_images_in_suggestions.enabled": "All new suggestions can include images.",
   "menus.guild_configuration.responses.can_have_images_in_suggestions.disabled": "All new suggestions cannot include images.",
+  "menus.guild_configuration.responses.generic_dm_messages_disabled.enabled": "The bot will DM users on actions such as new suggestions.",
+  "menus.guild_configuration.responses.generic_dm_messages_disabled.disabled": "The bot will not DM users on actions such as new suggestions.",
   "menus.guild_configuration.responses.pagination.view_next": "View next page of settings",
   "menus.guild_configuration.responses.pagination.view_previous": "View previous page of settings",
   "menus.guild_configuration.responses.primary_language": "I have changed the guilds primary language to $LANGUAGE",
