@@ -1,4 +1,5 @@
 import logging
+from typing import cast
 
 import hikari
 import lightbulb
@@ -97,9 +98,9 @@ async def notify_user_of_change(
 
 
 async def autocomplete_callback(ctx: lightbulb.AutocompleteContext[str]) -> None:
-    current_value: str = ctx.focused.value or ""
+    current_value: str = str(ctx.focused.value) or ""
     values_to_recommend = await shared.utils.get_sid_autocomplete_for_guild(
-        guild_id=ctx.interaction.guild_id,
+        guild_id=cast("int", ctx.interaction.guild_id),
         search=current_value,
         index="suggestion_sid_autocomplete_index",
     )
@@ -151,7 +152,7 @@ class NotesAddCmd(
         note = self.note.replace("\\n", "\n")
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
             self.suggestion_id,
-            ctx.guild_id,
+            cast("int", ctx.guild_id),
         )
         if suggestion is None:
             logger.debug(
@@ -178,7 +179,7 @@ class NotesAddCmd(
             return
 
         suggestion.moderator_note = note
-        suggestion.moderator_note_added_by = user_config
+        suggestion.moderator_note_added_by = user_config.user_id
         # All moderator note authors are public
         suggestion.moderator_note_added_by_display_text = (
             f"<@{ctx.user.id}>" if self.anonymously is False else "Anonymous"
@@ -235,7 +236,7 @@ class NotesRemoveCmd(
         )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
             self.suggestion_id,
-            ctx.guild_id,
+            cast("int", ctx.guild_id),
         )
         if suggestion is None:
             logger.debug(

@@ -39,6 +39,10 @@ class SuggestionVotes(Table, AuditMixin):
     def vote_type_enum(self) -> SuggestionsVoteTypeEnum:
         return SuggestionsVoteTypeEnum(self.vote_type)
 
+    @vote_type_enum.setter
+    def vote_type_enum(self, value: SuggestionsVoteTypeEnum) -> None:
+        self.vote_type = value.value
+
     @classmethod
     async def fetch_votes_for_suggestion(
         cls, suggestion, *, vote_type: SuggestionsVoteTypeEnum | None = None

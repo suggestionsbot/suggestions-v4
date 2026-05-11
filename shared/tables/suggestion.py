@@ -170,7 +170,7 @@ class Suggestions(Table, AuditMixin):
         return SuggestionStateEnum(self.state_raw)
 
     @state.setter
-    def state(self, value: SuggestionStateEnum):
+    def state(self, value: SuggestionStateEnum) -> None:
         self.state_raw = value.value
 
     @property
@@ -221,7 +221,7 @@ class Suggestions(Table, AuditMixin):
     @classmethod
     async def fetch_suggestion(
         cls, sID: str, guild_id: int, *, state: SuggestionStateEnum | None = None
-    ) -> typing.Self:
+    ) -> typing.Self | None:
         """Simple helper method to also ensure configurations are prefetched"""
         query = (
             cls.objects(

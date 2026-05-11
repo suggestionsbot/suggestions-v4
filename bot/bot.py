@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import cast, Literal
 
 import hikari
 import lightbulb
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 async def create_guild_config(ctx: lightbulb.Context) -> GuildConfigs:
-    return await configs.ensure_guild_config(ctx.guild_id)
+    return await configs.ensure_guild_config(cast("int", ctx.guild_id))
 
 
 async def create_user_config(ctx: lightbulb.Context) -> UserConfigs:
@@ -33,7 +34,7 @@ async def create_bot(  # noqa: PLR0915, C901
     token: str,
     *,
     log_conf: str | None = "INFO",
-) -> (hikari.GatewayBot, lightbulb.Client):
+) -> tuple[hikari.GatewayBot, lightbulb.Client]:
     intents = hikari.Intents.NONE
     intents |= hikari.Intents.GUILDS
     # We will cache guilds and see how big it gets
@@ -84,7 +85,7 @@ async def create_bot(  # noqa: PLR0915, C901
             internal_error: InternalErrors = await InternalErrors.persist_error(
                 exc.causes[0],
                 command_name=ctx.command_data.name,
-                guild_id=ctx.guild_id,
+                guild_id=cast("int", ctx.guild_id),
                 user_id=ctx.user.id,
             )
             await ctx.respond(
@@ -123,7 +124,7 @@ async def create_bot(  # noqa: PLR0915, C901
             if ctx.guild_id:
                 span.set_attribute("interaction.guild.id", ctx.guild_id)
 
-            guild_config = await configs.ensure_guild_config(ctx.guild_id)
+            guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
             user_config = await configs.ensure_user_config(ctx.user.id)
             await SuggestionMenu.handle_interaction(
                 event.interaction.components,
@@ -235,7 +236,9 @@ async def create_bot(  # noqa: PLR0915, C901
                 span.set_attribute("interaction.guild.id", ctx.guild_id)
 
             if custom_id.startswith("gcm"):
-                guild_config = await configs.ensure_guild_config(ctx.guild_id)
+                guild_config = await configs.ensure_guild_config(
+                    cast("int", ctx.guild_id)
+                )
                 _, link_id, setting = custom_id.split(":", maxsplit=2)
                 await GuildConfigurationMenus.handle_interaction(
                     setting,
@@ -255,7 +258,10 @@ async def create_bot(  # noqa: PLR0915, C901
             elif custom_id.startswith("v4_queue:"):
                 await SuggestionsQueueViewerMenu.handle_paginator_interaction(
                     queue_id=pid,
-                    action=action,
+                    action=cast(
+                        "Literal['back', 'next', 'stop', 'approve', 'reject']",
+                        action,
+                    ),
                     queued_suggestion_id=queued_suggestion_id,
                     ctx=ctx,
                     localisations=constants.LOCALISATIONS,
@@ -263,7 +269,9 @@ async def create_bot(  # noqa: PLR0915, C901
                 )
 
             elif component_key in ("queue approve", "queue reject"):
-                guild_config = await configs.ensure_guild_config(ctx.guild_id)
+                guild_config = await configs.ensure_guild_config(
+                    cast("int", ctx.guild_id)
+                )
                 await SuggestionsQueueMenu.handle_physical_interaction(
                     queued_suggestion_id,
                     to_approve,

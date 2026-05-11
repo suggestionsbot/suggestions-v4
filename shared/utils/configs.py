@@ -21,7 +21,7 @@ async def ensure_guild_config(guild_id: int) -> GuildConfigs:
 
 
 async def ensure_user_config(
-    user_id: int, *, locale: hikari.Locale = hikari.Locale.EN_GB
+    user_id: int, *, locale: hikari.Locale | str = hikari.Locale.EN_GB
 ) -> UserConfigs:
     uc: UserConfigs = await UserConfigs.objects().get_or_create(
         UserConfigs.user_id == user_id,

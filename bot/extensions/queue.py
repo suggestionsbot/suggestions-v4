@@ -73,7 +73,10 @@ class QueueInfoCmd(
 
         guild: hikari.Guild | None = ctx.interaction.get_guild()
         if guild is None:
-            guild: hikari.Guild = await ctx.interaction.fetch_guild()  # TODO cache
+            guild: hikari.RESTGuild | None = (
+                await ctx.interaction.fetch_guild()
+            )  # TODO cache
+            assert guild is not None
 
         embed = hikari.Embed(
             title=localisations.get_localized_string(
@@ -139,5 +142,7 @@ class QueueViewCmd(
             link_id=link_id,
         )
         PAGINATOR_OBJECTS.add_entry(pid, paginator)
-        await ctx.respond(components=await paginator.format_page())
+        await ctx.respond(
+            components=await paginator.format_page()  # ty:ignore[invalid-argument-type]
+        )
         return

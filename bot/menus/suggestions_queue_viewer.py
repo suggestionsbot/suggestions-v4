@@ -1,4 +1,4 @@
-from typing import Literal, TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING, cast
 
 import hikari
 import lightbulb
@@ -33,7 +33,7 @@ class SuggestionsQueueViewerMenu:
             user_id=event.interaction.user.id,
             locale=event.interaction.locale,
         )
-        guild_config = await configs.ensure_guild_config(ctx.guild_id)
+        guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         try:
             paginator = PAGINATOR_OBJECTS.get_entry(queue_id)
         except NonExistentEntry:

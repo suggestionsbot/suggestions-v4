@@ -133,7 +133,7 @@ class QueuedSuggestions(Table, AuditMixin):
     )
 
     @property
-    def is_physical(self):
+    def is_physical(self) -> bool:
         return self.channel_id is not None and self.message_id is not None
 
     @property
@@ -145,7 +145,7 @@ class QueuedSuggestions(Table, AuditMixin):
         return QueuedSuggestionStateEnum(self.state_raw)
 
     @state.setter
-    def state(self, value: QueuedSuggestionStateEnum):
+    def state(self, value: QueuedSuggestionStateEnum) -> None:
         self.state_raw = value.value
 
     @classmethod

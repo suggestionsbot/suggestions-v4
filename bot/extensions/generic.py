@@ -1,7 +1,7 @@
-import datetime
 import logging
 import sys
 
+import arrow
 import hikari
 import humanize
 import lightbulb
@@ -37,7 +37,7 @@ class InfoCmd(
     async def invoke(
         self,
         ctx: lightbulb.Context,
-        bot: hikari.RESTBot | hikari.GatewayBot,
+        bot: hikari.GatewayBot,
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         localisations: Localisation,
@@ -191,7 +191,7 @@ class StatsCmd(
                 "commands.stats.responses.shards",
                 user_config.primary_language,
             ),
-            value=TOTAL_SHARDS,
+            value=str(TOTAL_SHARDS),
             inline=True,
         )
         embed.add_field(
@@ -199,9 +199,7 @@ class StatsCmd(
                 "commands.stats.responses.uptime",
                 user_config.primary_language,
             ),
-            value=humanize.precisedelta(
-                LOADED_AT - datetime.datetime.now(tz=datetime.UTC),
-            ),
+            value=humanize.precisedelta(LOADED_AT - arrow.utcnow().datetime),
             inline=True,
         )
         embed.add_field(

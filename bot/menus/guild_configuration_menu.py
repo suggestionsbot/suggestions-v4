@@ -252,16 +252,16 @@ class GuildConfigurationMenus:
         *,
         ctx: lightbulb.components.MenuContext | lightbulb.Context,
         guild_config: GuildConfigs,
-    ) -> str:
+    ) -> str | hikari.UndefinedType:
         current_channel_placeholder: str | None = None
         if getattr(guild_config, field):
             cache_key = (
                 f"guilds:{ctx.guild_id}:channel_names:{getattr(guild_config, field)}"
             )
-            current_channel_placeholder: bytes | None = (
-                await t_constants.REDIS_CLIENT.get(cache_key)
-            )
-            if current_channel_placeholder is not None:
+            current_channel_placeholder = await t_constants.REDIS_CLIENT.get(cache_key)
+            if current_channel_placeholder is not None and isinstance(
+                current_channel_placeholder, bytes
+            ):
                 with contextlib.suppress(UnicodeDecodeError):
                     current_channel_placeholder: str = current_channel_placeholder.decode(
                         "utf-8",
@@ -281,7 +281,12 @@ class GuildConfigurationMenus:
                 except (hikari.errors.HikariError, UnicodeEncodeError):
                     pass
 
-        return current_channel_placeholder
+        return (
+            current_channel_placeholder
+            if current_channel_placeholder is not None
+            and isinstance(current_channel_placeholder, str)
+            else hikari.UNDEFINED
+        )
 
     @classmethod
     async def build_queue_components(

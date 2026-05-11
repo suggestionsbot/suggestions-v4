@@ -4,7 +4,7 @@ import contextlib
 import io
 import logging
 import typing
-from typing import cast
+from typing import cast, Sequence
 
 import commons
 import hikari
@@ -53,7 +53,7 @@ class SuggestionMenu:
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
     ) -> None:
-        guild_config = await configs.ensure_guild_config(ctx.guild_id)
+        guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         user_config = await configs.ensure_user_config(ctx.user.id)
         await CommandInvokes.create(
             user_config=user_config,
@@ -86,7 +86,7 @@ class SuggestionMenu:
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
-        guild_config = await configs.ensure_guild_config(ctx.guild_id)
+        guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         user_config = await configs.ensure_user_config(ctx.user.id)
         await CommandInvokes.create(
             user_config=user_config,
@@ -102,8 +102,7 @@ class SuggestionMenu:
         )
 
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-            sid,
-            ctx.guild_id,
+            sid, cast("int", ctx.guild_id)
         )
         if suggestion is None:
             logger.debug(
@@ -130,12 +129,13 @@ class SuggestionMenu:
             return None
 
         if suggestion.state != SuggestionStateEnum.PENDING:
-            return await ctx.respond(
+            await ctx.respond(
                 localisations.get_localized_string(
                     "values.suggestion_no_more_casting",
                     ctx.interaction.locale,
                 ),
             )
+            return
 
         vote_obj: SuggestionVotes = await SuggestionVotes.objects().get_or_create(
             Where(
@@ -156,9 +156,10 @@ class SuggestionMenu:
                 if vote == SuggestionsVoteTypeEnum.UpVote
                 else "values.suggestion_down_vote_already_voted"
             )
-            return await ctx.respond(
+            await ctx.respond(
                 localisations.get_localized_string(key, ctx.interaction.locale),
             )
+            return
 
         if vote_obj._was_created:
             # New vote
@@ -198,7 +199,7 @@ class SuggestionMenu:
                 },
             )
 
-        vote_obj.vote_type = vote
+        vote_obj.vote_type_enum = vote
         await vote_obj.save()
         await suggestion.queue_message_edit()
 
@@ -218,12 +219,12 @@ class SuggestionMenu:
             content.write(await ma.as_string())
 
         await ctx.respond(content.getvalue(), ephemeral=True)
-        return None
+        return
 
     @classmethod
     async def handle_interaction(  # noqa: PLR0912, C901
         cls,
-        response_fields: list[LabelInteractionComponent],
+        response_fields: Sequence[LabelInteractionComponent],
         *,
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
@@ -266,8 +267,11 @@ class SuggestionMenu:
                         return None
 
                     for item_id in entry.component.values:
+                        assert event.interaction.resolved is not None
                         item: hikari.messages.Attachment | None = (
-                            event.interaction.resolved.attachments.get(item_id)
+                            event.interaction.resolved.attachments.get(
+                                cast("hikari.Snowflake", item_id)
+                            )
                         )
                         if item is None:
                             logger.critical(
@@ -285,6 +289,7 @@ class SuggestionMenu:
                             ),
                         )
 
+            assert suggestion_content is not None
             if len(suggestion_content) > MAX_CONTENT_LENGTH:
                 await ctx.respond(
                     embed=utils.error_embed(
@@ -351,7 +356,7 @@ class SuggestionMenu:
                     internal_error: InternalErrors = await InternalErrors.persist_error(
                         exception,
                         command_name="suggest",
-                        guild_id=ctx.guild_id,
+                        guild_id=cast("int", ctx.guild_id),
                         user_id=ctx.user.id,
                     )
 
@@ -480,12 +485,12 @@ class SuggestionMenu:
         s.message_id = message.id
         await s.save()
         await shared.utils.cache_sid_in_autocomplete(
-            guild_id=ctx.guild_id,
+            guild_id=cast("int", ctx.guild_id),
             suggestion_id=s.sID,
             index="shared_sid_autocomplete_index",
         )
         await shared.utils.cache_sid_in_autocomplete(
-            guild_id=ctx.guild_id,
+            guild_id=cast("int", ctx.guild_id),
             suggestion_id=s.sID,
             index="suggestion_sid_autocomplete_index",
         )
@@ -621,12 +626,12 @@ class SuggestionMenu:
 
         await qs.save()
         await shared.utils.cache_sid_in_autocomplete(
-            guild_id=ctx.guild_id,
+            guild_id=cast("int", ctx.guild_id),
             suggestion_id=qs.sID,
             index="shared_sid_autocomplete_index",
         )
         await shared.utils.cache_sid_in_autocomplete(
-            guild_id=ctx.guild_id,
+            guild_id=cast("int", ctx.guild_id),
             suggestion_id=qs.sID,
             index="queue_sid_autocomplete_index",
         )

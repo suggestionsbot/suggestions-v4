@@ -1,3 +1,5 @@
+from typing import cast
+
 import hikari
 import lightbulb
 from piccolo.columns import Where, And
@@ -65,7 +67,7 @@ class SuggestionsQueueMenu:
             else:
                 queued_suggestion = await QueuedSuggestions.fetch_queued_suggestion(
                     queued_suggestion_id,
-                    event.interaction.guild_id,
+                    cast("int", event.interaction.guild_id),
                     lock_rows=True,
                 )
 
@@ -107,15 +109,14 @@ class SuggestionsQueueMenu:
         user_config: UserConfigs,
         event: hikari.ComponentInteractionCreateEvent,
     ) -> None:
-        queued_suggestion.state_raw = QueuedSuggestionStateEnum.APPROVED
+        queued_suggestion.state = QueuedSuggestionStateEnum.APPROVED
         queued_suggestion.resolved_at = utc_now()
-        queued_suggestion.resolved_by = event.interaction.user
+        queued_suggestion.resolved_by = event.interaction.user.id
         queued_suggestion.resolved_by_display_text = (
             f"<@{ctx.user.id}>"
             if guild_config.allow_anonymous_moderators is False
             else "Anonymous"
         )
-        queued_suggestion.still_in_queue = False
         suggestion: Suggestions | None = await SuggestionMenu.handle_suggestion(
             suggestion=queued_suggestion.suggestion,
             image_urls=queued_suggestion.image_urls,
@@ -152,15 +153,14 @@ class SuggestionsQueueMenu:
         event: hikari.ComponentInteractionCreateEvent,
     ) -> None:
         # needs rejecting
-        queued_suggestion.state_raw = QueuedSuggestionStateEnum.REJECTED
+        queued_suggestion.state = QueuedSuggestionStateEnum.REJECTED
         queued_suggestion.resolved_at = utc_now()
-        queued_suggestion.resolved_by = event.interaction.user
+        queued_suggestion.resolved_by = event.interaction.user.id
         queued_suggestion.resolved_by_display_text = (
             f"<@{ctx.user.id}>"
             if guild_config.allow_anonymous_moderators is False
             else "Anonymous"
         )
-        queued_suggestion.still_in_queue = False
         if queued_suggestion.is_physical:
             # Delete from channel
             try:

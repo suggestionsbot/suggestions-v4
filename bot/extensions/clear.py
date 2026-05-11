@@ -1,9 +1,10 @@
 import logging
+from typing import cast
 
 import hikari
 import lightbulb
 
-import shared
+import shared.utils
 from bot.localisation import Localisation
 from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import (
@@ -21,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 
 async def autocomplete_callback(ctx: lightbulb.AutocompleteContext[str]) -> None:
-    current_value: str = ctx.focused.value or ""
+    current_value: str = str(ctx.focused.value) or ""
     values_to_recommend = await shared.utils.get_sid_autocomplete_for_guild(
-        guild_id=ctx.interaction.guild_id,
+        guild_id=cast("int", ctx.interaction.guild_id),
         search=current_value,
         index="shared_sid_autocomplete_index",
     )

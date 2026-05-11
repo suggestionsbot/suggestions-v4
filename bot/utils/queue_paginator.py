@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import hikari
 
@@ -32,7 +32,7 @@ class QueuedSuggestionsPaginator:
     ) -> None:
         self._current_page_index = 0
         self._paged_data: list[str] = data
-        self._guild_id: int = ctx.guild_id
+        self._guild_id: int = cast("int", ctx.guild_id)
         self._rest = ctx.interaction.app.rest
         self._locale: hikari.Locale = locale
         self._pid: str = pid

@@ -43,7 +43,7 @@ class ErrorInformation(
             await ctx.respond("I'm sorry this command is only for Ethan.")
             return
 
-        error: InternalErrors = await InternalErrors.objects().get(
+        error: InternalErrors | None = await InternalErrors.objects().get(
             InternalErrors.id == self.error_id,
         )
         if error is None:

@@ -1,5 +1,6 @@
 import io
 import logging
+from typing import cast
 
 import hikari
 import lightbulb
@@ -41,7 +42,7 @@ def handle_suggestions_errors(func):  # noqa: ANN001, ANN201
                     internal_error: InternalErrors = await InternalErrors.persist_error(
                         exception,
                         command_name="suggest",
-                        guild_id=ctx.guild_id,
+                        guild_id=cast("int", ctx.guild_id),
                         user_id=ctx.user.id,
                     )
 

@@ -5,7 +5,7 @@ import datetime
 from datetime import timedelta
 from enum import IntEnum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import hikari
 import lightbulb
@@ -82,7 +82,7 @@ VIEW_GROUP = lightbulb.Group(
 
 
 async def user_cooldown_bucket(interaction: hikari.CommandInteraction) -> tuple[int, int]:
-    return interaction.user.id, interaction.guild_id
+    return cast("int", interaction.user.id), cast("int", interaction.guild_id)
 
 
 GLOBAL_COMMAND_COOLDOWN = Cooldown(
