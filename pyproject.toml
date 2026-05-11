@@ -94,7 +94,9 @@ ignore = [
     # black conflict
     'COM812',
     # asserts
-    'S101'
+    'S101',
+    # commented out code
+    'ERA001',
 ]
 
 

@@ -14,8 +14,6 @@ from hikari.interactions.interaction_components import (
     FileUploadInteractionComponent,  # noqa: TC002 # PR Means this may yet change
     TextSelectMenuInteractionComponent,  # noqa: TC002 # PR Means this may yet change
 )
-from piccolo.columns import Where, Column
-from piccolo.columns.operators import Equal
 
 import shared.utils
 from bot import constants, utils
@@ -126,7 +124,7 @@ class SuggestionMenu:
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         if suggestion.state != SuggestionStateEnum.PENDING:
             await ctx.respond(
@@ -137,70 +135,66 @@ class SuggestionMenu:
             )
             return
 
-        vote_obj: SuggestionVotes = await SuggestionVotes.objects().get_or_create(
-            Where(
-                cast("Column", cast("object", SuggestionVotes.suggestion)),
-                suggestion,
-                operator=Equal,
-            ),
-            defaults={  # noqa: PGH003 # type: ignore # This is just weird reference things
-                "suggestion": suggestion,
-                "vote_type": vote,
-                "user_id": ctx.user.id,
-            },
-        )
-        if not vote_obj._was_created and vote_obj.vote_type == vote.value:
-            # Trying to vote again for the same item
-            key = (
-                "values.suggestion_up_vote_already_voted"
-                if vote == SuggestionsVoteTypeEnum.UpVote
-                else "values.suggestion_down_vote_already_voted"
+        async with SuggestionVotes._meta.db.transaction():
+            vote_obj, was_created = await SuggestionVotes.get_or_create(
+                suggestion=suggestion,
+                vote_type=vote,
+                user_id=ctx.user.id,
+                lock_rows=True,
             )
-            await ctx.respond(
-                localisations.get_localized_string(key, ctx.interaction.locale),
-            )
-            return
+            if not was_created and vote_obj.vote_type == vote.value:
+                # Trying to vote again for the same item
+                key = (
+                    "values.suggestion_up_vote_already_voted"
+                    if vote == SuggestionsVoteTypeEnum.UpVote
+                    else "values.suggestion_down_vote_already_voted"
+                )
+                await ctx.respond(
+                    localisations.get_localized_string(key, ctx.interaction.locale),
+                )
+                return
 
-        if vote_obj._was_created:
-            # New vote
-            key = (
-                "values.suggestion_up_vote_registered_vote"
-                if vote == SuggestionsVoteTypeEnum.UpVote
-                else "values.suggestion_down_vote_registered_vote"
-            )
-            logger.debug(
-                "Member voted on %s with %s",
-                suggestion.suggestion,
-                vote.value,
-                extra={
-                    "interaction.user.id": ctx.user.id,
-                    "interaction.user.username": ctx.user.display_name,
-                    "interaction.guild.id": ctx.guild_id,
-                    "suggestion.id": suggestion.sID,
-                },
-            )
+            if was_created:
+                # New vote
+                key = (
+                    "values.suggestion_up_vote_registered_vote"
+                    if vote == SuggestionsVoteTypeEnum.UpVote
+                    else "values.suggestion_down_vote_registered_vote"
+                )
+                logger.debug(
+                    "Member voted on %s with %s",
+                    suggestion.suggestion,
+                    vote.value,
+                    extra={
+                        "interaction.user.id": ctx.user.id,
+                        "interaction.user.username": ctx.user.display_name,
+                        "interaction.guild.id": ctx.guild_id,
+                        "suggestion.id": suggestion.sID,
+                    },
+                )
 
-        else:
-            # Vote has changed
-            key = (
-                "values.suggestion_down_vote_modified_vote"
-                if vote == SuggestionsVoteTypeEnum.DownVote
-                else "values.suggestion_up_vote_modified_vote"
-            )
-            logger.debug(
-                "Member modified their vote on %s to a %s",
-                suggestion.suggestion,
-                vote.value,
-                extra={
-                    "interaction.user.id": ctx.user.id,
-                    "interaction.user.username": ctx.user.display_name,
-                    "interaction.guild.id": ctx.guild_id,
-                    "suggestion.id": suggestion.sID,
-                },
-            )
+            else:
+                # Vote has changed
+                key = (
+                    "values.suggestion_down_vote_modified_vote"
+                    if vote == SuggestionsVoteTypeEnum.DownVote
+                    else "values.suggestion_up_vote_modified_vote"
+                )
+                logger.debug(
+                    "Member modified their vote on %s to a %s",
+                    suggestion.suggestion,
+                    vote.value,
+                    extra={
+                        "interaction.user.id": ctx.user.id,
+                        "interaction.user.username": ctx.user.display_name,
+                        "interaction.guild.id": ctx.guild_id,
+                        "suggestion.id": suggestion.sID,
+                    },
+                )
 
-        vote_obj.vote_type_enum = vote
-        await vote_obj.save()
+            vote_obj.vote_type_enum = vote
+            await vote_obj.save()
+
         await suggestion.queue_message_edit()
 
         content = io.StringIO()

@@ -14,6 +14,18 @@ Migration execution order:
 from '/home/skelmis/Code/Suggestions/suggestions_version_4/migrations/votes.csv'
 with (FORMAT csv)"` - roughly 5-7 minutes
 11. Recreate indexes
+```sql
+
+create index suggestion_votes_suggestion_index
+    on public.suggestion_votes (suggestion);
+
+create index suggestion_votes_user_id_index
+    on public.suggestion_votes (user_id);
+
+create index suggestion_votes_suggestion_user_id_index
+    on public.suggestion_votes (suggestion, user_id);
+
+```
 
 ```sql
 \copy suggestion_votes (created_at, last_modified_at, suggestion, user_id, vote_type)

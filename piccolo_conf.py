@@ -15,6 +15,8 @@ DB = PostgresEngine(
         "host": os.environ["POSTGRES_HOST"],
         "port": int(os.environ["POSTGRES_PORT"]),
     },
+    # log_queries=True,
+    # log_responses=True,
 )
 
 APP_REGISTRY = AppRegistry(
