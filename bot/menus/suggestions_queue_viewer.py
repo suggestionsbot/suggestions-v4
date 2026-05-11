@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 
 import hikari
 import lightbulb
@@ -8,10 +8,12 @@ from bot import utils
 from bot.constants import PAGINATOR_OBJECTS
 from bot.localisation import Localisation
 from bot.menus import SuggestionsQueueMenu
-from shared.tables import (
-    UserConfigs,
-)
 from shared.utils import configs
+
+if TYPE_CHECKING:
+    from shared.tables import (
+        UserConfigs,
+    )
 
 
 class SuggestionsQueueViewerMenu:
@@ -25,10 +27,11 @@ class SuggestionsQueueViewerMenu:
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
         event: hikari.ComponentInteractionCreateEvent,
-    ):
+    ) -> None:
         await ctx.defer(ephemeral=True)
         user_config: UserConfigs = await configs.ensure_user_config(
-            user_id=event.interaction.user.id, locale=event.interaction.locale
+            user_id=event.interaction.user.id,
+            locale=event.interaction.locale,
         )
         guild_config = await configs.ensure_guild_config(ctx.guild_id)
         try:
@@ -38,7 +41,7 @@ class SuggestionsQueueViewerMenu:
                 localisations.get_localized_string(
                     "menus.queue_paginator.responses.expired",
                     user_config.primary_language,
-                )
+                ),
             )
             return
 
@@ -49,39 +52,39 @@ class SuggestionsQueueViewerMenu:
                 localisations.get_localized_string(
                     "menus.queue_paginator.responses.back",
                     user_config.primary_language,
-                )
+                ),
             )
             return
 
-        elif action == "next":
+        if action == "next":
             paginator.current_page += 1
             await paginator.update_message_with_current_page()
             await ctx.respond(
                 localisations.get_localized_string(
                     "menus.queue_paginator.responses.next",
                     user_config.primary_language,
-                )
+                ),
             )
             return
 
-        elif action == "stop":
+        if action == "stop":
             PAGINATOR_OBJECTS.delete_entry(queue_id)
             await paginator.stop_paginating()
             await ctx.respond(
                 localisations.get_localized_string(
                     "menus.queue_paginator.responses.cancelled",
                     user_config.primary_language,
-                )
+                ),
             )
             return
 
-        elif action == "approve":
+        if action == "approve":
             if queued_suggestion_id not in paginator.pages:
                 await ctx.respond(
                     localisations.get_localized_string(
                         "menus.queue_paginator.responses.already_resolved",
                         user_config.primary_language,
-                    )
+                    ),
                 )
                 return
 
@@ -96,13 +99,13 @@ class SuggestionsQueueViewerMenu:
             )
             return
 
-        elif action == "reject":
+        if action == "reject":
             if queued_suggestion_id not in paginator.pages:
                 await ctx.respond(
                     localisations.get_localized_string(
                         "menus.queue_paginator.responses.already_resolved",
                         user_config.primary_language,
-                    )
+                    ),
                 )
                 return
 
@@ -119,6 +122,7 @@ class SuggestionsQueueViewerMenu:
 
         await ctx.respond(
             embed=utils.error_embed(
-                "Something went wrong.", "Please contact support if this keeps happening."
-            )
+                "Something went wrong.",
+                "Please contact support if this keeps happening.",
+            ),
         )

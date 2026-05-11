@@ -1,18 +1,18 @@
-class SuggestionException(Exception):
-    """Base exception class"""
+class SuggestionException(Exception):  # noqa: N818
+    """Base exception class."""
 
 
 class MessageTooLong(SuggestionException):
     """The content provided was too long."""
 
-    def __init__(self, text: str):
+    def __init__(self, text: str) -> None:
         self.message_text = text
 
 
 class MissingTranslation(SuggestionException):
     """The en_GB translation file is missing a translation."""
 
-    def __init__(self, missing_key: str):
+    def __init__(self, missing_key: str) -> None:
         self.missing_key = missing_key
 
 

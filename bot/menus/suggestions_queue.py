@@ -30,11 +30,12 @@ class SuggestionsQueueMenu:
         localisations: Localisation,
         guild_config: GuildConfigs,
         event: hikari.ComponentInteractionCreateEvent,
-    ):
+    ) -> None:
         await ctx.defer(ephemeral=True)
         async with UserConfigs._meta.db.transaction():
             user_config: UserConfigs = await configs.ensure_user_config(
-                user_id=event.interaction.user.id, locale=event.interaction.locale
+                user_id=event.interaction.user.id,
+                locale=event.interaction.locale,
             )
             if queued_suggestion_id is None:
                 # Legacy ids did not contain
@@ -57,13 +58,15 @@ class SuggestionsQueueMenu:
                                 event.interaction.message.id,
                                 operator=Equal,
                             ),
-                        )
+                        ),
                     )
                 )
 
             else:
                 queued_suggestion = await QueuedSuggestions.fetch_queued_suggestion(
-                    queued_suggestion_id, event.interaction.guild_id, lock_rows=True
+                    queued_suggestion_id,
+                    event.interaction.guild_id,
+                    lock_rows=True,
                 )
 
             await CommandInvokes.create(
@@ -103,7 +106,7 @@ class SuggestionsQueueMenu:
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         event: hikari.ComponentInteractionCreateEvent,
-    ):
+    ) -> None:
         queued_suggestion.state_raw = QueuedSuggestionStateEnum.APPROVED
         queued_suggestion.resolved_at = utc_now()
         queued_suggestion.resolved_by = event.interaction.user
@@ -132,7 +135,8 @@ class SuggestionsQueueMenu:
         await queued_suggestion.notify_users_of_resolution()
         await ctx.respond(
             localisations.get_localized_string(
-                "menus.queue.responses.approved", user_config.primary_language
+                "menus.queue.responses.approved",
+                user_config.primary_language,
             ),
         )
 
@@ -146,7 +150,7 @@ class SuggestionsQueueMenu:
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         event: hikari.ComponentInteractionCreateEvent,
-    ):
+    ) -> None:
         # needs rejecting
         queued_suggestion.state_raw = QueuedSuggestionStateEnum.REJECTED
         queued_suggestion.resolved_at = utc_now()
@@ -214,6 +218,7 @@ class SuggestionsQueueMenu:
         await queued_suggestion.notify_users_of_resolution()
         await ctx.respond(
             localisations.get_localized_string(
-                "menus.queue.responses.rejected", user_config.primary_language
+                "menus.queue.responses.rejected",
+                user_config.primary_language,
             ),
         )

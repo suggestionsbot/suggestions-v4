@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, Self
 
 from piccolo.columns import Timestamptz, Serial, Text, BigInt
@@ -8,7 +8,7 @@ from shared.tables import GuildConfigs, UserConfigs
 from shared.tables.mixins.audit import utc_now
 
 
-class CommandTypes(str, Enum):
+class CommandTypes(StrEnum):
     SLASH_COMMAND = "Slash Command"
     MESSAGE_COMMAND = "Message Command"
     BUTTON = "Button"
@@ -23,7 +23,9 @@ class CommandInvokes(Table):
 
     action = Text(help_text="The action ran", required=True)
     action_type = Text(
-        help_text="The type of action", choices=CommandTypes, required=True
+        help_text="The type of action",
+        choices=CommandTypes,
+        required=True,
     )
     created_at = Timestamptz(
         default=utc_now,
@@ -32,11 +34,15 @@ class CommandInvokes(Table):
     )
     user_locale = Text(help_text="The user locale used in the command")
     guild_locale = Text(
-        help_text="The guild locale used in the command", null=True, default=None
+        help_text="The guild locale used in the command",
+        null=True,
+        default=None,
     )
     user_id = BigInt(help_text="The user who triggered the command")
     guild_id = BigInt(
-        help_text="The guild where the command was triggered", null=True, default=None
+        help_text="The guild where the command was triggered",
+        null=True,
+        default=None,
     )
 
     @classmethod

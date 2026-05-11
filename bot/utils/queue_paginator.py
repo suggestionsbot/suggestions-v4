@@ -4,17 +4,17 @@ import logging
 from typing import TYPE_CHECKING
 
 import hikari
-import lightbulb
-from hikari.api import (
-    ContainerComponentBuilder,
-    MessageActionRowBuilder,
-    TextDisplayComponentBuilder,
-)
 
 from bot.constants import LOCALISATIONS
 from bot.exceptions import QueueImbalance
 
 if TYPE_CHECKING:
+    from hikari.api import (
+        ContainerComponentBuilder,
+        MessageActionRowBuilder,
+        TextDisplayComponentBuilder,
+    )
+    import lightbulb
     from shared.tables import QueuedSuggestions
 
 log = logging.getLogger(__name__)
@@ -24,12 +24,12 @@ class QueuedSuggestionsPaginator:
     def __init__(
         self,
         *,
-        data,
+        data: list[str],
         ctx: lightbulb.Context,
         locale: hikari.Locale,
         pid: str,
         link_id: str,
-    ):
+    ) -> None:
         self._current_page_index = 0
         self._paged_data: list[str] = data
         self._guild_id: int = ctx.guild_id
@@ -45,7 +45,7 @@ class QueuedSuggestionsPaginator:
         return self._current_page_index + 1
 
     @current_page.setter
-    def current_page(self, value) -> None:
+    def current_page(self, value: int) -> None:
         # Wrap around
         if value > self.total_pages:
             self._current_page_index = 0
@@ -63,7 +63,7 @@ class QueuedSuggestionsPaginator:
     def pages(self) -> list[str]:
         return self._paged_data
 
-    async def remove_current_page(self):
+    async def remove_current_page(self) -> None:
         wrap = self.current_page == self.total_pages
         self._paged_data.pop(self._current_page_index)
         if wrap:
@@ -83,16 +83,15 @@ class QueuedSuggestionsPaginator:
 
         else:
             await self.original_interaction.edit_initial_response(
-                components=await self.format_page()
+                components=await self.format_page(),
             )
-
-        return None
 
     async def get_current_queued_suggestion(self) -> QueuedSuggestions:
         from shared.tables import QueuedSuggestions, QueuedSuggestionStateEnum
 
         qs: QueuedSuggestions | None = await QueuedSuggestions.fetch_queued_suggestion(
-            self._paged_data[self._current_page_index], self._guild_id
+            self._paged_data[self._current_page_index],
+            self._guild_id,
         )
         if qs.state != QueuedSuggestionStateEnum.PENDING:
             raise QueueImbalance
@@ -132,7 +131,7 @@ class QueuedSuggestionsPaginator:
                         "menus.queue_paginator.responses.page.footer",
                         self._locale,
                         extras={"CURRENT": self.current_page, "TOTAL": self.total_pages},
-                    )
+                    ),
                 ),
             ]
             qsc = await suggestion.as_components(
@@ -162,18 +161,18 @@ class QueuedSuggestionsPaginator:
                                 emoji="\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f",
                                 custom_id=f"v4_queue:next:{self._pid}::{self._link_id}",
                             ),
-                        ]
+                        ],
                     ),
-                ]
+                ],
             )
             return components
 
-    async def update_message_with_current_page(self):
+    async def update_message_with_current_page(self) -> None:
         await self.original_interaction.edit_initial_response(
-            components=await self.format_page()
+            components=await self.format_page(),
         )
 
-    async def stop_paginating(self):
+    async def stop_paginating(self) -> None:
         await self.original_interaction.edit_initial_response(
             components=[
                 hikari.impl.TextDisplayComponentBuilder(

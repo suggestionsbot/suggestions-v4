@@ -1,6 +1,6 @@
 import random
 import typing
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import arrow
@@ -19,7 +19,7 @@ from shared.tables import UserConfigs
 from shared.tables.mixins.audit import utc_now
 
 
-class PossibleMessageAddons(str, Enum):
+class PossibleMessageAddons(StrEnum):
     READ_CHANGELOG = "message_addons.read_changelog"
     PRODUCT_UPDATES = "message_addons.product_updates"
     SUGGESTION_RESOLUTION_NOTIFICATIONS = (
@@ -52,10 +52,13 @@ class MessageAddons(Table):
         null=False,
     )
     user = ForeignKey(
-        LazyTableReference("UserConfigs", module_path="shared.tables"), index=True
+        LazyTableReference("UserConfigs", module_path="shared.tables"),
+        index=True,
     )
     shown_at = Timestamptz(
-        default=utc_now, help_text="When this message was shown to the user", index=True
+        default=utc_now,
+        help_text="When this message was shown to the user",
+        index=True,
     )
 
     @property
@@ -64,7 +67,7 @@ class MessageAddons(Table):
 
     @classmethod
     async def has_been_shown_message_recently(cls, user: UserConfigs) -> bool:
-        """Has the user been shown a message recently already"""
+        """Has the user been shown a message recently already."""
         recent_period = arrow.get(utc_now()).shift(months=-2).datetime
         return (
             await MessageAddons.exists()
@@ -75,9 +78,12 @@ class MessageAddons(Table):
 
     @classmethod
     async def get_message(
-        cls, user: UserConfigs, *, hint: PossibleMessageAddons | None = None
+        cls,
+        user: UserConfigs,
+        *,
+        hint: PossibleMessageAddons | None = None,
     ) -> typing.Self | None:
-        """Get a message to add if the user hasn't seen one recently"""
+        """Get a message to add if the user hasn't seen one recently."""
         if await cls.has_been_shown_message_recently(user):
             return None
 
@@ -86,7 +92,7 @@ class MessageAddons(Table):
 
         # We can create one for usage
         if hint is None:
-            hint = random.choice(GLOBAL_MESSAGES)
+            hint = random.choice(GLOBAL_MESSAGES)  # Not security related # noqa: S311
 
         # For the first couple of months we are locking it to this
         # TODO Change later
@@ -97,11 +103,12 @@ class MessageAddons(Table):
         return ma
 
     async def as_string(self) -> str:
-        """Returns the class as usable strings for responses"""
+        """Returns the class as usable strings for responses."""
         return LOCALISATIONS.get_localized_string(
-            self.shown_message, self.user.primary_language
+            self.shown_message,
+            self.user.primary_language,
         )
 
-    async def as_components(self):
-        """Returns the class as usable components for responses"""
-        return (hikari.impl.TextDisplayComponentBuilder(content=await self.as_string()),)
+    async def as_components(self) -> hikari.impl.TextDisplayComponentBuilder:
+        """Returns the class as usable components for responses."""
+        return hikari.impl.TextDisplayComponentBuilder(content=await self.as_string())

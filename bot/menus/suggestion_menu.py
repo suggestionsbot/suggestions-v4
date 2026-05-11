@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import io
 import logging
 import typing
@@ -7,12 +8,11 @@ from typing import cast
 
 import commons
 import hikari
-import lightbulb
 from hikari.interactions.interaction_components import (
-    LabelInteractionComponent,
-    TextInputInteractionComponent,
-    FileUploadInteractionComponent,
-    TextSelectMenuInteractionComponent,
+    LabelInteractionComponent,  # noqa: TC002 # PR Means this may yet change
+    TextInputInteractionComponent,  # noqa: TC002 # PR Means this may yet change
+    FileUploadInteractionComponent,  # noqa: TC002 # PR Means this may yet change
+    TextSelectMenuInteractionComponent,  # noqa: TC002 # PR Means this may yet change
 )
 from piccolo.columns import Where, Column
 from piccolo.columns.operators import Equal
@@ -21,7 +21,6 @@ import shared.utils
 from bot import constants, utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MissingQueueChannel, MessageTooLong
-from bot.localisation import Localisation
 from bot.tables import (
     InternalErrors,
     MessageAddons,
@@ -29,13 +28,15 @@ from bot.tables import (
     CommandInvokes,
     CommandTypes,
 )
-from shared.tables import (
-    GuildConfigs,
-    UserConfigs,
-)
 from shared.utils import r2, configs
 
 if typing.TYPE_CHECKING:
+    import lightbulb
+    from bot.localisation import Localisation
+    from shared.tables import (
+        GuildConfigs,
+        UserConfigs,
+    )
     from shared.tables import (
         Suggestions,
         SuggestionVotes,
@@ -51,7 +52,7 @@ class SuggestionMenu:
         cls,
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
-    ):
+    ) -> None:
         guild_config = await configs.ensure_guild_config(ctx.guild_id)
         user_config = await configs.ensure_user_config(ctx.user.id)
         await CommandInvokes.create(
@@ -61,12 +62,15 @@ class SuggestionMenu:
             command_type=CommandTypes.BUTTON,
         )
         components = await cls.build_suggest_modal(
-            guild_config=guild_config, localisations=localisations, ctx=ctx
+            guild_config=guild_config,
+            localisations=localisations,
+            ctx=ctx,
         )
         link_id: str = await utils.otel.generate_trace_link_state()
         await ctx.interaction.create_modal_response(
             localisations.get_localized_string(
-                "commands.suggest.responses.menu_title", ctx.interaction.locale
+                "commands.suggest.responses.menu_title",
+                ctx.interaction.locale,
             ),
             f"suggest_modal:{link_id}",
             components=components,
@@ -80,7 +84,7 @@ class SuggestionMenu:
         *,
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
-    ):
+    ) -> None:
         await ctx.defer(ephemeral=True)
         guild_config = await configs.ensure_guild_config(ctx.guild_id)
         user_config = await configs.ensure_user_config(ctx.user.id)
@@ -98,7 +102,8 @@ class SuggestionMenu:
         )
 
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-            sid, ctx.guild_id
+            sid,
+            ctx.guild_id,
         )
         if suggestion is None:
             logger.debug(
@@ -109,32 +114,36 @@ class SuggestionMenu:
                     "interaction.author.global_name": ctx.user.global_name,
                 },
             )
-            return await ctx.respond(
+            await ctx.respond(
                 embed=utils.error_embed(
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.title", ctx.interaction.locale
+                        "menus.suggestion.not_found.title",
+                        ctx.interaction.locale,
                     ),
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.description", ctx.interaction.locale
+                        "menus.suggestion.not_found.description",
+                        ctx.interaction.locale,
                     ),
                 ),
                 ephemeral=True,
             )
+            return None
 
         if suggestion.state != SuggestionStateEnum.PENDING:
             return await ctx.respond(
                 localisations.get_localized_string(
-                    "values.suggestion_no_more_casting", ctx.interaction.locale
-                )
+                    "values.suggestion_no_more_casting",
+                    ctx.interaction.locale,
+                ),
             )
 
         vote_obj: SuggestionVotes = await SuggestionVotes.objects().get_or_create(
             Where(
-                cast(Column, cast(object, SuggestionVotes.suggestion)),
+                cast("Column", cast("object", SuggestionVotes.suggestion)),
                 suggestion,
                 operator=Equal,
             ),
-            defaults={  # type: ignore # This is just weird reference things
+            defaults={  # noqa: PGH003 # type: ignore # This is just weird reference things
                 "suggestion": suggestion,
                 "vote_type": vote,
                 "user_id": ctx.user.id,
@@ -148,7 +157,7 @@ class SuggestionMenu:
                 else "values.suggestion_down_vote_already_voted"
             )
             return await ctx.respond(
-                localisations.get_localized_string(key, ctx.interaction.locale)
+                localisations.get_localized_string(key, ctx.interaction.locale),
             )
 
         if vote_obj._was_created:
@@ -159,7 +168,9 @@ class SuggestionMenu:
                 else "values.suggestion_down_vote_registered_vote"
             )
             logger.debug(
-                f"Member voted on {suggestion.suggestion} with {vote.value}",
+                "Member voted on %s with %s",
+                suggestion.suggestion,
+                vote.value,
                 extra={
                     "interaction.user.id": ctx.user.id,
                     "interaction.user.username": ctx.user.display_name,
@@ -176,8 +187,9 @@ class SuggestionMenu:
                 else "values.suggestion_up_vote_modified_vote"
             )
             logger.debug(
-                f"Member modified their vote on {suggestion.suggestion} "
-                f"to a {vote.value}",
+                "Member modified their vote on %s to a %s",
+                suggestion.suggestion,
+                vote.value,
                 extra={
                     "interaction.user.id": ctx.user.id,
                     "interaction.user.username": ctx.user.display_name,
@@ -193,7 +205,8 @@ class SuggestionMenu:
         content = io.StringIO()
         content.write(localisations.get_localized_string(key, ctx.interaction.locale))
         user_config: UserConfigs = await configs.ensure_user_config(
-            ctx.user.id, locale=ctx.interaction.locale
+            ctx.user.id,
+            locale=ctx.interaction.locale,
         )
         if (
             ma := await MessageAddons.get_message(
@@ -208,7 +221,7 @@ class SuggestionMenu:
         return None
 
     @classmethod
-    async def handle_interaction(
+    async def handle_interaction(  # noqa: PLR0912, C901
         cls,
         response_fields: list[LabelInteractionComponent],
         *,
@@ -217,7 +230,7 @@ class SuggestionMenu:
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         event: hikari.ModalInteractionCreateEvent,
-    ):
+    ) -> Suggestions | None:
         await ctx.defer(ephemeral=True)
         try:
             suggestion_content: str | None = None
@@ -226,27 +239,29 @@ class SuggestionMenu:
             for entry in response_fields:
                 if entry.component.custom_id == "suggestion":
                     entry.component = cast(
-                        TextInputInteractionComponent,
+                        "TextInputInteractionComponent",
                         entry.component,
                     )
                     suggestion_content = entry.component.value
 
                 elif entry.component.custom_id == "anonymously":
                     entry.component = cast(
-                        FileUploadInteractionComponent, entry.component
+                        "FileUploadInteractionComponent",
+                        entry.component,
                     )
                     anonymously = commons.value_to_bool(entry.component.values[0])
 
                 elif entry.component.custom_id == "files":
                     entry.component = cast(
-                        TextSelectMenuInteractionComponent, entry.component
+                        "TextSelectMenuInteractionComponent",
+                        entry.component,
                     )
                     if guild_config.can_have_images_in_suggestions is False:
                         await ctx.respond(
                             localisations.get_localized_string(
                                 "values.suggest.no_images_in_suggestions",
                                 ctx.interaction.locale,
-                            )
+                            ),
                         )
                         return None
 
@@ -256,7 +271,7 @@ class SuggestionMenu:
                         )
                         if item is None:
                             logger.critical(
-                                "failed to find an image in the resolved attachments"
+                                "failed to find an image in the resolved attachments",
                             )
                             continue
 
@@ -267,7 +282,7 @@ class SuggestionMenu:
                                 file_data=await item.read(),
                                 guild_id=guild_config.guild_id,
                                 user_id=user_config.user_id,
-                            )
+                            ),
                         )
 
             if len(suggestion_content) > MAX_CONTENT_LENGTH:
@@ -285,7 +300,8 @@ class SuggestionMenu:
                         error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
                     ),
                     attachment=hikari.files.Bytes(
-                        io.StringIO(suggestion_content), "content.txt"
+                        io.StringIO(suggestion_content),
+                        "content.txt",
                     ),
                 )
                 return None
@@ -296,8 +312,9 @@ class SuggestionMenu:
             ):
                 await ctx.respond(
                     localisations.get_localized_string(
-                        "values.suggest.no_anonymous_suggestions", ctx.interaction.locale
-                    )
+                        "values.suggest.no_anonymous_suggestions",
+                        ctx.interaction.locale,
+                    ),
                 )
                 return None
 
@@ -312,18 +329,17 @@ class SuggestionMenu:
                     localisations=localisations,
                 )
 
-            else:
-                return await cls.handle_suggestion(
-                    suggestion=suggestion_content,
-                    image_urls=image_urls,
-                    author_display_name=(
-                        f"<@{ctx.user.id}>" if anonymously is False else "Anonymous"
-                    ),
-                    ctx=ctx,
-                    guild_config=guild_config,
-                    user_config=user_config,
-                    localisations=localisations,
-                )
+            return await cls.handle_suggestion(
+                suggestion=suggestion_content,
+                image_urls=image_urls,
+                author_display_name=(
+                    f"<@{ctx.user.id}>" if anonymously is False else "Anonymous"
+                ),
+                ctx=ctx,
+                guild_config=guild_config,
+                user_config=user_config,
+                localisations=localisations,
+            )
 
         except Exception as exception:
             this_will_handle: tuple[type[Exception], ...] = (
@@ -355,12 +371,13 @@ class SuggestionMenu:
                                 internal_error_reference=internal_error,
                             ),
                             attachment=hikari.files.Bytes(
-                                io.StringIO(exception.message_text), "content.txt"
+                                io.StringIO(exception.message_text),
+                                "content.txt",
                             ),
                         )
                         return None
 
-                    elif isinstance(exception, MissingQueueChannel):
+                    if isinstance(exception, MissingQueueChannel):
                         await ctx.respond(
                             embed=utils.error_embed(
                                 localisations.get_localized_string(
@@ -392,7 +409,7 @@ class SuggestionMenu:
         localisations: Localisation,
         send_final_response: bool = True,
     ) -> Suggestions | None:
-        """Specific helper for handling suggestions"""
+        """Specific helper for handling suggestions."""
         bot = ctx.client.app
         from shared.tables import SuggestionStateEnum
         from shared.tables import Suggestions
@@ -426,7 +443,7 @@ class SuggestionMenu:
 
         try:
             channel = await bot.rest.fetch_channel(guild_config.suggestions_channel_id)
-            channel = cast(hikari.GuildTextChannel, channel)
+            channel = cast("hikari.GuildTextChannel", channel)
         except (hikari.ForbiddenError, hikari.NotFoundError):
             await ctx.respond(
                 embed=utils.error_embed(
@@ -476,7 +493,9 @@ class SuggestionMenu:
         if guild_config.threads_for_suggestions:
             try:
                 thread = await bot.rest.create_message_thread(
-                    channel, message, f"Thread for suggestion {s.sID}"
+                    channel,
+                    message,
+                    f"Thread for suggestion {s.sID}",
                 )
                 s.thread_id = thread.id
                 await s.save()
@@ -498,7 +517,8 @@ class SuggestionMenu:
                 return None
 
             if guild_config.ping_on_thread_creation and not s.is_anonymous:
-                try:
+                # I'd consider it 'fine' if the bot can't send this message
+                with contextlib.suppress(hikari.ForbiddenError, hikari.NotFoundError):
                     await thread.send(
                         localisations.get_localized_string(
                             "values.suggest.ping_author_in_thread",
@@ -507,9 +527,6 @@ class SuggestionMenu:
                         ),
                         user_mentions=True,
                     )
-                except (hikari.ForbiddenError, hikari.NotFoundError):
-                    # I'd consider it 'fine' if the bot can't send this message
-                    pass
 
         await s.notify_users_of_new_suggestion()
         if send_final_response:
@@ -524,7 +541,7 @@ class SuggestionMenu:
                         "CHANNEL": channel.mention,
                         "SID": s.sID,
                     },
-                )
+                ),
             )
             if (ma := await MessageAddons.get_message(user_config)) is not None:
                 content.write("\n\n\n")
@@ -545,8 +562,8 @@ class SuggestionMenu:
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         localisations: Localisation,
-    ):
-        """Specific helper for handling queued suggestions"""
+    ) -> None:
+        """Specific helper for handling queued suggestions."""
         bot = ctx.client.app
         from shared.tables import QueuedSuggestions
 
@@ -567,9 +584,9 @@ class SuggestionMenu:
 
             try:
                 channel = await bot.rest.fetch_channel(
-                    guild_config.queued_suggestion_channel_id
+                    guild_config.queued_suggestion_channel_id,
                 )
-                channel = cast(hikari.GuildTextChannel, channel)
+                channel = cast("hikari.GuildTextChannel", channel)
             except (hikari.ForbiddenError, hikari.NotFoundError):
                 await ctx.respond(
                     embed=utils.error_embed(
@@ -584,7 +601,7 @@ class SuggestionMenu:
                         error_code=ErrorCode.MISSING_PERMISSIONS_IN_QUEUE_CHANNEL,
                     ),
                 )
-                return None
+                return
 
             prefix = (
                 guild_config.premium.queued_suggestions_prefix
@@ -615,8 +632,9 @@ class SuggestionMenu:
         )
 
         logger.debug(
-            f"User {ctx.user.id} created new queued"
-            f" suggestion in guild {ctx.guild_id}",
+            "User %s created new queued suggestion in guild %s",
+            ctx.user.id,
+            ctx.guild_id,
             extra={
                 "interaction.user.id": ctx.user.id,
                 "interaction.guild.id": ctx.guild_id,
@@ -629,14 +647,14 @@ class SuggestionMenu:
                 "values.suggest.sent_to_queue",
                 ctx.interaction.locale,
                 guild_config=guild_config,
-            )
+            ),
         )
         if (ma := await MessageAddons.get_message(user_config)) is not None:
             content.write("\n\n\n")
             content.write(await ma.as_string())
 
         await ctx.respond(content.getvalue(), ephemeral=True)
-        return None
+        return
 
     @classmethod
     async def build_suggest_modal(
@@ -645,11 +663,12 @@ class SuggestionMenu:
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         guild_config: GuildConfigs,
         localisations: Localisation,
-    ):
+    ) -> list[hikari.impl.LabelComponentBuilder]:
         components = [
             hikari.impl.LabelComponentBuilder(
                 label=localisations.get_localized_string(
-                    "commands.suggest.options.suggestion.name", ctx.interaction.locale
+                    "commands.suggest.options.suggestion.name",
+                    ctx.interaction.locale,
                 ).capitalize(),
                 description=localisations.get_localized_string(
                     "commands.suggest.options.suggestion.description",
@@ -669,7 +688,8 @@ class SuggestionMenu:
             components.append(
                 hikari.impl.LabelComponentBuilder(
                     label=localisations.get_localized_string(
-                        "commands.suggest.options.image.name", ctx.interaction.locale
+                        "commands.suggest.options.image.name",
+                        ctx.interaction.locale,
                     ).capitalize(),
                     description=localisations.get_localized_string(
                         "commands.suggest.options.image.description",
@@ -681,7 +701,7 @@ class SuggestionMenu:
                         max_values=5,
                         is_required=False,
                     ),
-                )
+                ),
             )
 
         if guild_config.can_have_anonymous_suggestions:
@@ -719,7 +739,7 @@ class SuggestionMenu:
                         max_values=1,
                         is_required=False,
                     ),
-                )
+                ),
             )
 
         return components

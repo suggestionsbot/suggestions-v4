@@ -42,12 +42,13 @@ async def get_vote_data(
     *,
     suggestion: Suggestions,
     vote_type: SuggestionsVoteTypeEnum | None,
-    ctx,
-    localisations,
-    user_config,
+    ctx: lightbulb.Context,
+    localisations: Localisation,
+    user_config: UserConfigs,
 ) -> list[str] | None:
     votes = await SuggestionVotes.fetch_votes_for_suggestion(
-        suggestion, vote_type=vote_type
+        suggestion,
+        vote_type=vote_type,
     )
     if not votes:
         await ctx.respond(
@@ -75,7 +76,11 @@ async def get_vote_data(
 
 
 async def view_voters_for_suggestion(
-    *, suggestion: Suggestions, data: list[str], ctx, user_config: UserConfigs
+    *,
+    suggestion: Suggestions,
+    data: list[str],
+    ctx: lightbulb.Context,
+    user_config: UserConfigs,
 ) -> None:
     pid = generate_id()
     link_id = await utils.otel.generate_trace_link_state()
@@ -89,7 +94,6 @@ async def view_voters_for_suggestion(
     )
     PAGINATOR_OBJECTS.add_entry(pid, paginator)
     await ctx.respond(components=await paginator.format_page())
-    return None
 
 
 @VIEW_GROUP.register
@@ -113,23 +117,23 @@ class ViewVotersCmd(
         default=lightbulb.Choice(
             "commands.view.voters.options.filter.1.name",
             "All",
-            True,
+            localize=True,
         ),
         choices=[
             lightbulb.Choice(
                 "commands.view.voters.options.filter.1.name",
                 "All",
-                True,
+                localize=True,
             ),
             lightbulb.Choice(
                 "commands.view.voters.options.filter.2.name",
                 "Up",
-                True,
+                localize=True,
             ),
             lightbulb.Choice(
                 "commands.view.voters.options.filter.3.name",
                 "Down",
-                True,
+                localize=True,
             ),
         ],
     )
@@ -150,7 +154,8 @@ class ViewVotersCmd(
             command_type=CommandTypes.SLASH_COMMAND,
         )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-            self.suggestion_id, guild_config.guild_id
+            self.suggestion_id,
+            guild_config.guild_id,
         )
         if suggestion is None:
             await ctx.respond(
@@ -160,7 +165,7 @@ class ViewVotersCmd(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         vote_type = (
             SuggestionsVoteTypeEnum.UpVote
@@ -176,12 +181,15 @@ class ViewVotersCmd(
             localisations=localisations,
         )
         if data is None:
-            return None
+            return
 
         await view_voters_for_suggestion(
-            suggestion=suggestion, data=data, ctx=ctx, user_config=user_config
+            suggestion=suggestion,
+            data=data,
+            ctx=ctx,
+            user_config=user_config,
         )
-        return None
+        return
 
 
 class ViewVoterMessageCommand(
@@ -218,7 +226,7 @@ class ViewVoterMessageCommand(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         data = await get_vote_data(
             suggestion=suggestion,
@@ -228,12 +236,15 @@ class ViewVoterMessageCommand(
             localisations=localisations,
         )
         if data is None:
-            return None
+            return
 
         await view_voters_for_suggestion(
-            suggestion=suggestion, data=data, ctx=ctx, user_config=user_config
+            suggestion=suggestion,
+            data=data,
+            ctx=ctx,
+            user_config=user_config,
         )
-        return None
+        return
 
 
 class ViewUpVoterMessageCommand(
@@ -270,7 +281,7 @@ class ViewUpVoterMessageCommand(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         data = await get_vote_data(
             suggestion=suggestion,
@@ -280,12 +291,15 @@ class ViewUpVoterMessageCommand(
             localisations=localisations,
         )
         if data is None:
-            return None
+            return
 
         await view_voters_for_suggestion(
-            suggestion=suggestion, data=data, ctx=ctx, user_config=user_config
+            suggestion=suggestion,
+            data=data,
+            ctx=ctx,
+            user_config=user_config,
         )
-        return None
+        return
 
 
 class ViewDownVoterMessageCommand(
@@ -322,7 +336,7 @@ class ViewDownVoterMessageCommand(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         data = await get_vote_data(
             suggestion=suggestion,
@@ -332,9 +346,12 @@ class ViewDownVoterMessageCommand(
             localisations=localisations,
         )
         if data is None:
-            return None
+            return
 
         await view_voters_for_suggestion(
-            suggestion=suggestion, data=data, ctx=ctx, user_config=user_config
+            suggestion=suggestion,
+            data=data,
+            ctx=ctx,
+            user_config=user_config,
         )
-        return None
+        return

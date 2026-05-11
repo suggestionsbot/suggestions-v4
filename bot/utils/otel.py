@@ -18,8 +18,9 @@ IGNORABLE_EXCEPTION_TYPES: tuple[type[Exception], ...] = (
 
 
 @contextmanager
-def start_error_span(
-    base_exception, span_name: Literal["global error handler", "command error handler"]
+def start_error_span(  # noqa: ANN201 #I Dont know how to type this
+    base_exception: Exception,
+    span_name: Literal["global error handler", "command error handler"],
 ):
     with OTEL_TRACER.start_as_current_span(span_name) as child:
         child.set_attribute("error.name", base_exception.__class__.__name__)
@@ -27,12 +28,12 @@ def start_error_span(
             # all these we dont need to care about being logged
             # as we handle them enough for end users to
             # theoretically fix themselves
-            child.set_attribute("error.handled", True)
+            child.set_attribute("error.handled", value=True)
 
         else:
             # We want to propagate these as 'unhandled errors'
             # that should be taken a look at by a dev
-            child.set_attribute("error.handled", False)
+            child.set_attribute("error.handled", value=False)
             child.set_status(Status(StatusCode.ERROR))
             child.record_exception(base_exception)
 
@@ -44,7 +45,9 @@ async def generate_trace_link_state() -> str:
     data = {}
     constants.OTEL_PROPAGATOR.inject(data)
     await constants.REDIS_CLIENT.set(
-        f"trace_context:{link_id}", orjson.dumps(data), ex=timedelta(days=1)
+        f"trace_context:{link_id}",
+        orjson.dumps(data),
+        ex=timedelta(days=1),
     )
     return link_id
 

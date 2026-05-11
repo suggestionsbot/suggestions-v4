@@ -3,10 +3,10 @@ from .message_addon import MessageAddons, PossibleMessageAddons
 from .command_invoke import CommandTypes, CommandInvokes
 
 __all__ = [
-    "InternalErrors",
-    "PossibleMessageAddons",
-    "MessageAddons",
+    "CommandInvokes",
+    "CommandInvokes",
     "CommandTypes",
-    "CommandInvokes",
-    "CommandInvokes",
+    "InternalErrors",
+    "MessageAddons",
+    "PossibleMessageAddons",
 ]

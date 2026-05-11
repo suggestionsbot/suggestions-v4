@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class Localisation:
-    def __init__(self, base_path: Path = Path(".")):
+    def __init__(self, base_path: Path = Path()) -> None:
         self._file_to_locale: dict[Path, hikari.Locale] = {
             base_path / Path("locales/da.json"): hikari.Locale.DA,
             base_path / Path("locales/de.json"): hikari.Locale.DE,
@@ -30,7 +30,7 @@ class Localisation:
         }
         data: dict[hikari.Locale, dict[str, str]] = {}
         for k, v in self._file_to_locale.items():
-            with open(k.resolve(), "r", encoding="utf-8") as f:
+            with Path(k.resolve()).open(encoding="utf-8") as f:
                 as_dict = json.loads(f.read())
                 data[v] = as_dict
 
@@ -39,13 +39,13 @@ class Localisation:
     def get_locale(self, key: str, locale: hikari.Locale) -> str:
         try:
             return self.lightbulb_provider.localizations[locale][key]
-        except KeyError:
+        except KeyError as e:
             fallback_value = self.lightbulb_provider.localizations[
                 hikari.Locale.EN_GB
             ].get(key, None)
             if fallback_value is None:
-                logger.critical(f"Could not find base translation for {key}")
-                raise MissingTranslation(key)
+                logger.critical("Could not find base translation for %s", key)
+                raise MissingTranslation(key) from e
 
             return fallback_value
 
@@ -53,9 +53,9 @@ class Localisation:
     def inject_locale_values(
         content: str,
         *,
-        extras: dict = None,
+        extras: dict | None = None,
         guild_config: GuildConfigs | None = None,
-    ):
+    ) -> str:
         base_config = {}
         if extras is not None:
             base_config = {**base_config, **extras}
@@ -74,9 +74,9 @@ class Localisation:
         key: str,
         locale: hikari.Locale | str,
         *,
-        extras: dict = None,
+        extras: dict | None = None,
         guild_config: GuildConfigs | None = None,
-    ):
+    ) -> str:
         if not isinstance(locale, hikari.Locale):
             locale = hikari.Locale(locale)
 

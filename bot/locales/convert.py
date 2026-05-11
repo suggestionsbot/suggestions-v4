@@ -4,8 +4,8 @@ from pathlib import Path
 from bot.localisation import Localisation
 
 localisation = Localisation(Path(".."))
-for k in localisation._file_to_locale.keys():
-    with open(k.name, "r") as f:
+for k in localisation._file_to_locale:
+    with Path(k.name).open() as f:
         data = json.loads(f.read())
 
     new_data = {}
@@ -31,10 +31,10 @@ for k in localisation._file_to_locale.keys():
 
         elif "INNER" in name:
             # No nice way to automate this
-            new_data[f"values.{name.replace("_INNER", "").lower()}"] = v  # noqa
+            new_data[f"values.{name.replace("_INNER", "").lower()}"] = v
 
         else:
             new_data[name] = v
 
-    with open(k.name, "w") as f:
+    with Path(k.name).open("w") as f:
         f.write(json.dumps(new_data, indent=4))

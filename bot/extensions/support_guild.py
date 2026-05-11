@@ -6,9 +6,7 @@ import lightbulb
 from humanize import naturaldate
 
 from bot.constants import EMBED_COLOR
-from bot.localisation import Localisation
 from bot.tables import InternalErrors
-from shared.tables import GuildConfigs, UserConfigs
 from shared.tables.mixins.audit import utc_now
 from web.constants import IS_PRODUCTION
 
@@ -39,25 +37,18 @@ class ErrorInformation(
     )
 
     @lightbulb.invoke
-    async def invoke(
-        self,
-        ctx: lightbulb.Context,
-        bot: hikari.RESTBot | hikari.GatewayBot,
-        guild_config: GuildConfigs,
-        user_config: UserConfigs,
-        localisations: Localisation,
-    ) -> None:
+    async def invoke(self, ctx: lightbulb.Context) -> None:
         await ctx.defer(ephemeral=True)
-        if ctx.user.id != 271612318947868673:
+        if ctx.user.id != 271612318947868673:  # noqa: PLR2004
             await ctx.respond("I'm sorry this command is only for Ethan.")
-            return None
+            return
 
         error: InternalErrors = await InternalErrors.objects().get(
-            InternalErrors.id == self.error_id
+            InternalErrors.id == self.error_id,
         )
         if error is None:
             await ctx.respond("Couldn't find an error with that ID.")
-            return None
+            return
 
         embed = hikari.Embed(
             colour=EMBED_COLOR,
@@ -78,4 +69,4 @@ class ErrorInformation(
                 mimetype="text/plain",
             ),
         )
-        return None
+        return

@@ -64,7 +64,8 @@ class BlocklistAddCmd(
         if suggestion is None:
             suggestion: Suggestions | QueuedSuggestions | None = (
                 await QueuedSuggestions.fetch_queued_suggestion(
-                    self.suggestion_id, ctx.guild_id
+                    self.suggestion_id,
+                    ctx.guild_id,
                 )
             )
             if suggestion is None:
@@ -79,7 +80,8 @@ class BlocklistAddCmd(
                 await ctx.respond(
                     embed=utils.error_embed(
                         localisations.get_localized_string(
-                            "menus.suggestion.not_found.title", ctx.interaction.locale
+                            "menus.suggestion.not_found.title",
+                            ctx.interaction.locale,
                         ),
                         localisations.get_localized_string(
                             "menus.suggestion.not_found.description",
@@ -88,7 +90,7 @@ class BlocklistAddCmd(
                     ),
                     ephemeral=True,
                 )
-                return None
+                return
 
         author_to_block: int = suggestion.author_id
         if author_to_block in guild_config.blocked_users:
@@ -99,7 +101,7 @@ class BlocklistAddCmd(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         guild_config.blocked_users.append(author_to_block)
         await guild_config.save()
@@ -118,14 +120,12 @@ class BlocklistAddCmd(
             extra={
                 "interaction.author.id": ctx.interaction.user.id,
                 "interaction.author.global_name": (
-                    ctx.interaction.user.global_name
-                    if ctx.interaction.user.global_name
-                    else ""
+                    ctx.interaction.user.global_name or ""
                 ),
                 "interaction.guild.id": ctx.guild_id,
             },
         )
-        return None
+        return
 
 
 @BLOCKLIST_GROUP.register
@@ -173,7 +173,7 @@ class BlocklistRemoveCmd(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         if self.suggestion_id is not None and self.user is not None:
             await ctx.respond(
@@ -183,7 +183,7 @@ class BlocklistRemoveCmd(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         user_to_unblock: int | None = None
         if self.user is not None:
@@ -196,7 +196,8 @@ class BlocklistRemoveCmd(
             if suggestion is None:
                 suggestion: Suggestions | QueuedSuggestions | None = (
                     await QueuedSuggestions.fetch_queued_suggestion(
-                        self.suggestion_id, ctx.guild_id
+                        self.suggestion_id,
+                        ctx.guild_id,
                     )
                 )
                 if suggestion is None:
@@ -211,7 +212,8 @@ class BlocklistRemoveCmd(
                     await ctx.respond(
                         embed=utils.error_embed(
                             localisations.get_localized_string(
-                                "menus.suggestion.not_found.title", ctx.interaction.locale
+                                "menus.suggestion.not_found.title",
+                                ctx.interaction.locale,
                             ),
                             localisations.get_localized_string(
                                 "menus.suggestion.not_found.description",
@@ -220,7 +222,7 @@ class BlocklistRemoveCmd(
                         ),
                         ephemeral=True,
                     )
-                    return None
+                    return
 
             user_to_unblock = suggestion.author_id
 
@@ -232,7 +234,7 @@ class BlocklistRemoveCmd(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         guild_config.blocked_users.remove(user_to_unblock)
         await guild_config.save()
@@ -251,11 +253,9 @@ class BlocklistRemoveCmd(
             extra={
                 "interaction.author.id": ctx.interaction.user.id,
                 "interaction.author.global_name": (
-                    ctx.interaction.user.global_name
-                    if ctx.interaction.user.global_name
-                    else ""
+                    ctx.interaction.user.global_name or ""
                 ),
                 "interaction.guild.id": ctx.guild_id,
             },
         )
-        return None
+        return

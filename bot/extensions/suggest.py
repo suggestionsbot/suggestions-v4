@@ -15,11 +15,11 @@ loader = lightbulb.Loader()
 logger = logging.getLogger(__name__)
 
 
-def handle_suggestions_errors(func):
+def handle_suggestions_errors(func):  # noqa: ANN001, ANN201
     func = lightbulb.di.with_di(func)
 
-    async def _wrapper(
-        command_data,
+    async def _wrapper(  # noqa: ANN202
+        command_data,  # noqa: ANN001
         ctx: lightbulb.Context,
         guild_config: GuildConfigs,
         localisations: Localisation,
@@ -61,12 +61,13 @@ def handle_suggestions_errors(func):
                                 internal_error_reference=internal_error,
                             ),
                             attachment=hikari.files.Bytes(
-                                io.StringIO(exception.message_text), "content.txt"
+                                io.StringIO(exception.message_text),
+                                "content.txt",
                             ),
                         )
                         return None
 
-                    elif isinstance(exception, MissingQueueChannel):
+                    if isinstance(exception, MissingQueueChannel):
                         await ctx.respond(
                             embed=utils.error_embed(
                                 localisations.get_localized_string(
@@ -116,7 +117,8 @@ class Suggest(
             await ctx.respond(
                 embed=utils.error_embed(
                     localisations.get_localized_string(
-                        "commands.suggest.responses.blocked.title", ctx.interaction.locale
+                        "commands.suggest.responses.blocked.title",
+                        ctx.interaction.locale,
                     ),
                     localisations.get_localized_string(
                         "commands.suggest.responses.blocked.description",
@@ -125,18 +127,21 @@ class Suggest(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         components = await menus.SuggestionMenu.build_suggest_modal(
-            guild_config=guild_config, localisations=localisations, ctx=ctx
+            guild_config=guild_config,
+            localisations=localisations,
+            ctx=ctx,
         )
 
         link_id: str = await utils.otel.generate_trace_link_state()
         await ctx.interaction.create_modal_response(
             localisations.get_localized_string(
-                "commands.suggest.responses.menu_title", ctx.interaction.locale
+                "commands.suggest.responses.menu_title",
+                ctx.interaction.locale,
             ),
             f"suggest_modal:{link_id}",
             components=components,
         )
-        return None
+        return

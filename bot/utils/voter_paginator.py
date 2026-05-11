@@ -4,17 +4,17 @@ import logging
 from typing import TYPE_CHECKING
 
 import hikari
-import lightbulb
-from hikari.api import (
-    ContainerComponentBuilder,
-    MessageActionRowBuilder,
-    TextDisplayComponentBuilder,
-)
 
 from bot.constants import LOCALISATIONS
 
 if TYPE_CHECKING:
-    pass
+    from hikari.api import (
+        ContainerComponentBuilder,
+        MessageActionRowBuilder,
+        TextDisplayComponentBuilder,
+    )
+    import lightbulb
+
 
 log = logging.getLogger(__name__)
 
@@ -23,13 +23,13 @@ class ViewVotersPaginator:
     def __init__(
         self,
         *,
-        data,
+        data: list[str],
         ctx: lightbulb.Context,
         locale: hikari.Locale,
         pid: str,
         link_id: str,
         sid: str,
-    ):
+    ) -> None:
         self._current_page_index = 0
         self._paged_data: list[str] = data
         self._guild_id: int = ctx.guild_id
@@ -46,7 +46,7 @@ class ViewVotersPaginator:
         return self._current_page_index + 1
 
     @current_page.setter
-    def current_page(self, value) -> None:
+    def current_page(self, value: int) -> None:
         # Wrap around
         if value > self.total_pages:
             self._current_page_index = 0
@@ -64,7 +64,7 @@ class ViewVotersPaginator:
     def pages(self) -> list[str]:
         return self._paged_data
 
-    async def remove_current_page(self):
+    async def remove_current_page(self) -> None:
         wrap = self.current_page == self.total_pages
         self._paged_data.pop(self._current_page_index)
         if wrap:
@@ -84,10 +84,8 @@ class ViewVotersPaginator:
 
         else:
             await self.original_interaction.edit_initial_response(
-                components=await self.format_page()
+                components=await self.format_page(),
             )
-
-        return None
 
     async def format_page(
         self,
@@ -110,7 +108,7 @@ class ViewVotersPaginator:
                     "menus.view_voters_paginator.responses.page.footer",
                     self._locale,
                     extras={"CURRENT": self.current_page, "TOTAL": self.total_pages},
-                )
+                ),
             ),
             hikari.impl.ContainerComponentBuilder(
                 components=[
@@ -122,9 +120,9 @@ class ViewVotersPaginator:
                                 "SID": self.sid,
                                 "DATA": self.pages[self._current_page_index],
                             },
-                        )
+                        ),
                     ),
-                ]
+                ],
             ),
         ]
 
@@ -147,18 +145,18 @@ class ViewVotersPaginator:
                             emoji="\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f",
                             custom_id=f"v4_queue:next:{self._pid}::{self._link_id}",
                         ),
-                    ]
+                    ],
                 ),
-            ]
+            ],
         )
         return components
 
-    async def update_message_with_current_page(self):
+    async def update_message_with_current_page(self) -> None:
         await self.original_interaction.edit_initial_response(
-            components=await self.format_page()
+            components=await self.format_page(),
         )
 
-    async def stop_paginating(self):
+    async def stop_paginating(self) -> None:
         await self.original_interaction.edit_initial_response(
             components=[
                 hikari.impl.TextDisplayComponentBuilder(

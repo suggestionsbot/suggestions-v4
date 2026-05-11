@@ -1,5 +1,5 @@
+from __future__ import annotations
 import hikari
-from hikari.api import ContainerComponentBuilder, MessageActionRowBuilder
 
 from bot.constants import LOCALISATIONS, EMBED_COLOR
 from shared.tables import (
@@ -8,11 +8,17 @@ from shared.tables import (
     QueuedSuggestions,
     QueuedSuggestionStateEnum,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from hikari.api import ContainerComponentBuilder, MessageActionRowBuilder
 
 
 async def build_new_suggestion_notification(
-    *, user_config: UserConfigs, suggestion: Suggestions
-):
+    *,
+    user_config: UserConfigs,
+    suggestion: Suggestions,
+) -> list[hikari.impl.ContainerComponentBuilder]:
     return [
         hikari.impl.ContainerComponentBuilder(
             accent_color=EMBED_COLOR,
@@ -40,7 +46,7 @@ async def build_new_suggestion_notification(
                             "GUILD_ID": suggestion.guild_id,
                             "SID": suggestion.footer_sid,
                         },
-                    )
+                    ),
                 ),
             ],
         ),
@@ -48,8 +54,10 @@ async def build_new_suggestion_notification(
 
 
 async def build_user_resolution_notification(
-    *, user_config: UserConfigs, suggestion: Suggestions
-):
+    *,
+    user_config: UserConfigs,
+    suggestion: Suggestions,
+) -> list[hikari.impl.ContainerComponentBuilder]:
     return [
         hikari.impl.ContainerComponentBuilder(
             accent_color=suggestion.color,
@@ -79,7 +87,7 @@ async def build_user_resolution_notification(
                             "GUILD_ID": suggestion.guild_id,
                             "SID": suggestion.footer_sid,
                         },
-                    )
+                    ),
                 ),
             ],
         ),
@@ -87,13 +95,16 @@ async def build_user_resolution_notification(
 
 
 async def build_queued_user_resolution_notification(
-    *, user_config: UserConfigs, suggestion: QueuedSuggestions, rest
-):
+    *,
+    user_config: UserConfigs,
+    suggestion: QueuedSuggestions,
+    rest: hikari.api.RESTClient,
+) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
     extra = None
     if suggestion.state == QueuedSuggestionStateEnum.APPROVED:
         related_suggestion: Suggestions = suggestion.related_suggestion
         related_suggestion.guild_configuration = await related_suggestion.get_related(
-            Suggestions.guild_configuration
+            Suggestions.guild_configuration,
         )
         jump_to = related_suggestion.message_jump_link
         initial_cv = hikari.impl.TextDisplayComponentBuilder(
@@ -144,7 +155,7 @@ async def build_queued_user_resolution_notification(
                             "GUILD_ID": suggestion.guild_id,
                             "SID": suggestion.footer_sid,
                         },
-                    )
+                    ),
                 ),
             ],
         ),

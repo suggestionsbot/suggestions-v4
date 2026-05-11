@@ -30,16 +30,17 @@ def error_embed(
         timestamp=utc_now(),
     )
     if footer_text and error_code:
-        raise ValueError("Can't provide both footer_text and error_code")
+        msg = "Can't provide both footer_text and error_code"
+        raise ValueError(msg)
 
-    elif footer_text:
+    if footer_text:
         embed.set_footer(text=footer_text)
 
     elif error_code:
         if internal_error_reference:
             embed.set_footer(
                 text=f"Error code {error_code.value} "
-                f"| Error ID {internal_error_reference.id}"
+                f"| Error ID {internal_error_reference.id}",
             )
         else:
             embed.set_footer(text=f"Error code {error_code.value}")

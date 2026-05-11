@@ -23,10 +23,10 @@ time_to_cache = datetime.timedelta(minutes=15)
 
 @loader.task(lightbulb.uniformtrigger(minutes=15, wait_first=False))
 async def update_redis(bot: hikari.GatewayBot) -> None:
-    """Updates redis with bot specific info such as guilds"""
+    """Updates redis with bot specific info such as guilds."""
     guilds = bot.cache.get_guilds_view()
     guild_count = len(guilds.keys())
-    for guild_id in guilds.keys():
+    for guild_id in guilds:
         await constants.REDIS_CLIENT.set(
             f"bot:guilds:is_in:{guild_id}",
             orjson.dumps(guild_id),

@@ -37,7 +37,7 @@ async def notify_user_of_change(
                 "interaction.author.id": suggestion.author_id,
             },
         )
-        return None
+        return
 
     if guild_config.generic_dm_messages_disabled:
         logger.debug(
@@ -50,7 +50,7 @@ async def notify_user_of_change(
                 "suggestion.id": suggestion.sID,
             },
         )
-        return None
+        return
 
     components: list = [
         hikari.impl.TextDisplayComponentBuilder(
@@ -58,7 +58,7 @@ async def notify_user_of_change(
                 "commands.note.add.responses.dm_change",
                 ctx.interaction.locale,
                 extras={"JUMP": suggestion.message_jump_link},
-            )
+            ),
         ),
         hikari.impl.SeparatorComponentBuilder(
             divider=True,
@@ -83,7 +83,7 @@ async def notify_user_of_change(
     try:
         dm_channel = await ctx.client.rest.create_dm_channel(ctx.user)
         await dm_channel.send(components=result)
-    except (hikari.ForbiddenError,):
+    except hikari.ForbiddenError:
         # I'd consider it 'fine' if the bot can't send this message
         logger.debug(
             "Failed to dm user about a suggestion note",
@@ -150,7 +150,8 @@ class NotesAddCmd(
         )
         note = self.note.replace("\\n", "\n")
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-            self.suggestion_id, ctx.guild_id
+            self.suggestion_id,
+            ctx.guild_id,
         )
         if suggestion is None:
             logger.debug(
@@ -164,7 +165,8 @@ class NotesAddCmd(
             await ctx.respond(
                 embed=utils.error_embed(
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.title", ctx.interaction.locale
+                        "menus.suggestion.not_found.title",
+                        ctx.interaction.locale,
                     ),
                     localisations.get_localized_string(
                         "menus.suggestion.not_found.description",
@@ -173,7 +175,7 @@ class NotesAddCmd(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         suggestion.moderator_note = note
         suggestion.moderator_note_added_by = user_config
@@ -188,7 +190,7 @@ class NotesAddCmd(
                 "commands.note.add.responses.change",
                 ctx.interaction.locale,
                 extras={"JUMP": suggestion.message_jump_link},
-            )
+            ),
         )
         await notify_user_of_change(
             ctx=ctx,
@@ -198,7 +200,7 @@ class NotesAddCmd(
             localisations=localisations,
         )
 
-        return None
+        return
 
 
 @NOTES_GROUP.register
@@ -232,7 +234,8 @@ class NotesRemoveCmd(
             command_type=CommandTypes.SLASH_COMMAND,
         )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-            self.suggestion_id, ctx.guild_id
+            self.suggestion_id,
+            ctx.guild_id,
         )
         if suggestion is None:
             logger.debug(
@@ -246,7 +249,8 @@ class NotesRemoveCmd(
             await ctx.respond(
                 embed=utils.error_embed(
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.title", ctx.interaction.locale
+                        "menus.suggestion.not_found.title",
+                        ctx.interaction.locale,
                     ),
                     localisations.get_localized_string(
                         "menus.suggestion.not_found.description",
@@ -255,7 +259,7 @@ class NotesRemoveCmd(
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         suggestion.moderator_note = None
         suggestion.moderator_note_added_by = None
@@ -267,7 +271,7 @@ class NotesRemoveCmd(
                 "commands.note.add.responses.change",
                 ctx.interaction.locale,
                 extras={"JUMP": suggestion.message_jump_link},
-            )
+            ),
         )
         await notify_user_of_change(
             ctx=ctx,
@@ -277,4 +281,4 @@ class NotesRemoveCmd(
             localisations=localisations,
         )
 
-        return None
+        return

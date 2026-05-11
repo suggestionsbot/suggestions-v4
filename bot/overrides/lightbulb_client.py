@@ -20,13 +20,13 @@ from lightbulb.client import (
     Client,
 )
 from lightbulb.commands import execution
-from lightbulb.internal import types as lb_types
 
 from bot import constants, utils
 from bot.tables import InternalErrors
 from shared.utils import configs
 
 if t.TYPE_CHECKING:
+    from lightbulb.internal import types as lb_types
     from collections.abc import Sequence
 
     from lightbulb import features as features_
@@ -42,12 +42,12 @@ def build_ctx(
     ),
 ) -> lightbulb.components.MenuContext:
     return lightbulb.components.MenuContext(
-        None,  # type: ignore
-        None,  # type: ignore
-        interaction,  # type: ignore
-        None,  # type: ignore
-        None,  # type: ignore
-        None,  # type: ignore
+        None,  # type: ignore # noqa: PGH003
+        None,  # type: ignore # noqa: PGH003
+        interaction,  # type: ignore # noqa: PGH003
+        None,  # type: ignore # noqa: PGH003
+        None,  # type: ignore # noqa: PGH003
+        None,  # type: ignore # noqa: PGH003
         asyncio.Event(),
     )
 
@@ -99,10 +99,10 @@ def client_from_app(
     *,
     features: Sequence[features_.Feature] = (),
 ) -> Client:
-    """
-    Create and return the appropriate client implementation from the given application.
+    """Create and return the appropriate client implementation from the given application.
 
     Args:
+    ----
         app: Application that either supports gateway events, or an interaction server.
         default_enabled_guilds:
             The guilds that application commands should be created in by default.
@@ -137,13 +137,16 @@ def client_from_app(
         features: Experimental features to enable for this client.
 
     Returns:
+    -------
         :obj:`~Client`: The created client instance.
 
     .. versionadded:: 3.2.0
         The ``features`` kwarg.
+
     """
     if execution.ExecutionSteps.INVOKE not in execution_step_order:
-        raise ValueError("'execution_step_order' must include ExecutionSteps.INVOKE")
+        msg = "'execution_step_order' must include ExecutionSteps.INVOKE"
+        raise ValueError(msg)
 
     if isinstance(app, GatewayClientAppT):
         LOGGER.debug("building gateway client from app")
@@ -154,12 +157,15 @@ def client_from_app(
 
     for experiment in features:
         if not di_.DI_ENABLED and experiment.requires_di_enabled:
+            msg = (
+                f"cannot enable experiment {experiment.name!r} "
+                f"- DI is required but is disabled"
+            )
             raise ValueError(
-                f"cannot enable experiment {experiment.name!r} - "
-                f"DI is required but is disabled"
+                msg,
             )
 
-    return cls(  # type: ignore
+    return cls(
         app,  # type: ignore[reportArgumentType]
         default_enabled_guilds,
         execution_step_order,
@@ -175,22 +181,24 @@ def client_from_app(
 
 class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
     async def handle_application_command_interaction(
-        self, interaction: hikari.CommandInteraction, initial_response_sent: asyncio.Event
+        self,
+        interaction: hikari.CommandInteraction,
+        initial_response_sent: asyncio.Event,
     ) -> None:
         out = self._resolve_options_and_command(interaction)
         if out is None:
             return
 
-        options, command = out
+        _, command = out
         command_locale_key = command._command_data.qualified_name
         localised_key = []
         try:
             for entry in command_locale_key.split(" "):
                 localised_key.append(
-                    self.localization_provider(entry)[hikari.Locale.EN_GB]
+                    self.localization_provider(entry)[hikari.Locale.EN_GB],
                 )
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             localised_key.append(command_locale_key)
             LOGGER.error(
                 "Failed to find command name for tracing for input %s",
@@ -207,11 +215,7 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
             span.set_attribute("interaction.user.id", interaction.user.id)
             span.set_attribute(
                 "interaction.user.global_name",
-                (
-                    interaction.user.global_name
-                    if interaction.user.global_name
-                    else interaction.user.username
-                ),
+                (interaction.user.global_name or interaction.user.username),
             )
             if interaction.guild_id:
                 span.set_attribute("interaction.guild.id", interaction.guild_id)
@@ -223,17 +227,18 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
                 otel_ctx = await utils.otel.get_context_from_link_state(link_id)
 
                 with OTEL_TRACER.start_as_current_span(
-                    "global cooldown handler", otel_ctx
+                    "global cooldown handler",
+                    otel_ctx,
                 ) as error_span:
                     internal_error: InternalErrors = await InternalErrors.persist_error(
                         exception,
                         command_name=localised_key,
-                        guild_id=t.cast(int, interaction.guild_id),
+                        guild_id=t.cast("int", interaction.guild_id),
                         user_id=interaction.user.id,
                     )
                     error_span.set_attribute("error.id", internal_error.id)
                     error_span.set_attribute("error.name", internal_error.error_name)
-                    error_span.set_attribute("error.handled", True)
+                    error_span.set_attribute("error.handled", value=True)
                     LOGGER.debug(
                         "CallableOnCooldown",
                         extra={
@@ -263,5 +268,6 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
                 return
 
             await super().handle_application_command_interaction(
-                interaction, initial_response_sent
+                interaction,
+                initial_response_sent,
             )

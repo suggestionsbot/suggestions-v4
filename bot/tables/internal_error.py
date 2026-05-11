@@ -35,7 +35,7 @@ class InternalErrors(AuditMixin, Table):
         "'This' being hash((self.error_name, self.traceback, self.command_name))",
     )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # Error objects should 'unique' based off the error itself
         # and not the extra metadata such as cluster or shard of execution
         return hash((self.error_name, self.traceback, self.command_name))

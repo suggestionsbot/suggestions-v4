@@ -27,17 +27,17 @@ class ConfigureGuildCmd(
             lightbulb.Choice(
                 "commands.configure.guild.options.menu.choices.1.name",
                 "overall",
-                True,
+                localize=True,
             ),
             lightbulb.Choice(
                 "commands.configure.guild.options.menu.choices.2.name",
                 "log_channel",
-                True,
+                localize=True,
             ),
             lightbulb.Choice(
                 "commands.configure.guild.options.menu.choices.3.name",
                 "queue_settings",
-                True,
+                localize=True,
             ),
         ],
     )
@@ -59,14 +59,20 @@ class ConfigureGuildCmd(
         )
         if self.menu == "log_channel":
             components = await GuildConfigurationMenus.build_log_channel_components(
-                ctx=ctx, guild_config=guild_config, localisations=localisations
+                ctx=ctx,
+                guild_config=guild_config,
+                localisations=localisations,
             )
         elif self.menu == "queue_settings":
             components = await GuildConfigurationMenus.build_queue_components(
-                ctx=ctx, guild_config=guild_config, localisations=localisations
+                ctx=ctx,
+                guild_config=guild_config,
+                localisations=localisations,
             )
         else:
             components = await GuildConfigurationMenus.build_base_components_page_1(
-                ctx=ctx, guild_config=guild_config, localisations=localisations
+                ctx=ctx,
+                guild_config=guild_config,
+                localisations=localisations,
             )
         await ctx.respond(components=components)

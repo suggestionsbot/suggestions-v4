@@ -78,23 +78,26 @@ class ClearCmd(
         )
         if suggestion is None:
             suggestion = await QueuedSuggestions.fetch_queued_suggestion(
-                self.suggestion_id, guild_config.guild_id
+                self.suggestion_id,
+                guild_config.guild_id,
             )
 
         if suggestion is None:
             await ctx.respond(
                 localisations.get_localized_string(
-                    "commands.clear.responses.not_found", user_config.primary_language
+                    "commands.clear.responses.not_found",
+                    user_config.primary_language,
                 ),
                 ephemeral=True,
             )
-            return None
+            return
 
         if suggestion.channel_id and suggestion.message_id:
             # Try to delete
             try:
                 await ctx.client.rest.delete_message(
-                    suggestion.channel_id, suggestion.message_id
+                    suggestion.channel_id,
+                    suggestion.message_id,
                 )
                 suggestion.message_id = None
                 suggestion.channel_id = None
@@ -122,4 +125,4 @@ class ClearCmd(
             ),
             ephemeral=True,
         )
-        return None
+        return

@@ -29,8 +29,10 @@ async def create_user_config(ctx: lightbulb.Context) -> UserConfigs:
     return await configs.ensure_user_config(ctx.user.id, locale=ctx.interaction.locale)
 
 
-async def create_bot(
-    token, *, log_conf: str | None = "INFO"
+async def create_bot(  # noqa: PLR0915, C901
+    token: str,
+    *,
+    log_conf: str | None = "INFO",
 ) -> (hikari.GatewayBot, lightbulb.Client):
     intents = hikari.Intents.NONE
     intents |= hikari.Intents.GUILDS
@@ -43,7 +45,6 @@ async def create_bot(
         cache_settings=CacheSettings(components=cache_items),
         intents=intents,
     )
-    logger.debug(f"Test with {repr(log_conf)}")
 
     default_enabled_guilds = ()
     if not t_constants.IS_PRODUCTION:
@@ -55,15 +56,18 @@ async def create_bot(
         localization_provider=constants.LOCALISATIONS.lightbulb_provider,
     )
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
-        GuildConfigs, create_guild_config
+        GuildConfigs,
+        create_guild_config,
     )
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
-        UserConfigs, create_user_config
+        UserConfigs,
+        create_user_config,
     )
     from bot.localisation import Localisation
 
     client.di.registry_for(lightbulb.di.Contexts.DEFAULT).register_value(
-        Localisation, constants.LOCALISATIONS
+        Localisation,
+        constants.LOCALISATIONS,
     )
 
     @client.error_handler
@@ -88,7 +92,7 @@ async def create_bot(
                     "Something went wrong.",
                     "Please contact support if this keeps happening.",
                     internal_error_reference=internal_error,
-                )
+                ),
             )
 
         raise exc
@@ -107,14 +111,14 @@ async def create_bot(
             link_id = custom_id.split(":", maxsplit=1)[1]
             if link_id is not None and link_id:
                 otel_ctx = await utils.otel.get_context_from_link_state(
-                    custom_id.split(":", maxsplit=1)[1]
+                    custom_id.split(":", maxsplit=1)[1],
                 )
 
         with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
             span.set_attribute("interaction.user.id", ctx.user.id)
             span.set_attribute(
                 "interaction.user.global_name",
-                (ctx.user.global_name if ctx.user.global_name else ctx.user.username),
+                (ctx.user.global_name or ctx.user.username),
             )
             if ctx.guild_id:
                 span.set_attribute("interaction.guild.id", ctx.guild_id)
@@ -148,7 +152,7 @@ async def create_bot(
         )
 
     @bot.listen(hikari.ComponentInteractionCreateEvent)
-    async def on_component_interaction(
+    async def on_component_interaction(  # noqa: PLR0915, PLR0912, C901
         event: hikari.ComponentInteractionCreateEvent,
     ) -> None:
         from shared.tables import SuggestionsVoteTypeEnum
@@ -168,9 +172,7 @@ async def create_bot(
         elif custom_id.startswith("v4_suggest_button"):
             component_key = "creating suggestion from button"
 
-        elif custom_id.startswith("queue_approve") or custom_id.startswith(
-            "queue_approve"
-        ):
+        elif custom_id.startswith(("queue_approve", "queue_approve")):
             # Legacy physical queue
             if not custom_id.endswith("e"):
                 custom_id = custom_id[:-1]
@@ -186,15 +188,14 @@ async def create_bot(
 
         elif custom_id.startswith("v4_queue:"):
             _, action, pid, queued_suggestion_id, link_id = custom_id.split(
-                ":", maxsplit=4
+                ":",
+                maxsplit=4,
             )
-            queued_suggestion_id = queued_suggestion_id if queued_suggestion_id else None
+            queued_suggestion_id = queued_suggestion_id or None
             otel_ctx = await utils.otel.get_context_from_link_state(link_id)
             component_key = f"queue paginator {action}"
 
-        elif custom_id.startswith("suggestions_up_vote") or custom_id.startswith(
-            "suggestions_down_vote"
-        ):
+        elif custom_id.startswith(("suggestions_up_vote", "suggestions_down_vote")):
             # Legacy button type one
             custom_id, suggestion_id = custom_id.split("|", maxsplit=2)
             custom_id = custom_id[:-1]
@@ -205,9 +206,7 @@ async def create_bot(
             )
             component_key = f"suggestion {vote_enum.value}"
 
-        elif custom_id.startswith("SuggestionsUpVote") or custom_id.startswith(
-            "SuggestionsDownVote"
-        ):
+        elif custom_id.startswith(("SuggestionsUpVote", "SuggestionsDownVote")):
             # Other legacy button type
             custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
             vote_enum = (
@@ -217,9 +216,7 @@ async def create_bot(
             )
             component_key = f"suggestion {vote_enum.value}"
 
-        elif custom_id.startswith("v4_suggestions_up_vote") or custom_id.startswith(
-            "v4_suggestions_down_vote"
-        ):
+        elif custom_id.startswith(("v4_suggestions_up_vote", "v4_suggestions_down_vote")):
             custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
             vote_enum = (
                 SuggestionsVoteTypeEnum.UpVote
@@ -232,7 +229,7 @@ async def create_bot(
             span.set_attribute("interaction.user.id", ctx.user.id)
             span.set_attribute(
                 "interaction.user.global_name",
-                (ctx.user.global_name if ctx.user.global_name else ctx.user.username),
+                (ctx.user.global_name or ctx.user.username),
             )
             if ctx.guild_id:
                 span.set_attribute("interaction.guild.id", ctx.guild_id)
@@ -257,9 +254,9 @@ async def create_bot(
 
             elif custom_id.startswith("v4_queue:"):
                 await SuggestionsQueueViewerMenu.handle_paginator_interaction(
-                    queue_id=pid,  # noqa
-                    action=action,  # noqa
-                    queued_suggestion_id=queued_suggestion_id,  # noqa
+                    queue_id=pid,
+                    action=action,
+                    queued_suggestion_id=queued_suggestion_id,
                     ctx=ctx,
                     localisations=constants.LOCALISATIONS,
                     event=event,
@@ -268,8 +265,8 @@ async def create_bot(
             elif component_key in ("queue approve", "queue reject"):
                 guild_config = await configs.ensure_guild_config(ctx.guild_id)
                 await SuggestionsQueueMenu.handle_physical_interaction(
-                    queued_suggestion_id,  # noqa
-                    to_approve,  # noqa
+                    queued_suggestion_id,
+                    to_approve,
                     ctx=ctx,
                     localisations=constants.LOCALISATIONS,
                     event=event,
@@ -278,8 +275,8 @@ async def create_bot(
 
             elif component_key in ("suggestion UpVote", "suggestion DownVote"):
                 await SuggestionMenu.handle_vote(
-                    suggestion_id,  # noqa
-                    vote_enum,  # noqa
+                    suggestion_id,
+                    vote_enum,
                     ctx=ctx,
                     localisations=constants.LOCALISATIONS,
                 )

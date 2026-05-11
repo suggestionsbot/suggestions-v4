@@ -44,7 +44,7 @@ class QueueInfoCmd(
         )
         queued_suggestions_for_guild: list[QueuedSuggestions] = (
             await QueuedSuggestions.fetch_guild_queued_suggestions(
-                guild_id=guild_config.guild_id
+                guild_id=guild_config.guild_id,
             )
         )
         virtual_count = physical_count = 0
@@ -60,7 +60,7 @@ class QueueInfoCmd(
                 "commands.queue.info.responses.description_count",
                 user_config.primary_language,
                 extras={"VIRTUAL": virtual_count, "PHYSICAL": physical_count},
-            )
+            ),
         )
         desc.write("\n")
         ext = "yes" if guild_config.uses_suggestion_queue else "no"
@@ -68,7 +68,7 @@ class QueueInfoCmd(
             localisations.get_localized_string(
                 f"commands.queue.info.responses.description_new_queued.{ext}",
                 user_config.primary_language,
-            )
+            ),
         )
 
         guild: hikari.Guild | None = ctx.interaction.get_guild()
@@ -77,7 +77,8 @@ class QueueInfoCmd(
 
         embed = hikari.Embed(
             title=localisations.get_localized_string(
-                "commands.queue.info.responses.title", user_config.primary_language
+                "commands.queue.info.responses.title",
+                user_config.primary_language,
             ),
             description=desc.getvalue(),
             colour=EMBED_COLOR,
@@ -115,16 +116,17 @@ class QueueViewCmd(
         )
         queued_suggestions_for_guild: list[QueuedSuggestions] = (
             await QueuedSuggestions.fetch_guild_queued_suggestions(
-                guild_id=guild_config.guild_id
+                guild_id=guild_config.guild_id,
             )
         )
         if not queued_suggestions_for_guild:
             await ctx.respond(
                 localisations.get_localized_string(
-                    "commands.queue.view.responses.empty", user_config.primary_language
-                )
+                    "commands.queue.view.responses.empty",
+                    user_config.primary_language,
+                ),
             )
-            return None
+            return
 
         queued_suggestion_ids: list[str] = [qs.sID for qs in queued_suggestions_for_guild]
         pid = generate_id()
@@ -138,4 +140,4 @@ class QueueViewCmd(
         )
         PAGINATOR_OBJECTS.add_entry(pid, paginator)
         await ctx.respond(components=await paginator.format_page())
-        return None
+        return

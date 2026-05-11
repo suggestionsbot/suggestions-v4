@@ -55,69 +55,82 @@ class InfoCmd(
             await ctx.respond(
                 f"**Guild ID:** `{guild_config.guild_id}`\n**Cluster {CLUSTER_ID} - "
                 f"Shard {shard_id}:** `{round(shard_latency, 2)}ms`"
-                f"**Average cluster latency:** `{round(bot.heartbeat_latency, 2)}ms`\n"
+                f"**Average cluster latency:** `{round(bot.heartbeat_latency, 2)}ms`\n",
             )
-            return None
+            return
 
         date = utc_now()
         embed: hikari.Embed = hikari.Embed(
             title=localisations.get_localized_string(
-                "commands.info.responses.name", user_config.primary_language
+                "commands.info.responses.name",
+                user_config.primary_language,
             ),
             description=localisations.get_localized_string(
-                "commands.info.responses.description", user_config.primary_language
+                "commands.info.responses.description",
+                user_config.primary_language,
             ),
             colour=EMBED_COLOR,
             timestamp=date,
         )
         embed.add_field(
             localisations.get_localized_string(
-                "commands.info.responses.author.title", user_config.primary_language
+                "commands.info.responses.author.title",
+                user_config.primary_language,
             ),
             localisations.get_localized_string(
-                "commands.info.responses.author.desc", user_config.primary_language
-            ),
-            inline=True,
-        )
-        embed.add_field(
-            localisations.get_localized_string(
-                "commands.info.responses.website.title", user_config.primary_language
-            ),
-            localisations.get_localized_string(
-                "commands.info.responses.website.desc", user_config.primary_language
+                "commands.info.responses.author.desc",
+                user_config.primary_language,
             ),
             inline=True,
         )
         embed.add_field(
             localisations.get_localized_string(
-                "commands.info.responses.discord.title", user_config.primary_language
+                "commands.info.responses.website.title",
+                user_config.primary_language,
             ),
             localisations.get_localized_string(
-                "commands.info.responses.discord.desc", user_config.primary_language
-            ),
-            inline=True,
-        )
-        embed.add_field(
-            localisations.get_localized_string(
-                "commands.info.responses.github.title", user_config.primary_language
-            ),
-            localisations.get_localized_string(
-                "commands.info.responses.github.desc", user_config.primary_language
+                "commands.info.responses.website.desc",
+                user_config.primary_language,
             ),
             inline=True,
         )
         embed.add_field(
             localisations.get_localized_string(
-                "commands.info.responses.legal.title", user_config.primary_language
+                "commands.info.responses.discord.title",
+                user_config.primary_language,
             ),
             localisations.get_localized_string(
-                "commands.info.responses.legal.desc", user_config.primary_language
+                "commands.info.responses.discord.desc",
+                user_config.primary_language,
             ),
             inline=True,
         )
         embed.add_field(
             localisations.get_localized_string(
-                "commands.info.responses.version", user_config.primary_language
+                "commands.info.responses.github.title",
+                user_config.primary_language,
+            ),
+            localisations.get_localized_string(
+                "commands.info.responses.github.desc",
+                user_config.primary_language,
+            ),
+            inline=True,
+        )
+        embed.add_field(
+            localisations.get_localized_string(
+                "commands.info.responses.legal.title",
+                user_config.primary_language,
+            ),
+            localisations.get_localized_string(
+                "commands.info.responses.legal.desc",
+                user_config.primary_language,
+            ),
+            inline=True,
+        )
+        embed.add_field(
+            localisations.get_localized_string(
+                "commands.info.responses.version",
+                user_config.primary_language,
             ),
             VERSION,
             inline=True,
@@ -125,7 +138,7 @@ class InfoCmd(
         embed.set_footer(text=f"© {date.year} Oof Software Limited")
 
         await ctx.respond(embed=embed)
-        return None
+        return
 
 
 @loader.command
@@ -159,7 +172,7 @@ class StatsCmd(
             color=EMBED_COLOR,
             timestamp=utc_now(),
         )
-        if user_config.user_id == 271612318947868673:  # Skelmis
+        if user_config.user_id == 271612318947868673:  # noqa: PLR2004 # Skelmis
             # I want accurate stats
             guilds: int = await shared.utils.get_accurate_guild_count()
         else:
@@ -167,44 +180,50 @@ class StatsCmd(
 
         embed.add_field(
             name=localisations.get_localized_string(
-                "commands.stats.responses.guild", user_config.primary_language
+                "commands.stats.responses.guild",
+                user_config.primary_language,
             ),
             value=humanize.intcomma(guilds),
             inline=True,
         )
         embed.add_field(
             name=localisations.get_localized_string(
-                "commands.stats.responses.shards", user_config.primary_language
+                "commands.stats.responses.shards",
+                user_config.primary_language,
             ),
             value=TOTAL_SHARDS,
             inline=True,
         )
         embed.add_field(
             name=localisations.get_localized_string(
-                "commands.stats.responses.uptime", user_config.primary_language
+                "commands.stats.responses.uptime",
+                user_config.primary_language,
             ),
             value=humanize.precisedelta(
-                LOADED_AT - datetime.datetime.now(tz=datetime.timezone.utc)
+                LOADED_AT - datetime.datetime.now(tz=datetime.UTC),
             ),
             inline=True,
         )
         embed.add_field(
             name=localisations.get_localized_string(
-                "commands.stats.responses.hikari", user_config.primary_language
+                "commands.stats.responses.hikari",
+                user_config.primary_language,
             ),
             value=hikari.__version__,
             inline=True,
         )
         embed.add_field(
             name=localisations.get_localized_string(
-                "commands.stats.responses.python", user_config.primary_language
+                "commands.stats.responses.python",
+                user_config.primary_language,
             ),
             value=python_version,
             inline=True,
         )
         embed.add_field(
             name=localisations.get_localized_string(
-                "commands.stats.responses.version", user_config.primary_language
+                "commands.stats.responses.version",
+                user_config.primary_language,
             ),
             value=VERSION,
             inline=True,
@@ -214,8 +233,7 @@ class StatsCmd(
                 "commands.stats.responses.cluster",
                 user_config.primary_language,
                 extras={"CLUSTER": CLUSTER_ID, "SHARD": shard_id},
-            )
+            ),
         )
 
         await ctx.respond(embed=embed)
-        return None

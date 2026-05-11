@@ -5,9 +5,9 @@ from .queue_paginator import QueuedSuggestionsPaginator
 from .voter_paginator import ViewVotersPaginator
 
 __all__ = [
-    "generate_id",
-    "error_embed",
-    "start_error_span",
     "QueuedSuggestionsPaginator",
     "ViewVotersPaginator",
+    "error_embed",
+    "generate_id",
+    "start_error_span",
 ]

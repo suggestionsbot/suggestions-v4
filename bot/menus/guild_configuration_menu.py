@@ -1,6 +1,6 @@
 import logging
 from datetime import timedelta
-from typing import Sequence
+from collections.abc import Sequence
 
 import commons
 import hikari
@@ -12,22 +12,23 @@ from bot.exceptions import SuggestionException
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs
 from web import constants as t_constants
+import contextlib
 
 log = logging.getLogger(__name__)
 
 
 class GuildConfigurationMenus:
     @classmethod
-    async def handle_interaction(
+    async def handle_interaction(  # noqa: PLR0912, PLR0911, PLR0915, C901
         cls,
-        id_data,
+        id_data: str,
         *,
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
         guild_config: GuildConfigs,
         event: hikari.ComponentInteractionCreateEvent,
         link_id: str,
-    ):
+    ) -> None:
         await ctx.defer(ephemeral=True)
         event_values: Sequence[str] = event.interaction.values
         log.debug(
@@ -36,7 +37,7 @@ class GuildConfigurationMenus:
             extra={
                 "setting.new_value": (
                     event_values[0] if len(event_values) == 1 else event_values
-                )
+                ),
             },
         )
         if id_data in (
@@ -47,36 +48,37 @@ class GuildConfigurationMenus:
             "queued_suggestion_log_channel_id",
         ):
             if len(event_values) == 0:
-                return await ctx.respond(
+                await ctx.respond(
                     localisations.get_localized_string(
                         f"menus.guild_configuration.responses.{id_data}.empty",
                         ctx.interaction.locale,
-                    )
+                    ),
                 )
+                return
 
-            else:
-                setattr(guild_config, id_data, int(event_values[0]))
-                if id_data == "log_channel_id":
-                    guild_config.keep_logs = False
+            setattr(guild_config, id_data, int(event_values[0]))
+            if id_data == "log_channel_id":
+                guild_config.keep_logs = False
 
-                elif id_data in (
-                    "queued_suggestion_channel_id",
-                    # Can set logs channel without breaking virtual queue
-                    # "queued_suggestion_log_channel_id",
-                ):
-                    guild_config.uses_suggestion_queue = True
-                    guild_config.virtual_suggestions_queue = False
+            elif id_data in (  # noqa: FURB171
+                "queued_suggestion_channel_id",
+                # Can set logs channel without breaking virtual queue
+                # "queued_suggestion_log_channel_id",
+            ):
+                guild_config.uses_suggestion_queue = True
+                guild_config.virtual_suggestions_queue = False
 
-                await guild_config.save()
-                return await ctx.respond(
-                    localisations.get_localized_string(
-                        f"menus.guild_configuration.responses.{id_data}.set",
-                        ctx.interaction.locale,
-                        extras={"CHANNEL": f"<#{getattr(guild_config, id_data)}>"},
-                    )
-                )
+            await guild_config.save()
+            await ctx.respond(
+                localisations.get_localized_string(
+                    f"menus.guild_configuration.responses.{id_data}.set",
+                    ctx.interaction.locale,
+                    extras={"CHANNEL": f"<#{getattr(guild_config, id_data)}>"},
+                ),
+            )
+            return
 
-        elif id_data in (
+        if id_data in (
             "threads_for_suggestions",
             "auto_archive_threads",
             "can_have_anonymous_suggestions",
@@ -89,61 +91,65 @@ class GuildConfigurationMenus:
             setattr(guild_config, id_data, result)
             await guild_config.save()
             key = "enabled" if getattr(guild_config, id_data) else "disabled"
-            return await ctx.respond(
+            await ctx.respond(
                 localisations.get_localized_string(
                     f"menus.guild_configuration.responses.{id_data}.{key}",
                     ctx.interaction.locale,
-                )
+                ),
             )
+            return
 
-        elif id_data in ("generic_dm_messages_disabled",):
+        if id_data == "generic_dm_messages_disabled":
             # Flipped for legacy purposes to maintain translations
             # These are all bool answers so is fine to do as is
             result = not commons.value_to_bool(event_values[0])
             setattr(guild_config, id_data, result)
             await guild_config.save()
             key = "enabled" if not getattr(guild_config, id_data) else "disabled"
-            return await ctx.respond(
+            await ctx.respond(
                 localisations.get_localized_string(
                     f"menus.guild_configuration.responses.{id_data}.{key}",
                     ctx.interaction.locale,
-                )
+                ),
             )
+            return
 
-        elif id_data == "primary_language":
+        if id_data == "primary_language":
             guild_config.primary_language_raw = event_values[0]
             await guild_config.save()
-            return await ctx.respond(
+            await ctx.respond(
                 localisations.get_localized_string(
                     "menus.guild_configuration.responses.primary_language",
                     ctx.interaction.locale,
                     extras={"LANGUAGE": guild_config.primary_language_as_word},
-                )
+                ),
             )
+            return
 
-        elif id_data == "log_channel":
+        if id_data == "log_channel":
             if event_values[0] == "same_channel":
                 guild_config.keep_logs = True
                 await guild_config.save()
-                return await ctx.respond(
+                await ctx.respond(
                     localisations.get_localized_string(
                         "menus.guild_configuration.responses.keep_logs.set",
                         ctx.interaction.locale,
-                    )
+                    ),
                 )
+                return
 
-            else:
-                # We need to pick a channel
-                return await ctx.respond(
-                    components=await cls.build_log_channel_components(
-                        ctx=ctx,
-                        localisations=localisations,
-                        guild_config=guild_config,
-                        link_id=link_id,
-                    )
-                )
+            # We need to pick a channel
+            await ctx.respond(
+                components=await cls.build_log_channel_components(
+                    ctx=ctx,
+                    localisations=localisations,
+                    guild_config=guild_config,
+                    link_id=link_id,
+                ),
+            )
+            return
 
-        elif id_data == "send_suggestions_button":
+        if id_data == "send_suggestions_button":
             channel = int(event_values[0])
             await ctx.client.rest.create_message(
                 channel,
@@ -152,7 +158,7 @@ class GuildConfigurationMenus:
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.responses.sent_suggestions_button.description",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -164,73 +170,80 @@ class GuildConfigurationMenus:
                                 ),
                                 custom_id="v4_suggest_button",
                             ),
-                        ]
+                        ],
                     ),
                 ],
             )
-            return await ctx.respond(
+            await ctx.respond(
                 localisations.get_localized_string(
                     "menus.guild_configuration.responses.sent_suggestions_button",
                     ctx.interaction.locale,
-                )
+                ),
             )
+            return
 
-        elif id_data == "view_page_2":
-            return await ctx.respond(
+        if id_data == "view_page_2":
+            await ctx.respond(
                 components=await cls.build_base_components_page_2(
                     ctx=ctx,
                     localisations=localisations,
                     guild_config=guild_config,
                     link_id=link_id,
-                )
+                ),
             )
-        elif id_data == "view_page_1":
-            return await ctx.respond(
+            return
+
+        if id_data == "view_page_1":
+            await ctx.respond(
                 components=await cls.build_base_components_page_1(
                     ctx=ctx,
                     localisations=localisations,
                     guild_config=guild_config,
                     link_id=link_id,
-                )
+                ),
             )
+            return
 
-        elif id_data == "suggestions_queue":
+        if id_data == "suggestions_queue":
             value = event_values[0]
             if value == "none":
                 guild_config.uses_suggestion_queue = False
                 await guild_config.save()
-                return await ctx.respond(
+                await ctx.respond(
                     localisations.get_localized_string(
                         "menus.guild_configuration.responses.suggestion_queue.none",
                         ctx.interaction.locale,
-                    )
+                    ),
                 )
+                return
 
-            elif value == "virtual":
+            if value == "virtual":
                 guild_config.uses_suggestion_queue = True
                 guild_config.virtual_suggestions_queue = True
                 guild_config.queued_suggestion_channel_id = None
                 # Leave log channel alone so they keep getting logged
-                # guild_config.queued_suggestion_log_channel_id = None
                 await guild_config.save()
-                return await ctx.respond(
+                await ctx.respond(
                     localisations.get_localized_string(
                         "menus.guild_configuration.responses.suggestion_queue.virtual",
                         ctx.interaction.locale,
-                    )
+                    ),
                 )
+                return
 
-            elif value == "channel":
-                return await ctx.respond(
+            if value == "channel":
+                await ctx.respond(
                     components=await cls.build_queue_components(
                         ctx=ctx,
                         localisations=localisations,
                         guild_config=guild_config,
                         link_id=link_id,
-                    )
+                    ),
                 )
+                return
 
-        raise SuggestionException(f"Unknown gcm interaction -> {repr(id_data)}")
+        msg = f"Unknown gcm interaction -> {id_data!r}"
+        raise SuggestionException(msg)
 
     @classmethod
     async def get_channel_name(
@@ -249,17 +262,15 @@ class GuildConfigurationMenus:
                 await t_constants.REDIS_CLIENT.get(cache_key)
             )
             if current_channel_placeholder is not None:
-                try:
+                with contextlib.suppress(UnicodeDecodeError):
                     current_channel_placeholder: str = current_channel_placeholder.decode(
-                        "utf-8"
+                        "utf-8",
                     )
-                except UnicodeDecodeError:
-                    pass
 
             elif current_channel_placeholder is None:
                 try:
                     channel = await ctx.client.rest.fetch_channel(
-                        getattr(guild_config, field)
+                        getattr(guild_config, field),
                     )
                     current_channel_placeholder: str = f"#{channel.name}"
                     await t_constants.REDIS_CLIENT.set(
@@ -284,12 +295,12 @@ class GuildConfigurationMenus:
         if link_id is None:
             link_id = await utils.otel.generate_trace_link_state()
 
-        components = [
+        return [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "menus.guild_configuration.queue_menu.overall_description",
                     ctx.interaction.locale,
-                )
+                ),
             ),
             hikari.impl.ContainerComponentBuilder(
                 components=[
@@ -297,7 +308,7 @@ class GuildConfigurationMenus:
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.queue_menu.queued_suggestion_channel_id",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -311,14 +322,14 @@ class GuildConfigurationMenus:
                                 ),
                                 min_values=1,
                                 max_values=1,
-                            ),  # type: ignore
-                        ]
+                            ),
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.queue_menu.queued_suggestion_log_channel_id",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -332,10 +343,10 @@ class GuildConfigurationMenus:
                                 ),
                                 min_values=1,
                                 max_values=1,
-                            ),  # type: ignore
-                        ]
+                            ),
+                        ],
                     ),
-                ]
+                ],
             ),
             hikari.impl.MessageActionRowBuilder(
                 components=[
@@ -343,12 +354,11 @@ class GuildConfigurationMenus:
                         url="https://docs.suggestions.gg/docs/queue",
                         label="View queue documentation here for more information",
                     ),
-                ]
+                ],
             ),
         ]
 
         # Docs for extra info
-        return components
 
     @classmethod
     async def build_log_channel_components(
@@ -369,7 +379,7 @@ class GuildConfigurationMenus:
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.log_menu.log_channel_id",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -383,11 +393,11 @@ class GuildConfigurationMenus:
                                 ),
                                 min_values=1,
                                 max_values=1,
-                            ),  # type: ignore
-                        ]
+                            ),
+                        ],
                     ),
-                ]
-            )
+                ],
+            ),
         ]
 
     @classmethod
@@ -407,7 +417,7 @@ class GuildConfigurationMenus:
                 content=localisations.get_localized_string(
                     "menus.guild_configuration.base_menu.overall_description",
                     ctx.interaction.locale,
-                )
+                ),
             ),
             hikari.impl.ContainerComponentBuilder(
                 components=[
@@ -415,7 +425,7 @@ class GuildConfigurationMenus:
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.suggestions_channel_id",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -429,14 +439,14 @@ class GuildConfigurationMenus:
                                 ),
                                 min_values=1,
                                 max_values=1,
-                            ),  # type: ignore
-                        ]
+                            ),
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.threads_for_suggestions",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -463,13 +473,13 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.auto_archive_threads",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -496,13 +506,13 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.ping_on_thread_creation",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -529,13 +539,13 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.can_have_anonymous_suggestions",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -562,13 +572,13 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.can_have_images_in_suggestions",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -595,13 +605,13 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.suggestions_via_button",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -611,9 +621,9 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
-                ]
+                ],
             ),
             hikari.impl.MessageActionRowBuilder(
                 components=[
@@ -625,7 +635,7 @@ class GuildConfigurationMenus:
                         ),
                         custom_id=f"gcm:{link_id}:view_page_2",
                     ),
-                ]
+                ],
             ),
             hikari.impl.MessageActionRowBuilder(
                 components=[
@@ -633,7 +643,7 @@ class GuildConfigurationMenus:
                         url="https://docs.suggestions.gg/docs/configuration",
                         label="View the documentation here",
                     ),
-                ]
+                ],
             ),
         ]
         # Add suggestions container
@@ -663,8 +673,8 @@ class GuildConfigurationMenus:
                 content=localisations.get_localized_string(
                     "menus.guild_configuration.base_menu.overall_description",
                     ctx.interaction.locale,
-                )
-            )
+                ),
+            ),
         ]
 
         # Add queue container
@@ -684,7 +694,7 @@ class GuildConfigurationMenus:
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.log_channel.description",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -708,23 +718,24 @@ class GuildConfigurationMenus:
                                         ),
                                         value="dedicated_channel",
                                         is_default=(
-                                            True
-                                            if guild_config.keep_logs is False
-                                            and guild_config.log_channel_id is not None
-                                            else False
+                                            bool(
+                                                guild_config.keep_logs is False
+                                                and guild_config.log_channel_id
+                                                is not None,
+                                            )
                                         ),
                                     ),
                                 ],
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.allow_anonymous_moderators",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -751,9 +762,9 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
-                ]
+                ],
             ),
         )
         components.append(
@@ -763,7 +774,7 @@ class GuildConfigurationMenus:
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.suggestion_queue.description",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -798,10 +809,10 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
-                ]
-            )
+                ],
+            ),
         )
 
         # Add misc container
@@ -812,7 +823,7 @@ class GuildConfigurationMenus:
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.generic_dm_messages_disabled",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -839,13 +850,13 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.primary_language",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -869,13 +880,13 @@ class GuildConfigurationMenus:
                                 min_values=1,
                                 max_values=1,
                             ),
-                        ]
+                        ],
                     ),
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.update_channel_id",
                             ctx.interaction.locale,
-                        )
+                        ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
@@ -889,11 +900,11 @@ class GuildConfigurationMenus:
                                 ),
                                 min_values=0,
                                 max_values=1,
-                            ),  # type: ignore
-                        ]
+                            ),
+                        ],
                     ),
-                ]
-            )
+                ],
+            ),
         )
         # Pagination
         components.append(
@@ -907,7 +918,7 @@ class GuildConfigurationMenus:
                         ),
                         custom_id=f"gcm:{link_id}:view_page_1",
                     ),
-                ]
+                ],
             ),
         )
 
@@ -919,8 +930,8 @@ class GuildConfigurationMenus:
                         url="https://docs.suggestions.gg/docs/configuration",
                         label="View the documentation here",
                     ),
-                ]
-            )
+                ],
+            ),
         )
 
         return components

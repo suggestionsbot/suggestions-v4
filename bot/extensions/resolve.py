@@ -20,7 +20,7 @@ loader = lightbulb.Loader()
 logger = logging.getLogger(__name__)
 
 
-async def resolve_suggestion(
+async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
     suggestion: Suggestions,
     response: str | None,
     anonymously: bool,
@@ -51,8 +51,8 @@ async def resolve_suggestion(
     if guild_config.auto_archive_threads and suggestion.thread_id:
         try:
             thread = await ctx.client.rest.fetch_channel(suggestion.thread_id)
-            thread = cast(hikari.GuildThreadChannel, thread)
-        except (hikari.NotFoundError,):
+            thread = cast("hikari.GuildThreadChannel", thread)
+        except hikari.NotFoundError:
             # While not ideal, we ignore the error here as
             # failing to archive a thread isn't a critical issue
             # worth crashing on. Instead, pass this to the actual
@@ -69,7 +69,7 @@ async def resolve_suggestion(
                     localisations.get_localized_string(
                         "commands.resolve.responses.locking_thread",
                         ctx.interaction.locale,
-                    )
+                    ),
                 )
                 await thread.edit(locked=True, archived=True)
                 logger.debug(
@@ -93,40 +93,45 @@ async def resolve_suggestion(
                 "commands.resolve.responses.keep_logs_edit_soon",
                 ctx.interaction.locale,
                 extras={"SID": suggestion.sID},
-            )
+            ),
         )
-        if apply_message_addon:
-            if (
+        if (
+            apply_message_addon
+            and (
                 ma := await MessageAddons.get_message(
                     user_config,
                     hint=PossibleMessageAddons.LEGACY_RESOLUTION_COMMANDS,
                 )
-            ) is not None:
-                content.write("\n\n")
-                content.write(await ma.as_string())
+            )
+            is not None
+        ):
+            content.write("\n\n")
+            content.write(await ma.as_string())
 
         await ctx.respond(content.getvalue())
-        return None
+        return
 
     # Need to delete from the original channel and move to new one
     if guild_config.log_channel_id is None:
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.no_log_channel", ctx.interaction.locale
-            )
+                "commands.resolve.responses.no_log_channel",
+                ctx.interaction.locale,
+            ),
         )
-        return None
+        return
 
     try:
         log_channel = await ctx.client.rest.fetch_channel(guild_config.log_channel_id)
-        log_channel = cast(hikari.GuildTextChannel, log_channel)
+        log_channel = cast("hikari.GuildTextChannel", log_channel)
     except (hikari.NotFoundError, hikari.ForbiddenError):
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.cant_get_log_channel", ctx.interaction.locale
-            )
+                "commands.resolve.responses.cant_get_log_channel",
+                ctx.interaction.locale,
+            ),
         )
-        return None
+        return
 
     try:
         components = await suggestion.as_components(
@@ -141,17 +146,19 @@ async def resolve_suggestion(
     except (hikari.NotFoundError, hikari.ForbiddenError):
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.cant_get_log_channel", ctx.interaction.locale
-            )
+                "commands.resolve.responses.cant_get_log_channel",
+                ctx.interaction.locale,
+            ),
         )
-        return None
+        return
 
     try:
         original_suggestion_message: hikari.Message | None = None
         if suggestion.channel_id is not None and suggestion.message_id is not None:
             original_suggestion_message: hikari.Message = (
                 await ctx.client.rest.fetch_message(
-                    suggestion.channel_id, suggestion.message_id
+                    suggestion.channel_id,
+                    suggestion.message_id,
                 )
             )
     except (hikari.NotFoundError, hikari.ForbiddenError):
@@ -180,20 +187,23 @@ async def resolve_suggestion(
             "commands.resolve.responses.resolved_immediately",
             ctx.interaction.locale,
             extras={"SID": suggestion.sID, "JUMP": suggestion.message_jump_link},
-        )
+        ),
     )
-    if apply_message_addon:
-        if (
+    if (
+        apply_message_addon
+        and (
             ma := await MessageAddons.get_message(
                 user_config,
                 hint=PossibleMessageAddons.LEGACY_RESOLUTION_COMMANDS,
             )
-        ) is not None:
-            content.write("\n\n")
-            content.write(await ma.as_string())
+        )
+        is not None
+    ):
+        content.write("\n\n")
+        content.write(await ma.as_string())
 
     await ctx.respond(content.getvalue())
-    return None
+    return
 
 
 async def autocomplete_callback(ctx: lightbulb.AutocompleteContext[str]) -> None:
@@ -229,22 +239,22 @@ class ResolveCmd(
             lightbulb.Choice(
                 "commands.resolve.options.resolution.menu.choices.1.name",
                 "Approved",
-                True,
+                localize=True,
             ),
             lightbulb.Choice(
                 "commands.resolve.options.resolution.menu.choices.2.name",
                 "Rejected",
-                True,
+                localize=True,
             ),
             lightbulb.Choice(
                 "commands.resolve.options.resolution.menu.choices.3.name",
                 "Implemented",
-                True,
+                localize=True,
             ),
             lightbulb.Choice(
                 "commands.resolve.options.resolution.menu.choices.4.name",
                 "Duplicate",
-                True,
+                localize=True,
             ),
         ],
     )
@@ -281,7 +291,8 @@ class ResolveCmd(
         )
         state: SuggestionStateEnum = SuggestionStateEnum(self.resolution_state_raw)
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-            self.suggestion_id, guild_config.guild_id
+            self.suggestion_id,
+            guild_config.guild_id,
         )
         if suggestion:
             await resolve_suggestion(
@@ -298,8 +309,9 @@ class ResolveCmd(
 
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.suggestion_not_found", ctx.interaction.locale
-            )
+                "commands.resolve.responses.suggestion_not_found",
+                ctx.interaction.locale,
+            ),
         )
 
 
@@ -350,7 +362,8 @@ class ApproveCmd(
             self.response.replace("\\n", "\n") if self.response is not None else None
         )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-            self.suggestion_id, guild_config.guild_id
+            self.suggestion_id,
+            guild_config.guild_id,
         )
         if suggestion:
             await resolve_suggestion(
@@ -368,8 +381,9 @@ class ApproveCmd(
 
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.suggestion_not_found", ctx.interaction.locale
-            )
+                "commands.resolve.responses.suggestion_not_found",
+                ctx.interaction.locale,
+            ),
         )
 
 
@@ -420,7 +434,8 @@ class RejectCmd(
             self.response.replace("\\n", "\n") if self.response is not None else None
         )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-            self.suggestion_id, guild_config.guild_id
+            self.suggestion_id,
+            guild_config.guild_id,
         )
         if suggestion:
             await resolve_suggestion(
@@ -438,6 +453,7 @@ class RejectCmd(
 
         await ctx.respond(
             localisations.get_localized_string(
-                "commands.resolve.responses.suggestion_not_found", ctx.interaction.locale
-            )
+                "commands.resolve.responses.suggestion_not_found",
+                ctx.interaction.locale,
+            ),
         )
