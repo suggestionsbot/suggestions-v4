@@ -15,6 +15,7 @@ from bot.constants import (
     DEFAULT_DOWN_VOTE,
 )
 from bot.localisation import Localisation
+from bot.tables import CommandInvokes, CommandTypes
 from bot.utils import generate_id, ViewVotersPaginator
 from shared.tables import (
     GuildConfigs,
@@ -147,6 +148,12 @@ class ViewVotersCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/view voters",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
             self.suggestion_id, guild_config.guild_id
         )
@@ -197,6 +204,12 @@ class ViewVoterMessageCommand(
     ) -> None:
         # 'self.target' contains the message object the command was executed on
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="View Voters",
+            command_type=CommandTypes.MESSAGE_COMMAND,
+        )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion_by_message(
             channel_id=self.target.channel_id,
             message_id=self.target.id,
@@ -243,6 +256,12 @@ class ViewUpVoterMessageCommand(
     ) -> None:
         # 'self.target' contains the message object the command was executed on
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="View Up Voters",
+            command_type=CommandTypes.MESSAGE_COMMAND,
+        )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion_by_message(
             channel_id=self.target.channel_id,
             message_id=self.target.id,
@@ -289,6 +308,12 @@ class ViewDownVoterMessageCommand(
     ) -> None:
         # 'self.target' contains the message object the command was executed on
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="View Down Voters",
+            command_type=CommandTypes.MESSAGE_COMMAND,
+        )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion_by_message(
             channel_id=self.target.channel_id,
             message_id=self.target.id,

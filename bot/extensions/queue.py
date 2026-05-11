@@ -7,6 +7,7 @@ import lightbulb
 from bot import utils
 from bot.constants import QUEUE_GROUP, EMBED_COLOR, PAGINATOR_OBJECTS
 from bot.localisation import Localisation
+from bot.tables import CommandInvokes, CommandTypes
 from bot.utils import QueuedSuggestionsPaginator, generate_id
 from shared.tables import (
     GuildConfigs,
@@ -35,6 +36,12 @@ class QueueInfoCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/queue info",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         queued_suggestions_for_guild: list[QueuedSuggestions] = (
             await QueuedSuggestions.fetch_guild_queued_suggestions(
                 guild_id=guild_config.guild_id
@@ -100,6 +107,12 @@ class QueueViewCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/queue view",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         queued_suggestions_for_guild: list[QueuedSuggestions] = (
             await QueuedSuggestions.fetch_guild_queued_suggestions(
                 guild_id=guild_config.guild_id

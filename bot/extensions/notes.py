@@ -7,6 +7,7 @@ import shared.utils
 from bot import utils
 from bot.constants import NOTES_GROUP, EMBED_COLOR
 from bot.localisation import Localisation
+from bot.tables import CommandTypes, CommandInvokes
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
@@ -139,6 +140,12 @@ class NotesAddCmd(
     ) -> None:
         # backwards compat for newlines instead of using a modal
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/note add",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         note = self.note.replace("\\n", "\n")
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
             self.suggestion_id, ctx.guild_id
@@ -215,6 +222,12 @@ class NotesRemoveCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/note remove",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
             self.suggestion_id, ctx.guild_id
         )

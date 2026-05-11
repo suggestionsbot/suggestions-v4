@@ -10,6 +10,7 @@ from hikari import snowflakes
 import shared.utils
 from bot.constants import TOTAL_SHARDS, CLUSTER_ID, VERSION, EMBED_COLOR, LOADED_AT
 from bot.localisation import Localisation
+from bot.tables import CommandTypes, CommandInvokes
 from shared.tables import GuildConfigs, UserConfigs
 from shared.tables.mixins.audit import utc_now
 
@@ -42,6 +43,12 @@ class InfoCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=False)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/info",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         if self.support and guild_config.guild_id:
             shard_id = snowflakes.calculate_shard_id(TOTAL_SHARDS, guild_config.guild_id)
             shard_latency = bot._get_shard(guild_config.guild_id).heartbeat_latency
@@ -140,6 +147,12 @@ class StatsCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=False)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/stats",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         shard_id = snowflakes.calculate_shard_id(TOTAL_SHARDS, guild_config.guild_id)
         python_version = f"{sys.version_info[0]}.{sys.version_info[1]}"
         embed: hikari.Embed = hikari.Embed(

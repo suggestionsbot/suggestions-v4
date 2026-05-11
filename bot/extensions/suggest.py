@@ -8,8 +8,8 @@ from bot import utils, menus
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MessageTooLong, MissingQueueChannel
 from bot.localisation import Localisation
-from bot.tables import InternalErrors
-from shared.tables import GuildConfigs
+from bot.tables import InternalErrors, CommandInvokes, CommandTypes
+from shared.tables import GuildConfigs, UserConfigs
 
 loader = lightbulb.Loader()
 logger = logging.getLogger(__name__)
@@ -103,8 +103,15 @@ class Suggest(
         self,
         ctx: lightbulb.Context,
         guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/suggest",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         if ctx.user.id in guild_config.blocked_users:
             await ctx.respond(
                 embed=utils.error_embed(

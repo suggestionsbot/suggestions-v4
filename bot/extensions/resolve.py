@@ -7,7 +7,7 @@ import lightbulb
 
 import shared
 from bot.localisation import Localisation
-from bot.tables import MessageAddons, PossibleMessageAddons
+from bot.tables import MessageAddons, PossibleMessageAddons, CommandTypes, CommandInvokes
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
@@ -270,6 +270,12 @@ class ResolveCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/resolve",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         note: str | None = (
             self.response.replace("\\n", "\n") if self.response is not None else None
         )
@@ -334,6 +340,12 @@ class ApproveCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/approve",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         note: str | None = (
             self.response.replace("\\n", "\n") if self.response is not None else None
         )
@@ -398,6 +410,12 @@ class RejectCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/reject",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         note: str | None = (
             self.response.replace("\\n", "\n") if self.response is not None else None
         )

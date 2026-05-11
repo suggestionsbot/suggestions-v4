@@ -6,6 +6,7 @@ import lightbulb
 
 import shared
 from bot.localisation import Localisation
+from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
@@ -67,6 +68,12 @@ class ClearCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/clear",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         suggestion: Suggestions | QueuedSuggestions | None = (
             await Suggestions.fetch_suggestion(self.suggestion_id, guild_config.guild_id)
         )

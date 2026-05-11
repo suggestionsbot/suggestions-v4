@@ -6,6 +6,7 @@ from piccolo.columns.operators import Equal
 from bot import utils
 from bot.localisation import Localisation
 from bot.menus import SuggestionMenu
+from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import (
     GuildConfigs,
     QueuedSuggestions,
@@ -64,6 +65,13 @@ class SuggestionsQueueMenu:
                 queued_suggestion = await QueuedSuggestions.fetch_queued_suggestion(
                     queued_suggestion_id, event.interaction.guild_id, lock_rows=True
                 )
+
+            await CommandInvokes.create(
+                user_config=user_config,
+                guild_config=guild_config,
+                action=f"Suggestions Queue {'Approve' if to_approve else 'Reject'}",
+                command_type=CommandTypes.BUTTON,
+            )
 
             if not to_approve:
                 await cls.reject_queued_suggestion(

@@ -6,6 +6,7 @@ import lightbulb
 from bot.constants import CONFIGURE_GROUP
 from bot.localisation import Localisation
 from bot.menus.guild_configuration_menu import GuildConfigurationMenus
+from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import GuildConfigs, UserConfigs
 
 logger = logging.getLogger(__name__)
@@ -49,9 +50,14 @@ class ConfigureGuildCmd(
         guild_config: GuildConfigs,
         user_config: UserConfigs,
         localisations: Localisation,
-        bot: hikari.RESTBot | hikari.GatewayBot,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/configure guild",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         if self.menu == "log_channel":
             components = await GuildConfigurationMenus.build_log_channel_components(
                 ctx=ctx, guild_config=guild_config, localisations=localisations

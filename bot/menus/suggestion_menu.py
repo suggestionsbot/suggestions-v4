@@ -20,7 +20,13 @@ from bot import constants, utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
 from bot.exceptions import MissingQueueChannel, MessageTooLong
 from bot.localisation import Localisation
-from bot.tables import InternalErrors, MessageAddons, PossibleMessageAddons
+from bot.tables import (
+    InternalErrors,
+    MessageAddons,
+    PossibleMessageAddons,
+    CommandInvokes,
+    CommandTypes,
+)
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
@@ -42,9 +48,16 @@ class SuggestionMenu:
     async def handle_embedded_button(
         cls,
         ctx: lightbulb.components.MenuContext,
-        guild_config: GuildConfigs,
         localisations: Localisation,
     ):
+        guild_config = await configs.ensure_guild_config(ctx.guild_id)
+        user_config = await configs.ensure_user_config(ctx.user.id)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="Create Suggestion",
+            command_type=CommandTypes.BUTTON,
+        )
         components = await cls.build_suggest_modal(
             guild_config=guild_config, localisations=localisations, ctx=ctx
         )
@@ -67,6 +80,14 @@ class SuggestionMenu:
         localisations: Localisation,
     ):
         await ctx.defer(ephemeral=True)
+        guild_config = await configs.ensure_guild_config(ctx.guild_id)
+        user_config = await configs.ensure_user_config(ctx.user.id)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="Suggestion Vote",
+            command_type=CommandTypes.BUTTON,
+        )
         from shared.tables import (
             Suggestions,
             SuggestionStateEnum,
@@ -364,7 +385,7 @@ class SuggestionMenu:
         localisations: Localisation,
         send_final_response: bool = True,
     ) -> Suggestions | None:
-        """Specific helper for handling queued suggestions"""
+        """Specific helper for handling suggestions"""
         bot = ctx.client.app
         from shared.tables import SuggestionStateEnum
         from shared.tables import Suggestions

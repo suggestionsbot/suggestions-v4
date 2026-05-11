@@ -7,10 +7,12 @@ import shared.utils
 from bot import utils
 from bot.constants import BLOCKLIST_GROUP
 from bot.localisation import Localisation
+from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import (
     GuildConfigs,
     Suggestions,
     QueuedSuggestions,
+    UserConfigs,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,9 +48,16 @@ class BlocklistAddCmd(
         self,
         ctx: lightbulb.Context,
         guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/blocklist add",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         suggestion: Suggestions | QueuedSuggestions | None = (
             await Suggestions.fetch_suggestion(self.suggestion_id, ctx.guild_id)
         )
@@ -146,9 +155,16 @@ class BlocklistRemoveCmd(
         self,
         ctx: lightbulb.Context,
         guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="/blocklist remove",
+            command_type=CommandTypes.SLASH_COMMAND,
+        )
         if self.suggestion_id is None and self.user is None:
             await ctx.respond(
                 localisations.get_localized_string(

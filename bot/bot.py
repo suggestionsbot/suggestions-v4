@@ -15,7 +15,7 @@ from bot.menus import (
     SuggestionsQueueMenu,
     SuggestionsQueueViewerMenu,
 )
-from bot.tables import InternalErrors
+from bot.tables import InternalErrors, CommandInvokes
 from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
 from web import constants as t_constants
@@ -252,11 +252,9 @@ async def create_bot(
                 )
 
             elif custom_id.startswith("v4_suggest_button"):
-                guild_config = await configs.ensure_guild_config(ctx.guild_id)
                 await SuggestionMenu.handle_embedded_button(
                     ctx=ctx,
                     localisations=constants.LOCALISATIONS,
-                    guild_config=guild_config,
                 )
 
             elif custom_id.startswith("v4_queue:"):
