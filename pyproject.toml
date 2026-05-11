@@ -49,6 +49,25 @@ migrations = [
 
 [tool.ruff]
 line-length = 90
+exclude =[
+    'bot/piccolo_migrations',
+    'shared/piccolo_migrations',
+    'web/piccolo_migrations',
+    '.venv'
+]
+
+[tool.ruff.lint]
+future-annotations = true
+select = ["ALL"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true
 
 [tool.black]
 line-length = 90

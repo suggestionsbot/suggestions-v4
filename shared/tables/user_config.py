@@ -23,7 +23,8 @@ class UserConfigs(AuditMixin, Table):
     primary_language_raw = Text(
         default=hikari.Locale.EN_GB.value,
         choices=hikari.Locale,
-        help_text="The language to use when translating user messages. Defaults to ctx.interaction.locale when creating",
+        help_text="The language to use when translating user messages. "
+        "Defaults to ctx.interaction.locale when creating",
     )
 
     @property

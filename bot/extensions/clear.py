@@ -1,5 +1,4 @@
 import logging
-from typing import cast
 
 import hikari
 import lightbulb
@@ -99,7 +98,7 @@ class ClearCmd(
                 )
                 suggestion.message_id = None
                 suggestion.channel_id = None
-            except:
+            except hikari.HikariError:
                 # This is fine
                 pass
 

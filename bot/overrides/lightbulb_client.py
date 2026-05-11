@@ -44,7 +44,7 @@ def build_ctx(
     return lightbulb.components.MenuContext(
         None,  # type: ignore
         None,  # type: ignore
-        interaction,
+        interaction,  # type: ignore
         None,  # type: ignore
         None,  # type: ignore
         None,  # type: ignore
@@ -60,7 +60,7 @@ def client_from_app(
         execution.ExecutionStep
     ] = DEFAULT_EXECUTION_STEP_ORDER,
     default_locale: hikari.Locale = hikari.Locale.EN_US,
-    localization_provider: localization.LocalizationProvider = localization.localization_unsupported,
+    localization_provider: localization.LocalizationProvider = localization.localization_unsupported,  # noqa: E501
     delete_unknown_commands: bool = True,
     deferred_registration_callback: lb_types.DeferredRegistrationCallback | None = None,
     hooks: Sequence[execution.ExecutionHook] = (),
@@ -76,7 +76,7 @@ def client_from_app(
         execution.ExecutionStep
     ] = DEFAULT_EXECUTION_STEP_ORDER,
     default_locale: hikari.Locale = hikari.Locale.EN_US,
-    localization_provider: localization.LocalizationProvider = localization.localization_unsupported,
+    localization_provider: localization.LocalizationProvider = localization.localization_unsupported,  # noqa: E501
     delete_unknown_commands: bool = True,
     deferred_registration_callback: lb_types.DeferredRegistrationCallback | None = None,
     hooks: Sequence[execution.ExecutionHook] = (),
@@ -91,7 +91,7 @@ def client_from_app(
         execution.ExecutionStep
     ] = DEFAULT_EXECUTION_STEP_ORDER,
     default_locale: hikari.Locale = hikari.Locale.EN_US,
-    localization_provider: localization.LocalizationProvider = localization.localization_unsupported,
+    localization_provider: localization.LocalizationProvider = localization.localization_unsupported,  # noqa: E501
     delete_unknown_commands: bool = True,
     deferred_registration_callback: lb_types.DeferredRegistrationCallback | None = None,
     hooks: Sequence[execution.ExecutionHook] = (),
@@ -104,24 +104,35 @@ def client_from_app(
 
     Args:
         app: Application that either supports gateway events, or an interaction server.
-        default_enabled_guilds: The guilds that application commands should be created in by default.
-        execution_step_order: The order that execution steps will be run in upon command processing.
+        default_enabled_guilds:
+            The guilds that application commands should be created in by default.
+        execution_step_order:
+            The order that execution steps will be run in upon command processing.
         default_locale: The default locale to use for command names and descriptions,
-            as well as option names and descriptions. Has no effect if localizations are not being used.
+            as well as option names and descriptions.
+            Has no effect if localizations are not being used.
             Defaults to :obj:`hikari.locales.Locale.EN_US`.
-        localization_provider: The localization provider function to use. This will be called whenever the
+        localization_provider: The localization provider function to use.
+            This will be called whenever the
             client needs to get the localizations for a key. Defaults to
-            :obj:`~lightbulb.localization.localization_unsupported` - the client does not support localizing commands.
+            :obj:`~lightbulb.localization.localization_unsupported`
+            - the client does not support localizing commands.
             **Must** be passed if you intend to support localizations.
-        delete_unknown_commands: Whether to delete existing commands that the client does not have
+        delete_unknown_commands:
+            Whether to delete existing commands that the client does not have
             an implementation for during command syncing. Defaults to :obj:`True`.
-        deferred_registration_callback: The callback to use to resolve which guilds a command should be created in
-            if a command is registered using :meth:`~Client.register_deferred`. Allows for commands to be
-            dynamically created in guilds, for example enabled on a per-guild basis using feature flags. Defaults
+        deferred_registration_callback:
+            The callback to use to resolve which guilds a command should be created in
+            if a command is registered using :meth:`~Client.register_deferred`.
+                Allows for commands to be
+            dynamically created in guilds, for example enabled on a per-guild
+                basis using feature flags. Defaults
             to :obj:`None`.
-        hooks: Execution hooks that should be applied to all commands. These hooks will always run **before**
+        hooks: Execution hooks that should be applied to all commands.
+            These hooks will always run **before**
             all other hooks registered for the same step are executed.
-        sync_commands: Whether to sync commands that are registered to the client before starting. Defaults
+        sync_commands: Whether to sync commands that are registered to the
+            client before starting. Defaults
             to :obj:`True`.
         features: Experimental features to enable for this client.
 
@@ -144,10 +155,11 @@ def client_from_app(
     for experiment in features:
         if not di_.DI_ENABLED and experiment.requires_di_enabled:
             raise ValueError(
-                f"cannot enable experiment {experiment.name!r} - DI is required but is disabled"
+                f"cannot enable experiment {experiment.name!r} - "
+                f"DI is required but is disabled"
             )
 
-    return cls(
+    return cls(  # type: ignore
         app,  # type: ignore[reportArgumentType]
         default_enabled_guilds,
         execution_step_order,
@@ -216,7 +228,7 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
                     internal_error: InternalErrors = await InternalErrors.persist_error(
                         exception,
                         command_name=localised_key,
-                        guild_id=interaction.guild_id,
+                        guild_id=t.cast(int, interaction.guild_id),
                         user_id=interaction.user.id,
                     )
                     error_span.set_attribute("error.id", internal_error.id)
@@ -227,7 +239,7 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
                         extra={
                             "interaction.guild.id": interaction.guild_id,
                             "interaction.author.id": interaction.user.id,
-                            "interaction.author.global_name": interaction.user.global_name,
+                            "interaction.author.global_name": interaction.user.global_name,  # noqa: E501
                             "error.code": ErrorCode.COMMAND_ON_COOLDOWN.value,
                         },
                     )

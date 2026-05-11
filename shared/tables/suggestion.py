@@ -110,7 +110,7 @@ class Suggestions(Table, AuditMixin):
         null=True,
         default=None,
         required=False,
-        help_text="If a thread was automatically created for this suggestion, what was it?",
+        help_text="If a thread was automatically created for this suggestion, what was it?",  # noqa: E501
     )
     # BigInt vs ForeignKey as we moderators dont need configs
     # Secret as if anon we don't want to reveal
@@ -154,12 +154,16 @@ class Suggestions(Table, AuditMixin):
 
     @property
     def footer_sid(self) -> str:
-        # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/{self.guild_id}/suggestions/{self.sID})"
+        # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/
+        # {self.guild_id}/suggestions/{self.sID})"
         return f"`{self.sID}`"
 
     @property
     def message_jump_link(self) -> str:
-        return f"https://discord.com/channels/{self.guild_id}/{self.channel_id}/{self.message_id}"
+        return (
+            f"https://discord.com/channels/"
+            f"{self.guild_id}/{self.channel_id}/{self.message_id}"
+        )
 
     @property
     def state(self) -> SuggestionStateEnum:
@@ -191,7 +195,10 @@ class Suggestions(Table, AuditMixin):
     ) -> typing.Self:
         """Simple helper method to also ensure configurations are prefetched"""
         query = (
-            cls.objects(Suggestions.user_configuration, Suggestions.guild_configuration)
+            cls.objects(
+                Suggestions.user_configuration,
+                Suggestions.guild_configuration,
+            )
             .where(
                 And(
                     Where(Suggestions.channel_id, channel_id, operator=Equal),
@@ -217,7 +224,10 @@ class Suggestions(Table, AuditMixin):
     ) -> typing.Self:
         """Simple helper method to also ensure configurations are prefetched"""
         query = (
-            cls.objects(Suggestions.user_configuration, Suggestions.guild_configuration)
+            cls.objects(
+                Suggestions.user_configuration,
+                Suggestions.guild_configuration,
+            )
             .where(
                 And(
                     Where(Suggestions.sID, sID, operator=Equal),
@@ -364,7 +374,7 @@ class Suggestions(Table, AuditMixin):
                 "components.suggestions.moderator_note",
                 locale,
                 extras={
-                    "MODERATOR_NOTE_BY_DISPLAY": self.moderator_note_added_by_display_text,
+                    "MODERATOR_NOTE_BY_DISPLAY": self.moderator_note_added_by_display_text,  # noqa: E501
                     "MODERATOR_NOTE": self.moderator_note,
                 },
                 guild_config=guild_config,

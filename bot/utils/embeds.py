@@ -38,7 +38,8 @@ def error_embed(
     elif error_code:
         if internal_error_reference:
             embed.set_footer(
-                text=f"Error code {error_code.value} | Error ID {internal_error_reference.id}"
+                text=f"Error code {error_code.value} "
+                f"| Error ID {internal_error_reference.id}"
             )
         else:
             embed.set_footer(text=f"Error code {error_code.value}")

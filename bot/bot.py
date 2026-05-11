@@ -2,20 +2,18 @@ import asyncio
 import logging
 
 import hikari
-import humanize
 import lightbulb
-from cooldowns import CallableOnCooldown
 from hikari.impl import CacheSettings, config
 
 from bot import overrides, utils, constants
-from bot.constants import OTEL_TRACER, ErrorCode
+from bot.constants import OTEL_TRACER
 from bot.menus import (
     GuildConfigurationMenus,
     SuggestionMenu,
     SuggestionsQueueMenu,
     SuggestionsQueueViewerMenu,
 )
-from bot.tables import InternalErrors, CommandInvokes
+from bot.tables import InternalErrors
 from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
 from web import constants as t_constants

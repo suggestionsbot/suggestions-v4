@@ -31,7 +31,7 @@ for k in localisation._file_to_locale.keys():
 
         elif "INNER" in name:
             # No nice way to automate this
-            new_data[f"values.{name.replace("_INNER", "").lower()}"] = v
+            new_data[f"values.{name.replace("_INNER", "").lower()}"] = v  # noqa
 
         else:
             new_data[name] = v

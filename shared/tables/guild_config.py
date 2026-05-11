@@ -57,7 +57,8 @@ class GuildConfigs(AuditMixin, Table):
     update_channel_id = BigInt(
         default=None,
         null=True,
-        help_text="A channel the bot can send updates to about new features, supported languages, etc",
+        help_text="A channel the bot can send updates to about new features, "
+        "supported languages, etc",
     )
     can_have_anonymous_suggestions = Boolean(
         default=True,
@@ -81,14 +82,16 @@ class GuildConfigs(AuditMixin, Table):
     )
     allow_anonymous_moderators = Boolean(
         default=False,
-        help_text="If True, moderators can be anonymous when suggestions are resolved or when adding notes",
+        help_text="If True, moderators can be anonymous when suggestions "
+        "are resolved or when adding notes",
     )
     blocked_users = Array(
         BigInt(),
         help_text="A list of users who cannot make suggestions",
     )
     blocked_users_json = JSON(
-        help_text="A migration helper given Apache hop doesnt like arrays. Will need to do a second migration later",
+        help_text="A migration helper given Apache hop doesnt like arrays. "
+        "Will need to do a second migration later",
         null=True,
         default=None,
     )

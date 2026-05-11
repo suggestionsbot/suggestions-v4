@@ -27,7 +27,8 @@ async def notify_user_of_change(
 ) -> None:
     if user_config.generic_dm_messages_disabled:
         logger.debug(
-            "Not dm'ing %s for a note changed on suggestion %s as they have dm's disabled",
+            "Not dm'ing %s for a note changed on "
+            "suggestion %s as they have dm's disabled",
             suggestion.author_id,
             suggestion.sID,
             extra={
@@ -40,7 +41,8 @@ async def notify_user_of_change(
 
     if guild_config.generic_dm_messages_disabled:
         logger.debug(
-            "Not dm'ing %s for a note changed on suggestion %s as the guilds has dm's disabled",
+            "Not dm'ing %s for a note changed on "
+            "suggestion %s as the guilds has dm's disabled",
             suggestion.author_id,
             suggestion.sID,
             extra={
@@ -165,7 +167,8 @@ class NotesAddCmd(
                         "menus.suggestion.not_found.title", ctx.interaction.locale
                     ),
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.description", ctx.interaction.locale
+                        "menus.suggestion.not_found.description",
+                        ctx.interaction.locale,
                     ),
                 ),
                 ephemeral=True,
@@ -246,7 +249,8 @@ class NotesRemoveCmd(
                         "menus.suggestion.not_found.title", ctx.interaction.locale
                     ),
                     localisations.get_localized_string(
-                        "menus.suggestion.not_found.description", ctx.interaction.locale
+                        "menus.suggestion.not_found.description",
+                        ctx.interaction.locale,
                     ),
                 ),
                 ephemeral=True,

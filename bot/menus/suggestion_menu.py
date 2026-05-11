@@ -14,6 +14,8 @@ from hikari.interactions.interaction_components import (
     FileUploadInteractionComponent,
     TextSelectMenuInteractionComponent,
 )
+from piccolo.columns import Where, Column
+from piccolo.columns.operators import Equal
 
 import shared.utils
 from bot import constants, utils
@@ -127,11 +129,15 @@ class SuggestionMenu:
             )
 
         vote_obj: SuggestionVotes = await SuggestionVotes.objects().get_or_create(
-            SuggestionVotes.suggestion == suggestion,
-            defaults={
-                SuggestionVotes.suggestion: suggestion,
-                SuggestionVotes.vote_type: vote,
-                SuggestionVotes.user_id: ctx.user.id,
+            Where(
+                cast(Column, cast(object, SuggestionVotes.suggestion)),
+                suggestion,
+                operator=Equal,
+            ),
+            defaults={  # type: ignore # This is just weird reference things
+                "suggestion": suggestion,
+                "vote_type": vote,
+                "user_id": ctx.user.id,
             },
         )
         if not vote_obj._was_created and vote_obj.vote_type == vote.value:
@@ -170,7 +176,8 @@ class SuggestionMenu:
                 else "values.suggestion_up_vote_modified_vote"
             )
             logger.debug(
-                f"Member modified their vote on {suggestion.suggestion} to a {vote.value}",
+                f"Member modified their vote on {suggestion.suggestion} "
+                f"to a {vote.value}",
                 extra={
                     "interaction.user.id": ctx.user.id,
                     "interaction.user.username": ctx.user.display_name,

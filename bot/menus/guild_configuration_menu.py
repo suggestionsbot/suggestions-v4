@@ -457,7 +457,7 @@ class GuildConfigurationMenus:
                                             ctx.interaction.locale,
                                         ),
                                         value="no",
-                                        is_default=not guild_config.threads_for_suggestions,
+                                        is_default=not guild_config.threads_for_suggestions,  # noqa: E501
                                     ),
                                 ],
                                 min_values=1,
@@ -523,7 +523,7 @@ class GuildConfigurationMenus:
                                             ctx.interaction.locale,
                                         ),
                                         value="no",
-                                        is_default=not guild_config.ping_on_thread_creation,
+                                        is_default=not guild_config.ping_on_thread_creation,  # noqa: E501
                                     ),
                                 ],
                                 min_values=1,
@@ -556,7 +556,7 @@ class GuildConfigurationMenus:
                                             ctx.interaction.locale,
                                         ),
                                         value="no",
-                                        is_default=not guild_config.can_have_anonymous_suggestions,
+                                        is_default=not guild_config.can_have_anonymous_suggestions,  # noqa: E501
                                     ),
                                 ],
                                 min_values=1,
@@ -589,7 +589,7 @@ class GuildConfigurationMenus:
                                             ctx.interaction.locale,
                                         ),
                                         value="no",
-                                        is_default=not guild_config.can_have_images_in_suggestions,
+                                        is_default=not guild_config.can_have_images_in_suggestions,  # noqa: E501
                                     ),
                                 ],
                                 min_values=1,
@@ -745,7 +745,7 @@ class GuildConfigurationMenus:
                                             ctx.interaction.locale,
                                         ),
                                         value="no",
-                                        is_default=not guild_config.allow_anonymous_moderators,
+                                        is_default=not guild_config.allow_anonymous_moderators,  # noqa: E501
                                     ),
                                 ],
                                 min_values=1,
@@ -825,7 +825,7 @@ class GuildConfigurationMenus:
                                             ctx.interaction.locale,
                                         ),
                                         value="yes",
-                                        is_default=not guild_config.generic_dm_messages_disabled,
+                                        is_default=not guild_config.generic_dm_messages_disabled,  # noqa: E501
                                     ),
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(

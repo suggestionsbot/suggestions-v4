@@ -1,16 +1,11 @@
-import datetime
 import io
 import logging
-import sys
 
 import hikari
-import humanize
 import lightbulb
-from hikari import snowflakes
 from humanize import naturaldate
 
-import shared.utils
-from bot.constants import TOTAL_SHARDS, CLUSTER_ID, VERSION, EMBED_COLOR, LOADED_AT
+from bot.constants import EMBED_COLOR
 from bot.localisation import Localisation
 from bot.tables import InternalErrors
 from shared.tables import GuildConfigs, UserConfigs
@@ -71,7 +66,8 @@ class ErrorInformation(
             description=f"**Command name**: `{error.command_name}`\n\n"
             f"**User ID**: `{error.user_id}` | **Guild ID**: `{error.guild_id}`\n\n"
             f"**Error**: `{error.error_name}`\n"
-            f"**Error occurred**: `{naturaldate(error.created_at)}` (<t:{int(error.created_at.timestamp())}:F>)",
+            f"**Error occurred**: `{naturaldate(error.created_at)}` "
+            f"(<t:{int(error.created_at.timestamp())}:F>)",
         )
         await ctx.respond(
             embed=embed,

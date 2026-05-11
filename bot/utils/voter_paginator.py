@@ -12,10 +12,9 @@ from hikari.api import (
 )
 
 from bot.constants import LOCALISATIONS
-from bot.exceptions import QueueImbalance
 
 if TYPE_CHECKING:
-    from shared.tables import QueuedSuggestions
+    pass
 
 log = logging.getLogger(__name__)
 

@@ -1,7 +1,6 @@
 import io
 import logging
 from itertools import batched
-from typing import cast
 
 import hikari
 import lightbulb
@@ -21,13 +20,9 @@ from shared.tables import (
     GuildConfigs,
     UserConfigs,
     Suggestions,
-    SuggestionStateEnum,
-    QueuedSuggestions,
-    QueuedSuggestionStateEnum,
     SuggestionVotes,
     SuggestionsVoteTypeEnum,
 )
-from web.util.table_mixins import utc_now
 
 loader = lightbulb.Loader()
 logger = logging.getLogger(__name__)

@@ -1,6 +1,5 @@
 import logging
 
-import hikari
 import lightbulb
 
 from bot.constants import CONFIGURE_GROUP
