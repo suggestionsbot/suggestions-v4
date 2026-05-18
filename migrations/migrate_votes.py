@@ -1,3 +1,4 @@
+import humanize
 import asyncio
 import json
 import os
@@ -41,7 +42,17 @@ async def get_votes_from_suggestions():
         votes += len(s.down_voted_by)
 
 
+# new schema, no duplicate votes
+# Yes we lose data but its technically more correct
+#
+# Also don't double vote, and we dont store time
+# so we can't know what the latest vote is so guess
+duplicate = 0
+existing_votes: set[str] = set()
+
+
 async def write_vote_csv():
+    global duplicate
     pgs = {}
     with open("migrations/suggestions.json", "r") as f:
         raw_data = orjson.loads(f.read())
@@ -63,16 +74,26 @@ async def write_vote_csv():
                 continue
 
             pgs_id = pgs[s._id]
-            for vote in s.up_voted_by:
+            for voter in s.up_voted_by:
+                if f"{pgs_id},{voter}" in existing_votes:
+                    duplicate += 1
+                    # continue
+
                 f.write(
-                    f"{created_at.isoformat()},{last_modified_at.isoformat()},{pgs_id},{vote},{SuggestionsVoteTypeEnum.UpVote.value}\n"
+                    f"{created_at.isoformat()},{last_modified_at.isoformat()},{pgs_id},{voter},{SuggestionsVoteTypeEnum.UpVote.value}\n"
                 )
+                existing_votes.add(f"{pgs_id},{voter}")
                 pbar.update(1)
 
-            for vote in s.up_voted_by:
+            for voter in s.down_voted_by:
+                if f"{pgs_id},{voter}" in existing_votes:
+                    duplicate += 1
+                    continue
+
                 f.write(
-                    f"{created_at.isoformat()},{last_modified_at.isoformat()},{pgs_id},{vote},{SuggestionsVoteTypeEnum.DownVote.value}\n"
+                    f"{created_at.isoformat()},{last_modified_at.isoformat()},{pgs_id},{voter},{SuggestionsVoteTypeEnum.DownVote.value}\n"
                 )
+                existing_votes.add(f"{pgs_id},{voter}")
                 pbar.update(1)
 
 
@@ -85,6 +106,7 @@ async def main():
     await write_vote_csv()
 
     print("--- %s seconds to complete ---" % (round(time.time() - start_time, 5)))
+    print(f"Voters with two or more votes on a suggestion: {duplicate}")
 
 
 if __name__ == "__main__":
