@@ -25,6 +25,8 @@ create index suggestion_votes_user_id_index
 create index suggestion_votes_suggestion_user_id_index
     on public.suggestion_votes (suggestion, user_id);
 
+alter table suggestion_votes
+add constraint unique_votes UNIQUE (user_id, suggestion);
 ```
 
 ```sql
