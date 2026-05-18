@@ -1,7 +1,8 @@
 from datetime import timedelta
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from piccolo.columns import Text, Integer, BigInt
+from piccolo.columns import Text, Integer, BigInt, Serial
 from piccolo.table import Table
 
 from shared.tables.mixins import AuditMixin
@@ -30,6 +31,9 @@ class CooldownPeriod(str, Enum):
 
 
 class PremiumGuildConfigs(AuditMixin, Table):
+    if TYPE_CHECKING:
+        id: Serial
+
     guild_id = BigInt(
         unique=True,
         index=True,

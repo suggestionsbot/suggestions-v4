@@ -67,30 +67,36 @@ class SuggestionVotes(Table, AuditMixin):
         suggestion: Suggestions,
         vote_type: SuggestionsVoteTypeEnum,
         user_id: int,
-        lock_rows: bool = False,
     ) -> tuple[SuggestionVotes, bool]:
-        created = False
-        query = SuggestionVotes.objects().first()
-        if lock_rows:
-            query = query.lock_rows("UPDATE", of=(cls,))
-
-        query = query.where(
-            Where(
-                SuggestionVotes.suggestion,
-                suggestion,
-                operator=Equal,
+        try_insert = (
+            await SuggestionVotes.insert(
+                cls(suggestion=suggestion, user_id=user_id, vote_type=vote_type)
             )
-        ).where(
-            Where(
-                SuggestionVotes.user_id,
-                user_id,
-                operator=Equal,
-            )
+            .on_conflict(action="DO NOTHING", target=(cls.user_id, cls.suggestion))
+            .returning(*SuggestionVotes.all_columns())
         )
-        vote_obj = await query
-        if vote_obj is None:
-            created = True
-            vote_obj = cls(suggestion=suggestion, user_id=user_id, vote_type=vote_type)
-            await vote_obj.save()
+        if try_insert:
+            # New object
+            obj = cls(**try_insert[0])
+            obj._exists_in_db = True
+            return obj, True
 
-        return vote_obj, created
+        return (
+            await SuggestionVotes.objects()
+            .first()
+            .where(
+                Where(
+                    SuggestionVotes.suggestion,
+                    suggestion,
+                    operator=Equal,
+                )
+            )
+            .where(
+                Where(
+                    SuggestionVotes.user_id,
+                    user_id,
+                    operator=Equal,
+                )
+            ),
+            False,
+        )

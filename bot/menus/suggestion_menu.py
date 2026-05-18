@@ -140,7 +140,6 @@ class SuggestionMenu:
                 suggestion=suggestion,
                 vote_type=vote,
                 user_id=ctx.user.id,
-                lock_rows=True,
             )
             if not was_created and vote_obj.vote_type == vote.value:
                 # Trying to vote again for the same item
