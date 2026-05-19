@@ -150,6 +150,7 @@
   "menus.queue.responses.queue_channel_no_perms.description": "The bot does not have permissions to interact with the queue channel.\nPlease contact an administrator and ask them to ensure the bot can delete messages from the channel.",
   "menus.queue.responses.approved": "I have accepted that suggestion from the queue.",
   "menus.queue.responses.rejected": "I have removed that suggestion from the queue.",
+  "menus.queue.responses.missing": "The requested queued suggestion no longer exists.",
   "menus.queue_paginator.responses.page.footer": "**Queued Suggestions Viewer**\nPage `$CURRENT`/`$TOTAL`",
   "menus.queue_paginator.responses.empty": "No more suggestions in queue.",
   "menus.queue_paginator.responses.expired": "This pagination session has expired, please start a new one with `/queue view`",

@@ -40,7 +40,7 @@ class SuggestionsQueueMenu:
                 locale=event.interaction.locale,
             )
             if queued_suggestion_id is None:
-                # Legacy ids did not contain
+                # Legacy events did not contain the id
                 queued_suggestion = (
                     await QueuedSuggestions.objects(
                         QueuedSuggestions.user_configuration,
@@ -77,6 +77,15 @@ class SuggestionsQueueMenu:
                 action=f"Suggestions Queue {'Approve' if to_approve else 'Reject'}",
                 command_type=CommandTypes.BUTTON,
             )
+
+            if queued_suggestion is None:
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.queue.responses.missing",
+                        user_config.primary_language,
+                    ),
+                )
+                return
 
             if not to_approve:
                 await cls.reject_queued_suggestion(

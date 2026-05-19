@@ -86,13 +86,16 @@ class QueuedSuggestionsPaginator:
                 components=await self.format_page(),
             )
 
-    async def get_current_queued_suggestion(self) -> QueuedSuggestions:
+    async def get_current_queued_suggestion(self) -> QueuedSuggestions | None:
         from shared.tables import QueuedSuggestions, QueuedSuggestionStateEnum
 
         qs: QueuedSuggestions | None = await QueuedSuggestions.fetch_queued_suggestion(
             self._paged_data[self._current_page_index],
             self._guild_id,
         )
+        if qs is None:
+            return qs
+
         if qs.state != QueuedSuggestionStateEnum.PENDING:
             raise QueueImbalance
 
@@ -109,7 +112,12 @@ class QueuedSuggestionsPaginator:
         | None
     ):
         try:
-            suggestion: QueuedSuggestions = await self.get_current_queued_suggestion()
+            suggestion: QueuedSuggestions | None = (
+                await self.get_current_queued_suggestion()
+            )
+            if suggestion is None:
+                await self.remove_current_page()
+                return None
         except QueueImbalance:
             await self.remove_current_page()
             log.warning(
@@ -120,6 +128,7 @@ class QueuedSuggestionsPaginator:
                     "interaction.guild.id": self.original_interaction.guild_id,
                 },
             )
+            return None
         else:
             components: list[
                 ContainerComponentBuilder
@@ -168,9 +177,9 @@ class QueuedSuggestionsPaginator:
             return components
 
     async def update_message_with_current_page(self) -> None:
-        await self.original_interaction.edit_initial_response(
-            components=await self.format_page(),
-        )
+        page = await self.format_page()
+        if page is not None:
+            await self.original_interaction.edit_initial_response(components=page)
 
     async def stop_paginating(self) -> None:
         await self.original_interaction.edit_initial_response(

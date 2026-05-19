@@ -174,7 +174,7 @@ class QueuedSuggestions(Table, AuditMixin):
     @classmethod
     async def fetch_queued_suggestion(
         cls, sID: str, guild_id: int, *, lock_rows: bool = False
-    ) -> typing.Self:
+    ) -> typing.Self | None:
         """Simple helper method to also ensure configurations are prefetched"""
         query = cls.objects(
             QueuedSuggestions.user_configuration,
