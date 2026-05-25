@@ -15,6 +15,7 @@ from bot.constants import (
     QUEUE_GROUP,
     VIEW_GROUP,
 )
+from bot.extensions.resolve import ResolveMessageCommand
 from shared.tables import GuildConfigs
 from web import constants as t_constants
 
@@ -67,6 +68,7 @@ async def main():
         client.register(BLOCKLIST_GROUP)
         client.register(QUEUE_GROUP)
         client.register(VIEW_GROUP)
+        client.register(ResolveMessageCommand)
         client.register(ViewVoterMessageCommand)
         client.register(ViewUpVoterMessageCommand)
         client.register(ViewDownVoterMessageCommand)

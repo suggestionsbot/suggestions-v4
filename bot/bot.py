@@ -2,12 +2,18 @@ import asyncio
 import logging
 from typing import cast, Literal
 
+import commons
 import hikari
 import lightbulb
 from hikari.impl import CacheSettings, config
+from hikari.interactions.interaction_components import (
+    TextInputInteractionComponent,
+    FileUploadInteractionComponent,
+)
 
 from bot import overrides, utils, constants
-from bot.constants import OTEL_TRACER
+from bot.constants import OTEL_TRACER, LOCALISATIONS
+from bot.extensions.resolve import resolve_suggestion
 from bot.menus import (
     GuildConfigurationMenus,
     SuggestionMenu,
@@ -15,7 +21,7 @@ from bot.menus import (
     SuggestionsQueueViewerMenu,
 )
 from bot.tables import InternalErrors
-from shared.tables import GuildConfigs, UserConfigs
+from shared.tables import GuildConfigs, UserConfigs, Suggestions, SuggestionStateEnum
 from shared.utils import configs
 from web import constants as t_constants
 
@@ -115,6 +121,12 @@ async def create_bot(  # noqa: PLR0915, C901
                     custom_id.split(":", maxsplit=1)[1],
                 )
 
+        elif custom_id.startswith("resolve_modal"):
+            component_key = "resolve modal"
+            _, link_id, suggestion_id = custom_id.split(":", maxsplit=2)
+            if link_id is not None and link_id:
+                otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+
         with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
             span.set_attribute("interaction.user.id", ctx.user.id)
             span.set_attribute(
@@ -124,16 +136,69 @@ async def create_bot(  # noqa: PLR0915, C901
             if ctx.guild_id:
                 span.set_attribute("interaction.guild.id", ctx.guild_id)
 
+            await ctx.defer(ephemeral=True)
             guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
             user_config = await configs.ensure_user_config(ctx.user.id)
-            await SuggestionMenu.handle_interaction(
-                event.interaction.components,
-                ctx=ctx,
-                localisations=constants.LOCALISATIONS,
-                event=event,
-                guild_config=guild_config,
-                user_config=user_config,
-            )
+            if custom_id.startswith("suggest_modal"):
+                await SuggestionMenu.handle_interaction(
+                    event.interaction.components,
+                    ctx=ctx,
+                    localisations=constants.LOCALISATIONS,
+                    event=event,
+                    guild_config=guild_config,
+                    user_config=user_config,
+                )
+
+            elif custom_id.startswith("resolve_modal"):
+                suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
+                    suggestion_id, guild_config.guild_id  # noqa
+                )
+                resolution_state_raw: str
+                response: str | None = None
+                anonymously: bool = False
+                for entry in event.interaction.components:
+                    if entry.component.custom_id == "resolution_state_raw":
+                        entry.component = cast(
+                            "FileUploadInteractionComponent",
+                            entry.component,
+                        )
+                        resolution_state_raw: str = entry.component.values[0]
+                    elif entry.component.custom_id == "response":
+                        entry.component = cast(
+                            "TextInputInteractionComponent",
+                            entry.component,
+                        )
+                        response = entry.component.value
+
+                    elif entry.component.custom_id == "anonymously":
+                        entry.component = cast(
+                            "FileUploadInteractionComponent",
+                            entry.component,
+                        )
+                        anonymously = commons.value_to_bool(entry.component.values[0])
+
+                # We know by here this is always true
+                suggestion: Suggestions = cast("Suggestions", suggestion)
+                await resolve_suggestion(
+                    suggestion,
+                    response,
+                    anonymously,
+                    SuggestionStateEnum(resolution_state_raw),
+                    ctx,
+                    guild_config,
+                    user_config,
+                    LOCALISATIONS,
+                )
+
+            else:
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        title="Unknown Modal",
+                        description=f"Please reach out to support with a screenshot of this message.\n\n"
+                        f"Custom ID: {custom_id}",
+                    ),
+                    ephemeral=True,
+                )
 
     def build_ctx(
         interaction: (

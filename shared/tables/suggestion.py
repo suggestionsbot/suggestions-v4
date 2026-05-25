@@ -98,12 +98,14 @@ class Suggestions(Table, AuditMixin):
         null=True,
         default=None,
         required=False,
+        index=True,
         help_text="If this suggestion has been sent to discord, what channel is it in?",
     )
     message_id = BigInt(
         null=True,
         default=None,
         required=False,
+        index=True,
         help_text="If this suggestion has been sent to discord, what is it's message id?",
     )
     thread_id = BigInt(
@@ -192,7 +194,7 @@ class Suggestions(Table, AuditMixin):
     @classmethod
     async def fetch_suggestion_by_message(
         cls, *, channel_id: int, message_id: int, guild_id: int
-    ) -> typing.Self:
+    ) -> typing.Self | None:
         """Simple helper method to also ensure configurations are prefetched"""
         query = (
             cls.objects(

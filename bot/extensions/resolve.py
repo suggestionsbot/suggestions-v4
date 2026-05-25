@@ -6,6 +6,7 @@ import hikari
 import lightbulb
 
 import shared.utils
+from bot import constants, utils
 from bot.localisation import Localisation
 from bot.tables import MessageAddons, PossibleMessageAddons, CommandTypes, CommandInvokes
 from shared.tables import (
@@ -25,7 +26,7 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
     response: str | None,
     anonymously: bool,
     suggestion_state: SuggestionStateEnum,
-    ctx: lightbulb.Context,
+    ctx: lightbulb.Context | lightbulb.components.MenuContext,
     guild_config: GuildConfigs,
     user_config: UserConfigs,
     localisations: Localisation,
@@ -457,3 +458,165 @@ class RejectCmd(
                 ctx.interaction.locale,
             ),
         )
+
+
+class ResolveMessageCommand(
+    lightbulb.MessageCommand,
+    name="message_commands.resolve.name",
+    localize=True,
+):
+    @classmethod
+    async def build_resolve_modal(
+        cls,
+        *,
+        user_configs: UserConfigs,
+        localisations: Localisation,
+    ) -> list[hikari.impl.LabelComponentBuilder]:
+        components = [
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "commands.resolve.options.resolution.name",
+                    user_configs.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "commands.resolve.options.resolution.description",
+                    user_configs.primary_language,
+                ),
+                component=hikari.impl.TextSelectMenuBuilder(
+                    custom_id="resolution_state_raw",
+                    parent=None,
+                    options=[
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "commands.resolve.options.resolution.menu.choices.1.name",
+                                user_configs.primary_language,
+                            ),
+                            value="Approved",
+                        ),
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "commands.resolve.options.resolution.menu.choices.2.name",
+                                user_configs.primary_language,
+                            ),
+                            value="Rejected",
+                        ),
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "commands.resolve.options.resolution.menu.choices.3.name",
+                                user_configs.primary_language,
+                            ),
+                            value="Implemented",
+                        ),
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "commands.resolve.options.resolution.menu.choices.4.name",
+                                user_configs.primary_language,
+                            ),
+                            value="Duplicate",
+                        ),
+                    ],
+                    is_required=True,
+                    min_values=1,
+                    max_values=1,
+                ),
+            ),
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "commands.resolve.options.response.name",
+                    user_configs.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "commands.resolve.options.response.description",
+                    user_configs.primary_language,
+                ),
+                component=hikari.impl.TextInputBuilder(
+                    custom_id="response",
+                    style=hikari.TextInputStyle.PARAGRAPH,
+                    required=False,
+                    min_length=1,
+                    max_length=constants.MAX_CONTENT_LENGTH,
+                    label="response",
+                ),
+            ),
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "commands.resolve.options.anonymously.name",
+                    user_configs.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "commands.resolve.options.anonymously.description",
+                    user_configs.primary_language,
+                ),
+                component=hikari.impl.TextSelectMenuBuilder(
+                    custom_id="anonymously",
+                    parent=None,
+                    options=[
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "menus.resolve.yes",
+                                user_configs.primary_language,
+                            ),
+                            value="yes",
+                        ),
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "menus.resolve.no",
+                                user_configs.primary_language,
+                            ),
+                            value="no",
+                            is_default=True,
+                        ),
+                    ],
+                    min_values=1,
+                    max_values=1,
+                    is_required=False,
+                ),
+            ),
+        ]
+
+        return components
+
+    @lightbulb.invoke
+    async def invoke(
+        self,
+        ctx: lightbulb.Context,
+        user_config: UserConfigs,
+        guild_config: GuildConfigs,
+        localisations: Localisation,
+    ) -> None:
+        # 'self.target' contains the message object the command was executed on
+        await CommandInvokes.create(
+            user_config=user_config,
+            guild_config=guild_config,
+            action="Resolve Suggestion",
+            command_type=CommandTypes.MESSAGE_COMMAND,
+        )
+        suggestion: Suggestions | None = await Suggestions.fetch_suggestion_by_message(
+            channel_id=self.target.channel_id,
+            message_id=self.target.id,
+            guild_id=guild_config.guild_id,
+        )
+        if suggestion is None:
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "commands.resolve.responses.suggestion_not_found",
+                    user_config.primary_language,
+                ),
+                ephemeral=True,
+            )
+            return
+
+        components = await self.build_resolve_modal(
+            localisations=localisations, user_configs=user_config
+        )
+
+        link_id: str = await utils.otel.generate_trace_link_state()
+        await ctx.respond_with_modal(
+            localisations.get_localized_string(
+                "message_commands.resolve.name",
+                user_config.primary_language,
+            ),
+            f"resolve_modal:{link_id}:{suggestion.sID}",
+            components=components,
+        )
+        return

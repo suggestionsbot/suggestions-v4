@@ -91,6 +91,8 @@
   "commands.configure.guild.options.menu.choices.1.name": "View All Settings",
   "commands.configure.guild.options.menu.choices.2.name": "Change Log Channel",
   "commands.configure.guild.options.menu.choices.3.name": "Configure Channel Based Suggestions Queue and Logs",
+  "menus.resolve.yes": "Yes",
+  "menus.resolve.no": "No",
   "menus.suggestion.yes": "Yes",
   "menus.suggestion.no": "No",
   "menus.suggestion.not_found.title": "Suggestion Not Found.",
@@ -164,6 +166,7 @@
   "message_addons.legacy_resolution_commands": "Want more ways to resolve suggestions other then just approving or rejecting? Try out `/resolve`!",
   "message_addons.premium.notif_on_suggestion_resolution": "Want to get a notification when Suggestions you vote on are resolved by staff? If so have a look at our premium offerings, currently free for the first month. Enjoy it on us!",
 
+  "message_commands.resolve.name": "Resolve Suggestion",
   "message_commands.view_voters.name": "View Voters",
   "message_commands.view_up_voters.name": "View Up Voters",
   "message_commands.view_down_voters.name": "View Down Voters",

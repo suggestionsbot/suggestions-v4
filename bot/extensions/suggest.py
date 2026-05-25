@@ -137,7 +137,7 @@ class Suggest(
         )
 
         link_id: str = await utils.otel.generate_trace_link_state()
-        await ctx.interaction.create_modal_response(
+        await ctx.respond_with_modal(
             localisations.get_localized_string(
                 "commands.suggest.responses.menu_title",
                 ctx.interaction.locale,

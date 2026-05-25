@@ -225,7 +225,6 @@ class SuggestionMenu:
         user_config: UserConfigs,
         event: hikari.ModalInteractionCreateEvent,
     ) -> Suggestions | None:
-        await ctx.defer(ephemeral=True)
         try:
             suggestion_content: str | None = None
             image_urls: list[str] = []
