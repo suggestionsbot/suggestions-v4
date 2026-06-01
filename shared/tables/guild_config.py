@@ -116,43 +116,6 @@ class GuildConfigs(AuditMixin, Table):
     def primary_language(self) -> hikari.Locale:
         return hikari.Locale(self.primary_language_raw)
 
-    @property
-    def primary_language_as_word(self) -> str:
-        return {
-            "bg": "Bulgarian",
-            "cs": "Czech",
-            "da": "Danish",
-            "de": "German",
-            "el": "Greek",
-            "en-GB": "English, UK",
-            "en-US": "English, US",
-            "es-ES": "Spanish",
-            "es-419": "Spanish, LATAM",
-            "fi": "Finnish",
-            "fr": "French",
-            "hi": "Hindi",
-            "hr": "Croatian",
-            "hu": "Hungarian",
-            "id": "Indonesian",
-            "it": "Italian",
-            "ja": "Japanese",
-            "ko": "Korean",
-            "lt": "Lithuanian",
-            "nl": "Dutch",
-            "no": "Norwegian",
-            "pl": "Polish",
-            "pt-BR": "Portuguese, Brazilian",
-            "ro": "Romanian",
-            "ru": "Russian",
-            "sv-SE": "Swedish",
-            "th": "Thai",
-            "tr": "Turkish",
-            "uk": "Ukrainian",
-            "vi": "Vietnamese",
-            "zh-CN": "Chinese, China",
-            "zh-TW": "Chinese, Taiwan",
-        }[self.primary_language_raw]
-
     async def premium_is_enabled(
         self, ctx: lightbulb.Context | lightbulb.components.MenuContext
     ) -> bool:

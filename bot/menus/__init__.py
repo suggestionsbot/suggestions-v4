@@ -1,4 +1,5 @@
 from .guild_configuration_menu import GuildConfigurationMenus
+from .user_configuration_menu import UserConfigurationMenus
 from .suggestion_menu import SuggestionMenu
 from .suggestions_queue import SuggestionsQueueMenu
 from .suggestions_queue_viewer import SuggestionsQueueViewerMenu

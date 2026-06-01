@@ -513,7 +513,11 @@ class SuggestionMenu:
                 await s.delete()
                 return None
 
-            if guild_config.ping_on_thread_creation and not s.is_anonymous:
+            if (
+                guild_config.ping_on_thread_creation
+                and user_config.ping_on_thread_creation
+                and not s.is_anonymous
+            ):
                 # I'd consider it 'fine' if the bot can't send this message
                 with contextlib.suppress(hikari.ForbiddenError, hikari.NotFoundError):
                     await thread.send(

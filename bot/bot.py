@@ -19,6 +19,7 @@ from bot.menus import (
     SuggestionMenu,
     SuggestionsQueueMenu,
     SuggestionsQueueViewerMenu,
+    UserConfigurationMenus,
 )
 from bot.tables import InternalErrors
 from shared.tables import GuildConfigs, UserConfigs, Suggestions, SuggestionStateEnum
@@ -235,6 +236,11 @@ async def create_bot(  # noqa: PLR0915, C901
             component_key = f"editing guild setting '{setting}'"
             otel_ctx = await utils.otel.get_context_from_link_state(link_id)
 
+        elif custom_id.startswith("ucm"):
+            _, link_id, setting = custom_id.split(":", maxsplit=2)
+            component_key = f"editing user setting '{setting}'"
+            otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+
         elif custom_id.startswith("v4_suggest_button"):
             component_key = "creating suggestion from button"
 
@@ -301,16 +307,21 @@ async def create_bot(  # noqa: PLR0915, C901
                 span.set_attribute("interaction.guild.id", ctx.guild_id)
 
             if custom_id.startswith("gcm"):
-                guild_config = await configs.ensure_guild_config(
-                    cast("int", ctx.guild_id)
-                )
                 _, link_id, setting = custom_id.split(":", maxsplit=2)
                 await GuildConfigurationMenus.handle_interaction(
                     setting,
                     ctx=ctx,
                     localisations=constants.LOCALISATIONS,
                     event=event,
-                    guild_config=guild_config,
+                    link_id=link_id,
+                )
+
+            elif custom_id.startswith("ucm"):
+                _, link_id, setting = custom_id.split(":", maxsplit=2)
+                await UserConfigurationMenus.handle_interaction(
+                    setting,
+                    ctx=ctx,
+                    event=event,
                     link_id=link_id,
                 )
 

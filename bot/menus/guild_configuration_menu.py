@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 from collections.abc import Sequence
+from typing import cast
 
 import commons
 import hikari
@@ -11,6 +12,8 @@ from bot import utils
 from bot.exceptions import SuggestionException
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs
+from shared.utils import configs
+from shared.utils.locales import language_as_word
 from web import constants as t_constants
 import contextlib
 
@@ -25,11 +28,11 @@ class GuildConfigurationMenus:
         *,
         ctx: lightbulb.components.MenuContext,
         localisations: Localisation,
-        guild_config: GuildConfigs,
         event: hikari.ComponentInteractionCreateEvent,
         link_id: str,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         event_values: Sequence[str] = event.interaction.values
         log.debug(
             "Processing GCM component %s",
@@ -121,7 +124,9 @@ class GuildConfigurationMenus:
                 localisations.get_localized_string(
                     "menus.guild_configuration.responses.primary_language",
                     ctx.interaction.locale,
-                    extras={"LANGUAGE": guild_config.primary_language_as_word},
+                    extras={
+                        "LANGUAGE": language_as_word(guild_config.primary_language_raw)
+                    },
                 ),
             )
             return
@@ -645,7 +650,7 @@ class GuildConfigurationMenus:
             hikari.impl.MessageActionRowBuilder(
                 components=[
                     hikari.impl.LinkButtonBuilder(
-                        url="https://docs.suggestions.gg/docs/configuration",
+                        url="https://docs.suggestions.gg/docs/configuration/guild",
                         label="View the documentation here",
                     ),
                 ],
@@ -932,7 +937,7 @@ class GuildConfigurationMenus:
             hikari.impl.MessageActionRowBuilder(
                 components=[
                     hikari.impl.LinkButtonBuilder(
-                        url="https://docs.suggestions.gg/docs/configuration",
+                        url="https://docs.suggestions.gg/docs/configuration/guild",
                         label="View the documentation here",
                     ),
                 ],

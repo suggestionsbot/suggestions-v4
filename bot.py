@@ -53,6 +53,7 @@ async def main():
     async def on_starting(_: hikari.StartingEvent) -> None:
         # Force load these so they register on the group
         from bot.extensions.configure_guild import ConfigureGuildCmd  # noqa
+        from bot.extensions.configure_user import ConfigureUserCmd  # noqa
         from bot.extensions.notes import NotesAddCmd, NotesRemoveCmd  # noqa
         from bot.extensions.blocklist import BlocklistAddCmd, BlocklistRemoveCmd  # noqa
         from bot.extensions.queue import QueueInfoCmd  # noqa
