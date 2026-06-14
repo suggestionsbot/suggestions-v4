@@ -79,6 +79,7 @@ async def main():
             "bot.extensions.resolve",
             "bot.extensions.support_guild",
             "bot.extensions.clear",
+            "bot.extensions.setup",
             "bot.tasks.store_guilds_in_redis",
         )
         await client.start()

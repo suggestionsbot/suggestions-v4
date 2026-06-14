@@ -6,7 +6,7 @@ from typing import cast
 import commons
 import hikari
 import lightbulb
-from hikari.api import special_endpoints
+from hikari.api import special_endpoints, ComponentBuilder
 
 from bot import utils
 from bot.exceptions import SuggestionException
@@ -411,6 +411,212 @@ class GuildConfigurationMenus:
                 ],
             ),
         ]
+
+    @classmethod
+    async def build_setup_components(
+        cls,
+        *,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        guild_config: GuildConfigs,
+        localisations: Localisation,
+        link_id: str | None = None,
+    ) -> list[ComponentBuilder]:
+        if link_id is None:
+            link_id = await utils.otel.generate_trace_link_state()
+
+        no_queue_is_default = not guild_config.uses_suggestion_queue
+        virtual_is_default = False
+        channel_is_default = False
+        if guild_config.uses_suggestion_queue:
+            if guild_config.virtual_suggestions_queue:
+                virtual_is_default = True
+            else:
+                channel_is_default = True
+
+        components: list[special_endpoints.ComponentBuilder] = [
+            hikari.impl.TextDisplayComponentBuilder(
+                content=localisations.get_localized_string(
+                    "menus.setup.base_menu.overall_description",
+                    ctx.interaction.locale,
+                ),
+            ),
+            hikari.impl.ContainerComponentBuilder(
+                components=[
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.suggestions_channel_id",
+                            ctx.interaction.locale,
+                        ),
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.ChannelSelectMenuBuilder(
+                                custom_id=f"gcm:{link_id}:suggestions_channel_id",
+                                channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
+                                placeholder=await cls.get_channel_name(
+                                    "suggestions_channel_id",
+                                    ctx=ctx,
+                                    guild_config=guild_config,
+                                ),
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ],
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.threads_for_suggestions",
+                            ctx.interaction.locale,
+                        ),
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.TextSelectMenuBuilder(
+                                custom_id=f"gcm:{link_id}:threads_for_suggestions",
+                                options=[
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.yes",
+                                            ctx.interaction.locale,
+                                        ),
+                                        value="yes",
+                                        is_default=guild_config.threads_for_suggestions,
+                                    ),
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.no",
+                                            ctx.interaction.locale,
+                                        ),
+                                        value="no",
+                                        is_default=not guild_config.threads_for_suggestions,  # noqa: E501
+                                    ),
+                                ],
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ],
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.log_menu.log_channel_id",
+                            ctx.interaction.locale,
+                        ),
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.ChannelSelectMenuBuilder(
+                                custom_id=f"gcm:{link_id}:log_channel_id",
+                                channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
+                                placeholder=await cls.get_channel_name(
+                                    "log_channel_id",
+                                    ctx=ctx,
+                                    guild_config=guild_config,
+                                ),
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+            hikari.impl.TextDisplayComponentBuilder(
+                content=localisations.get_localized_string(
+                    "menus.setup.base_menu.optional_description",
+                    ctx.interaction.locale,
+                ),
+            ),
+            hikari.impl.ContainerComponentBuilder(
+                components=[
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.suggestion_queue.description",
+                            ctx.interaction.locale,
+                        ),
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.TextSelectMenuBuilder(
+                                custom_id=f"gcm:{link_id}:suggestions_queue",
+                                options=[
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.base_menu.suggestion_queue.none",
+                                            ctx.interaction.locale,
+                                        ),
+                                        value="none",
+                                        is_default=no_queue_is_default,
+                                    ),
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.base_menu.suggestion_queue.virtual",
+                                            ctx.interaction.locale,
+                                        ),
+                                        value="virtual",
+                                        is_default=virtual_is_default,
+                                    ),
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.base_menu.suggestion_queue.channel",
+                                            ctx.interaction.locale,
+                                        ),
+                                        value="channel",
+                                        is_default=channel_is_default,
+                                    ),
+                                ],
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ],
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.suggestions_via_button",
+                            ctx.interaction.locale,
+                        ),
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.ChannelSelectMenuBuilder(
+                                custom_id=f"gcm:{link_id}:send_suggestions_button",
+                                channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ],
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.update_channel_id",
+                            ctx.interaction.locale,
+                        ),
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.ChannelSelectMenuBuilder(
+                                custom_id=f"gcm:{link_id}:update_channel_id",
+                                channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
+                                placeholder=await cls.get_channel_name(
+                                    "update_channel_id",
+                                    ctx=ctx,
+                                    guild_config=guild_config,
+                                ),
+                                min_values=0,
+                                max_values=1,
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+            hikari.impl.MessageActionRowBuilder(
+                components=[
+                    hikari.impl.LinkButtonBuilder(
+                        url="https://docs.suggestions.gg/docs/configuration/guild",
+                        label="View more documentation here",
+                    ),
+                ],
+            ),
+        ]
+        return components
 
     @classmethod
     async def build_base_components_page_1(

@@ -1,4 +1,6 @@
 {
+  "commands.setup.name": "setup",
+  "commands.setup.description": "Configure the minimum required settings to use the bot.",
   "commands.suggest.name": "suggest",
   "commands.suggest.description": "Create a new suggestion.",
   "commands.suggest.options.suggestion.name": "suggestion",
@@ -110,6 +112,8 @@
   "menus.user_configuration.responses.generic_dm_messages_disabled.enabled": "The bot will DM you on actions such as new suggestions.",
   "menus.user_configuration.responses.generic_dm_messages_disabled.disabled": "The bot will not DM you on actions such as new suggestions.",
   "menus.user_configuration.responses.primary_language": "I have changed the your primary language to $LANGUAGE",
+  "menus.setup.base_menu.overall_description": "This form lets you configure the bot for your guild.\nThese items are the bare minimum to start using the bot. Once you are done here consider running the `/configure guild` command to review other possible configurations.",
+  "menus.setup.base_menu.optional_description": "This section features optional elements you may wish to configure.",
   "menus.guild_configuration.base_menu.overall_description": "This form lets you configure the bot for your guild.\nWhere applicable, clicking items on this form will generate new forms if further configuration is required.",
   "menus.guild_configuration.base_menu.suggestions_channel_id": "Select where you would like suggestions to be sent to.",
   "menus.guild_configuration.base_menu.suggestions_via_button": "Send a message to the selected channel containing a button to create suggestions.",
