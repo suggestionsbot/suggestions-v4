@@ -65,7 +65,7 @@ class GuildConfigs(AuditMixin, Table):
         help_text="Is this guild allowed to make suggestions anonymously?",
     )
     auto_archive_threads = Boolean(
-        default=False,
+        default=True,
         help_text="Auto archive threads when suggestions are resolved?",
     )
     uses_suggestion_queue = Boolean(

@@ -398,7 +398,7 @@ class Suggestions(Table, AuditMixin):
                 },
                 guild_config=guild_config,
             )
-            if self.resolved_note is not None:
+            if self.resolved_note is not None and self.resolved_note:
                 content += localisations.get_localized_string(
                     "components.suggestions.resolved_note",
                     locale,

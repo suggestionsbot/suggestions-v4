@@ -3,6 +3,7 @@ import typing
 from enum import Enum
 
 import hikari
+import lightbulb
 from hikari.impl import ContainerComponentBuilder, MessageActionRowBuilder
 from piccolo.columns import (
     Serial,
@@ -221,8 +222,40 @@ class QueuedSuggestions(Table, AuditMixin):
 
         return PENDING_COLOR
 
+    async def remove_queued_suggestion(
+        self, ctx: lightbulb.components.MenuContext
+    ) -> bool:
+        """Used when it has been either approved or rejected.
+
+        Returns
+        -------
+        bool: If the message was deleted successfully
+
+        """
+        try:
+            original_suggestion_message: hikari.Message | None = None
+            if self.channel_id is not None and self.message_id is not None:
+                original_suggestion_message: hikari.Message = (
+                    await ctx.client.rest.fetch_message(
+                        self.channel_id,
+                        self.message_id,
+                    )
+                )
+        except (hikari.NotFoundError, hikari.ForbiddenError):
+            # Looks like the original was deleted or we cant view
+            # But eh thats fine as we can make our new log anyway
+            pass
+        else:
+            try:
+                if original_suggestion_message is not None:
+                    await original_suggestion_message.delete()
+            except hikari.ForbiddenError:
+                return False
+
+        return True
+
     async def notify_users_of_resolution(self):
-        """Helper to queue user resolution notifications"""
+        """Helper to queue user resolution notifications."""
         await SAQ_QUEUE.enqueue(
             "queued_suggestion_resolved_notifications",
             suggestion_id=self.sID,

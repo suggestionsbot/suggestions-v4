@@ -40,6 +40,17 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
             "interaction.guild.id": guild_config.guild_id,
         },
     )
+    content = io.StringIO()
+    if anonymously and not guild_config.allow_anonymous_moderators:
+        content.write(
+            localisations.get_localized_string(
+                "commands.resolve.responses.not_allowed_anonymous",
+                user_config.primary_language,
+            )
+        )
+        content.write("\n\n")
+        anonymously = False
+
     suggestion.state = suggestion_state
     suggestion.resolved_at = utc_now()
     suggestion.resolved_note = response
@@ -88,7 +99,6 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
         await suggestion.save()
         await suggestion.queue_message_edit(exclude_buttons=True, as_resolved=True)
         await suggestion.notify_users_of_resolution()
-        content = io.StringIO()
         content.write(
             localisations.get_localized_string(
                 "commands.resolve.responses.keep_logs_edit_soon",
@@ -181,8 +191,8 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
     suggestion.channel_id = log_message.channel_id
     suggestion.message_id = log_message.id
     await suggestion.save()
+    # We ignore user configs here as we deem it important
     await suggestion.notify_users_of_resolution()
-    content = io.StringIO()
     content.write(
         localisations.get_localized_string(
             "commands.resolve.responses.resolved_immediately",

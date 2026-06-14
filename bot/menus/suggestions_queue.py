@@ -1,3 +1,4 @@
+import io
 from typing import cast
 
 import hikari
@@ -88,6 +89,7 @@ class SuggestionsQueueMenu:
                 return
 
             if not to_approve:
+                key = "menus.queue.responses.rejected"
                 await cls.reject_queued_suggestion(
                     queued_suggestion,
                     ctx=ctx,
@@ -98,6 +100,7 @@ class SuggestionsQueueMenu:
                 )
 
             else:
+                key = "menus.queue.responses.approved"
                 await cls.approve_queued_suggestion(
                     queued_suggestion,
                     ctx=ctx,
@@ -106,6 +109,24 @@ class SuggestionsQueueMenu:
                     event=event,
                     user_config=user_config,
                 )
+
+            message: io.StringIO = io.StringIO()
+            message.write(
+                localisations.get_localized_string(
+                    key,
+                    user_config.primary_language,
+                ),
+            )
+            did_delete = await queued_suggestion.remove_queued_suggestion(ctx)
+            if not did_delete:
+                message.write("\n\n")
+                message.write(
+                    localisations.get_localized_string(
+                        "commands.resolve.responses.missing_queued_suggestion_channel_perms",
+                        ctx.interaction.locale,
+                    ),
+                )
+            await ctx.respond(message.getvalue())
 
     @classmethod
     async def approve_queued_suggestion(
@@ -143,12 +164,6 @@ class SuggestionsQueueMenu:
         queued_suggestion.related_suggestion = suggestion
         await queued_suggestion.save()
         await queued_suggestion.notify_users_of_resolution()
-        await ctx.respond(
-            localisations.get_localized_string(
-                "menus.queue.responses.approved",
-                user_config.primary_language,
-            ),
-        )
 
     @classmethod
     async def reject_queued_suggestion(
@@ -225,9 +240,3 @@ class SuggestionsQueueMenu:
 
         await queued_suggestion.save()
         await queued_suggestion.notify_users_of_resolution()
-        await ctx.respond(
-            localisations.get_localized_string(
-                "menus.queue.responses.rejected",
-                user_config.primary_language,
-            ),
-        )

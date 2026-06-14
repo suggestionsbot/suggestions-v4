@@ -1,3 +1,4 @@
+import io
 import logging
 from typing import cast
 
@@ -149,6 +150,16 @@ class NotesAddCmd(
             action="/note add",
             command_type=CommandTypes.SLASH_COMMAND,
         )
+        response = io.StringIO()
+        if self.anonymously and not guild_config.allow_anonymous_moderators:
+            response.write(
+                localisations.get_localized_string(
+                    "commands.note.responses.not_allowed_anonymous",
+                    user_config.primary_language,
+                )
+            )
+            self.anonymously = False
+
         note = self.note.replace("\\n", "\n")
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
             self.suggestion_id,
@@ -186,13 +197,15 @@ class NotesAddCmd(
         )
         await suggestion.save()
         await suggestion.queue_message_edit()
-        await ctx.respond(
+        response.write("\n\n")
+        response.write(
             localisations.get_localized_string(
                 "commands.note.add.responses.change",
                 ctx.interaction.locale,
                 extras={"JUMP": suggestion.message_jump_link},
             ),
         )
+        await ctx.respond(response.getvalue())
         await notify_user_of_change(
             ctx=ctx,
             suggestion=suggestion,
