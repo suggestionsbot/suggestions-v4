@@ -21,8 +21,12 @@ class InternalErrors(AuditMixin, Table):
     )
     traceback = Text(help_text="The full error traceback")
     error_name = Text(help_text="The class name of the error")
-    user_id = BigInt(help_text="The user who triggered the error")
-    guild_id = BigInt(help_text="The guild where the error was triggered")
+    user_id = BigInt(
+        help_text="The user who triggered the error", null=True, default=None
+    )
+    guild_id = BigInt(
+        help_text="The guild where the error was triggered", null=True, default=None
+    )
     command_name = Varchar(
         default=None,
         null=True,
@@ -46,8 +50,8 @@ class InternalErrors(AuditMixin, Table):
         exception: Exception,
         *,
         command_name: str,
-        guild_id: int,
-        user_id: int,
+        user_id: int | None = None,
+        guild_id: int | None = None,
     ) -> InternalErrors:
         internal_error = cls(
             id=generate_id(),

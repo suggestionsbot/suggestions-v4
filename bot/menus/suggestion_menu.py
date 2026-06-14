@@ -435,7 +435,7 @@ class SuggestionMenu:
                     error_code=ErrorCode.MISSING_FETCH_PERMISSIONS_IN_SUGGESTIONS_CHANNEL,
                 ),
             )
-            await s.delete()
+            await s.delete().where(Suggestions.id == s.id)
             return None
 
         try:
@@ -455,7 +455,7 @@ class SuggestionMenu:
                     error_code=ErrorCode.MISSING_FETCH_PERMISSIONS_IN_SUGGESTIONS_CHANNEL,
                 ),
             )
-            await s.delete()
+            await s.delete().where(Suggestions.id == s.id)
             return None
 
         prefix = (
@@ -510,7 +510,7 @@ class SuggestionMenu:
                         error_code=ErrorCode.MISSING_THREAD_CREATE_PERMISSIONS,
                     ),
                 )
-                await s.delete()
+                await s.delete().where(Suggestions.id == s.id)
                 return None
 
             if (

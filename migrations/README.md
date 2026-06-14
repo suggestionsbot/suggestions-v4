@@ -34,3 +34,18 @@ add constraint unique_votes UNIQUE (user_id, suggestion);
 from '/home/skelmis/Code/Suggestions/suggestions_version_4/migrations/votes.csv'
 with (FORMAT csv)
 ```
+
+---
+
+When reseting migrations need to add this also:
+```shell
+uv run piccolo migrations shared new
+```
+
+```python
+    async def run():
+        q = "alter table suggestion_votes add constraint unique_votes UNIQUE (user_id, suggestion)"
+        await Suggestions.raw(q)
+
+    manager.add_raw(run)
+```

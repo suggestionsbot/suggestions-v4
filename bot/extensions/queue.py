@@ -14,6 +14,7 @@ from shared.tables import (
     QueuedSuggestions,
     UserConfigs,
 )
+from shared import utils as shared_utils
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +72,14 @@ class QueueInfoCmd(
             ),
         )
 
-        guild: hikari.Guild | None = ctx.interaction.get_guild()
-        if guild is None:
-            guild: hikari.RESTGuild | None = (
-                await ctx.interaction.fetch_guild()
-            )  # TODO cache
-            assert guild is not None
+        guild_data = await shared_utils.get_guild_queue_info(guild_config.guild_id)
+        if guild_data is None or not guild_data:
+            guild: hikari.Guild | None = ctx.interaction.get_guild()
+            if guild is None:
+                guild: hikari.RESTGuild | None = await ctx.interaction.fetch_guild()
+                assert guild is not None
+
+            guild_data = await shared_utils.cache_guild_queue_info(guild)
 
         embed = hikari.Embed(
             title=localisations.get_localized_string(
@@ -87,8 +90,8 @@ class QueueInfoCmd(
             colour=EMBED_COLOR,
         )
         embed.set_author(
-            name=guild.name,
-            icon=guild.make_icon_url(),
+            name=guild_data["name"],
+            icon=guild_data["icon"],
         )
         await ctx.respond(embed=embed)
 
