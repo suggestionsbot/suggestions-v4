@@ -31,20 +31,25 @@ class Users(Table, tablename="users", schema=None):
     )
 
 
-ID = "2026-01-13T22:10:26:382376"
-VERSION = "1.30.0"
+ID = "2026-06-14T14:15:34:168612"
+VERSION = "1.34.0"
 DESCRIPTION = ""
 
 
 async def forwards():
-    manager = MigrationManager(migration_id=ID, app_name="web", description=DESCRIPTION)
-
-    manager.add_table(class_name="Alerts", tablename="alerts", schema=None, columns=None)
-
-    manager.add_table(class_name="Users", tablename="users", schema=None, columns=None)
+    manager = MigrationManager(
+        migration_id=ID, app_name="web", description=DESCRIPTION
+    )
 
     manager.add_table(
-        class_name="APIToken", tablename="api_token", schema=None, columns=None
+        class_name="MagicLinks",
+        tablename="magic_links",
+        schema=None,
+        columns=None,
+    )
+
+    manager.add_table(
+        class_name="Users", tablename="users", schema=None, columns=None
     )
 
     manager.add_table(
@@ -55,8 +60,12 @@ async def forwards():
     )
 
     manager.add_table(
-        class_name="MagicLinks",
-        tablename="magic_links",
+        class_name="APIToken", tablename="api_token", schema=None, columns=None
+    )
+
+    manager.add_table(
+        class_name="GuildTokens",
+        tablename="guild_tokens",
         schema=None,
         columns=None,
     )
@@ -68,9 +77,13 @@ async def forwards():
         columns=None,
     )
 
+    manager.add_table(
+        class_name="Alerts", tablename="alerts", schema=None, columns=None
+    )
+
     manager.add_column(
-        table_class_name="Alerts",
-        tablename="alerts",
+        table_class_name="MagicLinks",
+        tablename="magic_links",
         column_name="created_at",
         db_column_name="created_at",
         column_class_name="Timestamptz",
@@ -90,8 +103,8 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="Alerts",
-        tablename="alerts",
+        table_class_name="MagicLinks",
+        tablename="magic_links",
         column_name="last_modified_at",
         db_column_name="last_modified_at",
         column_class_name="Timestamptz",
@@ -111,14 +124,35 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="Alerts",
-        tablename="alerts",
-        column_name="uuid",
-        db_column_name="uuid",
-        column_class_name="UUID",
-        column_class=UUID,
+        table_class_name="MagicLinks",
+        tablename="magic_links",
+        column_name="email",
+        db_column_name="email",
+        column_class_name="Text",
+        column_class=Text,
         params={
-            "default": UUID4(),
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="MagicLinks",
+        tablename="magic_links",
+        column_name="token",
+        db_column_name="token",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -126,40 +160,16 @@ async def forwards():
             "index_method": IndexMethod.hash,
             "choices": None,
             "db_column_name": None,
-            "secret": False,
+            "secret": True,
         },
         schema=None,
     )
 
     manager.add_column(
-        table_class_name="Alerts",
-        tablename="alerts",
-        column_name="target",
-        db_column_name="target",
-        column_class_name="ForeignKey",
-        column_class=ForeignKey,
-        params={
-            "references": Users,
-            "on_delete": OnDelete.cascade,
-            "on_update": OnUpdate.cascade,
-            "target_column": None,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": True,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Alerts",
-        tablename="alerts",
-        column_name="message",
-        db_column_name="message",
+        table_class_name="MagicLinks",
+        tablename="magic_links",
+        column_name="cookie",
+        db_column_name="cookie",
         column_class_name="Text",
         column_class=Text,
         params={
@@ -171,50 +181,21 @@ async def forwards():
             "index_method": IndexMethod.btree,
             "choices": None,
             "db_column_name": None,
-            "secret": False,
+            "secret": True,
         },
         schema=None,
     )
 
     manager.add_column(
-        table_class_name="Alerts",
-        tablename="alerts",
-        column_name="level",
-        db_column_name="level",
-        column_class_name="Text",
-        column_class=Text,
-        params={
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": Enum(
-                "AlertLevels",
-                {
-                    "INFO": "info",
-                    "WARNING": "warning",
-                    "ERROR": "error",
-                    "SUCCESS": "success",
-                },
-            ),
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="Alerts",
-        tablename="alerts",
-        column_name="has_been_shown",
-        db_column_name="has_been_shown",
+        table_class_name="MagicLinks",
+        tablename="magic_links",
+        column_name="used_in_same_request_browser",
+        db_column_name="used_in_same_request_browser",
         column_class_name="Boolean",
         column_class=Boolean,
         params={
-            "default": False,
-            "null": False,
+            "default": None,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -227,10 +208,10 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="Alerts",
-        tablename="alerts",
-        column_name="was_shown_at",
-        db_column_name="was_shown_at",
+        table_class_name="MagicLinks",
+        tablename="magic_links",
+        column_name="used_at",
+        db_column_name="used_at",
         column_class_name="Timestamptz",
         column_class=Timestamptz,
         params={
@@ -504,136 +485,6 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="APIToken",
-        tablename="api_token",
-        column_name="created_at",
-        db_column_name="created_at",
-        column_class_name="Timestamptz",
-        column_class=Timestamptz,
-        params={
-            "default": utc_now,
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="APIToken",
-        tablename="api_token",
-        column_name="last_modified_at",
-        db_column_name="last_modified_at",
-        column_class_name="Timestamptz",
-        column_class=Timestamptz,
-        params={
-            "default": TimestamptzNow(),
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="APIToken",
-        tablename="api_token",
-        column_name="token",
-        db_column_name="token",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 100,
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": True,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="APIToken",
-        tablename="api_token",
-        column_name="user",
-        db_column_name="user",
-        column_class_name="ForeignKey",
-        column_class=ForeignKey,
-        params={
-            "references": Users,
-            "on_delete": OnDelete.cascade,
-            "on_update": OnUpdate.cascade,
-            "target_column": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": True,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="APIToken",
-        tablename="api_token",
-        column_name="expiry_date",
-        db_column_name="expiry_date",
-        column_class_name="Timestamptz",
-        column_class=Timestamptz,
-        params={
-            "default": TimestamptzNow(),
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="APIToken",
-        tablename="api_token",
-        column_name="max_expiry_date",
-        db_column_name="max_expiry_date",
-        column_class_name="Timestamptz",
-        column_class=Timestamptz,
-        params={
-            "default": TimestamptzNow(),
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
         table_class_name="OAuthEntry",
         tablename="oauth_entry",
         column_name="created_at",
@@ -826,8 +677,8 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="MagicLinks",
-        tablename="magic_links",
+        table_class_name="APIToken",
+        tablename="api_token",
         column_name="created_at",
         db_column_name="created_at",
         column_class_name="Timestamptz",
@@ -847,8 +698,8 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="MagicLinks",
-        tablename="magic_links",
+        table_class_name="APIToken",
+        tablename="api_token",
         column_name="last_modified_at",
         db_column_name="last_modified_at",
         column_class_name="Timestamptz",
@@ -868,14 +719,60 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="MagicLinks",
-        tablename="magic_links",
-        column_name="email",
-        db_column_name="email",
-        column_class_name="Text",
-        column_class=Text,
+        table_class_name="APIToken",
+        tablename="api_token",
+        column_name="token",
+        db_column_name="token",
+        column_class_name="Varchar",
+        column_class=Varchar,
         params={
+            "length": 100,
             "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": True,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="APIToken",
+        tablename="api_token",
+        column_name="user",
+        db_column_name="user",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": Users,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="APIToken",
+        tablename="api_token",
+        column_name="expiry_date",
+        db_column_name="expiry_date",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": TimestamptzNow(),
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -889,10 +786,73 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="MagicLinks",
-        tablename="magic_links",
-        column_name="token",
-        db_column_name="token",
+        table_class_name="APIToken",
+        tablename="api_token",
+        column_name="max_expiry_date",
+        db_column_name="max_expiry_date",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": TimestamptzNow(),
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildTokens",
+        tablename="guild_tokens",
+        column_name="created_at",
+        db_column_name="created_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": utc_now,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildTokens",
+        tablename="guild_tokens",
+        column_name="last_modified_at",
+        db_column_name="last_modified_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": TimestamptzNow(),
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildTokens",
+        tablename="guild_tokens",
+        column_name="subscription_id",
+        db_column_name="subscription_id",
         column_class_name="Text",
         column_class=Text,
         params={
@@ -910,39 +870,18 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="MagicLinks",
-        tablename="magic_links",
-        column_name="cookie",
-        db_column_name="cookie",
-        column_class_name="Text",
-        column_class=Text,
-        params={
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": True,
-        },
-        schema=None,
-    )
-
-    manager.add_column(
-        table_class_name="MagicLinks",
-        tablename="magic_links",
-        column_name="used_in_same_request_browser",
-        db_column_name="used_in_same_request_browser",
-        column_class_name="Boolean",
-        column_class=Boolean,
+        table_class_name="GuildTokens",
+        tablename="guild_tokens",
+        column_name="used_for_guild",
+        db_column_name="used_for_guild",
+        column_class_name="BigInt",
+        column_class=BigInt,
         params={
             "default": None,
             "null": True,
             "primary_key": False,
             "unique": False,
-            "index": False,
+            "index": True,
             "index_method": IndexMethod.btree,
             "choices": None,
             "db_column_name": None,
@@ -952,15 +891,39 @@ async def forwards():
     )
 
     manager.add_column(
-        table_class_name="MagicLinks",
-        tablename="magic_links",
-        column_name="used_at",
-        db_column_name="used_at",
+        table_class_name="GuildTokens",
+        tablename="guild_tokens",
+        column_name="user",
+        db_column_name="user",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": Users,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="GuildTokens",
+        tablename="guild_tokens",
+        column_name="expires_at",
+        db_column_name="expires_at",
         column_class_name="Timestamptz",
         column_class=Timestamptz,
         params={
-            "default": None,
-            "null": True,
+            "default": TimestamptzNow(),
+            "null": False,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -1069,6 +1032,185 @@ async def forwards():
         params={
             "default": "",
             "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Alerts",
+        tablename="alerts",
+        column_name="created_at",
+        db_column_name="created_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": utc_now,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Alerts",
+        tablename="alerts",
+        column_name="last_modified_at",
+        db_column_name="last_modified_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": TimestamptzNow(),
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Alerts",
+        tablename="alerts",
+        column_name="uuid",
+        db_column_name="uuid",
+        column_class_name="UUID",
+        column_class=UUID,
+        params={
+            "default": UUID4(),
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": True,
+            "index_method": IndexMethod.hash,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Alerts",
+        tablename="alerts",
+        column_name="target",
+        db_column_name="target",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": Users,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": True,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Alerts",
+        tablename="alerts",
+        column_name="message",
+        db_column_name="message",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Alerts",
+        tablename="alerts",
+        column_name="level",
+        db_column_name="level",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": Enum(
+                "AlertLevels",
+                {
+                    "INFO": "info",
+                    "WARNING": "warning",
+                    "ERROR": "error",
+                    "SUCCESS": "success",
+                },
+            ),
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Alerts",
+        tablename="alerts",
+        column_name="has_been_shown",
+        db_column_name="has_been_shown",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": False,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="Alerts",
+        tablename="alerts",
+        column_name="was_shown_at",
+        db_column_name="was_shown_at",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": None,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
