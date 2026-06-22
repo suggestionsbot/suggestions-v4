@@ -1,3 +1,4 @@
+import io
 import time
 import typing
 from enum import Enum
@@ -329,7 +330,7 @@ class QueuedSuggestions(Table, AuditMixin):
                 )
             )
 
-        if self.resolved_by is not None and self.related_suggestion is None:
+        if self.state is QueuedSuggestionStateEnum.REJECTED:
             # Means it's been rejected so we should show it
             components.append(
                 hikari.impl.SeparatorComponentBuilder(
@@ -337,23 +338,31 @@ class QueuedSuggestions(Table, AuditMixin):
                     spacing=hikari.SpacingType.SMALL,
                 )
             )
-            content = localisations.get_localized_string(
-                "components.queued_suggestions.resolved",
-                locale,
-                extras={
-                    "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
-                },
-            )
+            content = io.StringIO()
             if self.resolved_note is not None:
-                content += localisations.get_localized_string(
-                    "components.queued_suggestions.resolved_note",
-                    locale,
-                    extras={
-                        "RESOLVED_BY_NOTE": self.resolved_note,
-                    },
+                content.write(
+                    localisations.get_localized_string(
+                        "components.queued_suggestions.resolved_note",
+                        locale,
+                        extras={
+                            "RESOLVED_BY_NOTE": self.resolved_note,
+                        },
+                    )
                 )
 
-            components.append(hikari.impl.TextDisplayComponentBuilder(content=content))
+            content.write(
+                localisations.get_localized_string(
+                    "components.queued_suggestions.resolved",
+                    locale,
+                    extras={
+                        "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
+                    },
+                )
+            )
+
+            components.append(
+                hikari.impl.TextDisplayComponentBuilder(content=content.getvalue())
+            )
 
         extras = {
             "SID": self.footer_sid,
