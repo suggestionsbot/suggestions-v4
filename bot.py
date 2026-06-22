@@ -14,9 +14,11 @@ from bot.constants import (
     BLOCKLIST_GROUP,
     QUEUE_GROUP,
     VIEW_GROUP,
+    CLUSTER_ID,
 )
 from bot.extensions.resolve import ResolveMessageCommand
 from shared.tables import GuildConfigs
+from shared.utils.ntfy import notify_ethan_of_something
 from web import constants as t_constants
 
 load_dotenv()
@@ -82,6 +84,13 @@ async def main():
             "bot.extensions.setup",
             "bot.tasks.store_guilds_in_redis",
         )
+
+        await notify_ethan_of_something(
+            title="Bot Starting",
+            message=f"Woo! A cluster is starting.\n\nCluster ID: `{CLUSTER_ID}`",
+            priority=2,
+        )
+
         await client.start()
 
     await bot.start()
