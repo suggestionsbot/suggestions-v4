@@ -222,7 +222,7 @@ async def autocomplete_callback(ctx: lightbulb.AutocompleteContext[str]) -> None
     values_to_recommend = await shared.utils.get_sid_autocomplete_for_guild(
         guild_id=cast("int", ctx.interaction.guild_id),
         search=current_value,
-        index="shared_sid_autocomplete_index",
+        index="suggestion_sid_autocomplete_index",
     )
     await ctx.respond(values_to_recommend)
 
