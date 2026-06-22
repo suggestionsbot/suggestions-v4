@@ -390,9 +390,10 @@ async def create_bot(  # noqa: PLR0915, C901
                     # Cant confirm easily until in prod
                     await notify_ethan_of_something(
                         title="Unknown Component Key",
-                        message="Finally observed the legacy component key. "
-                        f"Out of the possible choices, it is this: `{component_key}`",
+                        message="Observed an unhandled component key: "
+                        f"`{component_key!r}`",
                         internal_error_reference=internal_error,
+                        tags="warning",
                     )
                     await ctx.respond(
                         embed=utils.error_embed(
