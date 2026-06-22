@@ -63,7 +63,12 @@ async def edit_suggestion_message(
             as_resolved=as_resolved,
         )
         await client.edit_message(
-            suggestion.channel_id, suggestion.message_id, components=components
+            suggestion.channel_id,
+            suggestion.message_id,
+            components=components,
+            # This must be set to None to clear old embeds
+            # to ensure we remain backwards compatible
+            embeds=None,
         )
 
 
