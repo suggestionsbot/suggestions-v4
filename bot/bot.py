@@ -245,14 +245,14 @@ async def create_bot(  # noqa: PLR0915, C901
             elif custom_id.startswith("v4_suggest_button"):
                 component_key = "creating suggestion from button"
 
-            elif custom_id.startswith(("queue_approve", "queue_approve")):
+            elif custom_id.startswith(("queue_approve", "queue_reject")):
                 # Legacy physical queue
                 if not custom_id.endswith("e"):
                     custom_id = custom_id[:-1]
 
                 component_key = custom_id.replace("_", " ")
                 queued_suggestion_id = None
-                to_approve = custom_id.endswith("approve")
+                to_approve = custom_id.startswith("queue_approve")
 
             elif custom_id.startswith("v4_queued_suggestion"):
                 _, approve, queued_suggestion_id = custom_id.split(":", maxsplit=2)
