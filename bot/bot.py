@@ -195,11 +195,22 @@ async def create_bot(  # noqa: PLR0915, C901
                 )
 
             else:
+                internal_error: InternalErrors = await InternalErrors.persist_error(
+                    f"Unknown Modal Key: {component_key}",
+                    command_name=component_key,
+                )
+                await notify_ethan_of_something(
+                    title="Unknown Modal Event",
+                    message=f"Observed an unhandled modal event: `{component_key!r}`",
+                    internal_error_reference=internal_error,
+                    tags="warning",
+                )
                 await ctx.respond(
                     embed=utils.error_embed(
                         title="Unknown Modal",
-                        description=f"Please reach out to support with a screenshot of this message.\n\n"
-                        f"Custom ID: {custom_id}",
+                        description=f"Please reach out to support with a screenshot of "
+                        f"this message.\n\nCustom ID: {custom_id}",
+                        internal_error_reference=internal_error,
                     ),
                     ephemeral=True,
                 )
