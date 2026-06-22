@@ -284,7 +284,7 @@
   "values.suggest.no_images_in_suggestions": "Your guild does not allow images in suggestions.",
   "values.suggestion_object_lock_thread": "Locking this thread as the suggestion has reached a resolution.",
   "menus.guild_configuration.responses.log_channel_id.set": "I have set this guilds log channel to $CHANNEL",
-  "components.queued_suggestions.suggestion": "**Suggestion**\n$SUGGESTION",
+  "components.queued_suggestions.suggestion": "**Queued Suggestion**\n$SUGGESTION",
   "components.queued_suggestions.submitter": "**Submitter**\n$AUTHOR_DISPLAY",
   "components.queued_suggestions.resolved": "\n\n**Resolved By**\n$RESOLVED_BY_DISPLAY",
   "components.queued_suggestions.resolved_note": "\n**Resolution Note**\n$RESOLVED_BY_NOTE",
