@@ -15,11 +15,11 @@ jobs:
       matrix:
         include:
           - dockerfile: ./docker/saq/Dockerfile
-            image: ghcr.io/suggestionsbot/suggestions_saq
+            image: ghcr.io/suggestionsbot/v4_suggestions_saq
           - dockerfile: ./docker/web/Dockerfile
-            image: ghcr.io/suggestionsbot/suggestions_web
+            image: ghcr.io/suggestionsbot/v4_suggestions_web
           - dockerfile: ./docker/bot/Dockerfile
-            image: ghcr.io/suggestionsbot/suggestions_bot
+            image: ghcr.io/suggestionsbot/v4_suggestions_bot
     permissions:
       contents: read
       packages: write
