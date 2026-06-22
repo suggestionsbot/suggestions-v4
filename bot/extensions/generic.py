@@ -54,7 +54,7 @@ class InfoCmd(
             shard_latency = bot._get_shard(guild_config.guild_id).heartbeat_latency
             await ctx.respond(
                 f"**Guild ID:** `{guild_config.guild_id}`\n**Cluster {CLUSTER_ID} - "
-                f"Shard {shard_id}:** `{round(shard_latency, 2)}ms`"
+                f"Shard {shard_id}:** `{round(shard_latency, 2)}ms`\n"
                 f"**Average cluster latency:** `{round(bot.heartbeat_latency, 2)}ms`\n",
             )
             return
