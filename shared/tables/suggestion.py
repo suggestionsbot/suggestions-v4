@@ -390,25 +390,33 @@ class Suggestions(Table, AuditMixin):
                     spacing=hikari.SpacingType.SMALL,
                 )
             )
-            content = localisations.get_localized_string(
-                "components.suggestions.resolved",
-                locale,
-                extras={
-                    "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
-                },
-                guild_config=guild_config,
-            )
+            content = io.StringIO()
             if self.resolved_note is not None and self.resolved_note:
-                content += localisations.get_localized_string(
-                    "components.suggestions.resolved_note",
+                content.write(
+                    localisations.get_localized_string(
+                        "components.suggestions.resolved_note",
+                        locale,
+                        extras={
+                            "RESOLVED_BY_NOTE": self.resolved_note,
+                        },
+                        guild_config=guild_config,
+                    )
+                )
+
+            content.write(
+                localisations.get_localized_string(
+                    "components.suggestions.resolved",
                     locale,
                     extras={
-                        "RESOLVED_BY_NOTE": self.resolved_note,
+                        "RESOLVED_BY_DISPLAY": self.resolved_by_display_text,
                     },
                     guild_config=guild_config,
                 )
+            )
 
-            components.append(hikari.impl.TextDisplayComponentBuilder(content=content))
+            components.append(
+                hikari.impl.TextDisplayComponentBuilder(content=content.getvalue())
+            )
 
         if not exclude_votes:
             components.append(

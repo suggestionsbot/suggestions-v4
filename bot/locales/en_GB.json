@@ -293,7 +293,7 @@
   "components.suggestions.suggestion": "**Suggestion**\n$SUGGESTION",
   "components.suggestions.submitter": "**Submitter**\n$AUTHOR_DISPLAY",
   "components.suggestions.resolved": "**Resolved By**\n$RESOLVED_BY_DISPLAY",
-  "components.suggestions.resolved_note": "\n**Resolution Note**\n$RESOLVED_BY_NOTE",
+  "components.suggestions.resolved_note": "**Resolution Note**\n$RESOLVED_BY_NOTE\n\n",
   "components.suggestions.moderator_note": "**Moderator Note**\n$MODERATOR_NOTE\n\n**Moderator**\n$MODERATOR_NOTE_BY_DISPLAY",
   "components.suggestions.results": "**Results So Far**\n$VOTES",
   "components.suggestions.results_resolved": "**Results**\n$VOTES",
