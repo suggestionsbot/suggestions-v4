@@ -13,4 +13,5 @@ RUN uv sync --no-default-groups --no-dev --compile-bytecode
 
 COPY . /code
 
-CMD ["uv", "run", "python", "-O", "bot.py"]
+RUN chmod +x /code/docker/bot/entrypoint.sh
+ENTRYPOINT ["/code/docker/bot/entrypoint.sh"]
