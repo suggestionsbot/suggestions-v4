@@ -11,7 +11,7 @@ from migrations.objects import QueuedSuggestion
 from shared.tables import QueuedSuggestions, QueuedSuggestionStateEnum
 
 __mongo = AsyncIOMotorClient("mongodb://localhost:27017")
-db = __mongo["suggestions"]
+db = __mongo["suggestions_bot"]
 small = ""
 queued_suggestions: Document = Document(
     db,

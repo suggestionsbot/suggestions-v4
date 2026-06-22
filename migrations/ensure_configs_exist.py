@@ -20,7 +20,7 @@ all_guild_ids: set[int] = set()
 users_created: int = 0
 guilds_created: int = 0
 __mongo = AsyncIOMotorClient("mongodb://localhost:27017")
-db = __mongo["suggestions"]
+db = __mongo["suggestions_bot"]
 small = ""
 suggestions: Document = Document(
     db,

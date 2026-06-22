@@ -12,7 +12,7 @@ from shared.tables import (
 )
 
 __mongo = AsyncIOMotorClient("mongodb://localhost:27017")
-db = __mongo["suggestions"]
+db = __mongo["suggestions_bot"]
 small = ""
 
 

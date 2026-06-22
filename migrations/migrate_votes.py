@@ -24,7 +24,7 @@ from shared.tables import (
 from shared.tables.mixins.audit import utc_now
 
 __mongo = AsyncIOMotorClient("mongodb://localhost:27017")
-db = __mongo["suggestions"]
+db = __mongo["suggestions_bot"]
 small = ""
 suggestions: Document = Document(
     db,
