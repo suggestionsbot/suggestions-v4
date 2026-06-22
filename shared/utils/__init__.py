@@ -14,5 +14,6 @@ __all__ = [
     "get_accurate_guild_count",
     "get_guild_queue_info",
     "get_sid_autocomplete_for_guild",
+    "ntfy",
     "upload_file_to_r2",
 ]

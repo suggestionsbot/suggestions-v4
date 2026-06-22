@@ -204,3 +204,8 @@ CF_R2_ACCESS_KEY = get_secret("CF_R2_ACCESS_KEY", infisical_client)
 CF_R2_SECRET_ACCESS_KEY = get_secret("CF_R2_SECRET_ACCESS_KEY", infisical_client)
 CF_R2_BUCKET = get_secret("CF_R2_BUCKET", infisical_client)
 CF_R2_URL = get_secret("CF_R2_URL", infisical_client)
+
+# ntfy.sh key
+NTFY_API_KEY = get_secret("NTFY_API_KEY", infisical_client)
+NTFY_URL = get_secret("NTFY_URL", infisical_client)
+NTFY_TOPIC = get_secret("NTFY_TOPIC", infisical_client)

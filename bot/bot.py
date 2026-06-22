@@ -20,6 +20,7 @@ from bot.menus import (
 from bot.tables import InternalErrors
 from shared.tables import GuildConfigs, UserConfigs, Suggestions, SuggestionStateEnum
 from shared.utils import configs
+from shared.utils.ntfy import notify_ethan_of_something
 from web import constants as t_constants
 
 if TYPE_CHECKING:
@@ -267,23 +268,37 @@ async def create_bot(  # noqa: PLR0915, C901
                 otel_ctx = await utils.otel.get_context_from_link_state(link_id)
                 component_key = f"queue paginator {action}"
 
-            elif custom_id.startswith(("suggestions_up_vote", "suggestions_down_vote")):
+            elif custom_id.startswith(("suggestion_up_vote", "suggestion_down_vote")):
                 # Legacy button type one
                 custom_id, suggestion_id = custom_id.split("|", maxsplit=2)
                 custom_id = custom_id[:-1]
                 vote_enum = (
                     SuggestionsVoteTypeEnum.UpVote
-                    if custom_id == "suggestions_up_vote"
+                    if custom_id == "suggestion_up_vote"
                     else SuggestionsVoteTypeEnum.DownVote
                 )
                 component_key = f"suggestion {vote_enum.value}"
 
-            elif custom_id.startswith(("SuggestionsUpVote", "SuggestionsDownVote")):
+            elif custom_id.startswith(
+                (
+                    "SuggestionsUpVote",
+                    "SuggestionsDownVote",
+                    "SuggestionUpVote",
+                    "SuggestionDownVote",
+                )
+            ):
                 # Other legacy button type
+                # Cant confirm easily until in prod
+                await notify_ethan_of_something(
+                    title="Legacy component key",
+                    message="Finally observed the legacy component key. "
+                    f"Out of the possible choices, it is this: `{component_key}`",
+                    priority=2,
+                )
                 custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
                 vote_enum = (
                     SuggestionsVoteTypeEnum.UpVote
-                    if custom_id == "SuggestionsUpVote"
+                    if custom_id in ("SuggestionsUpVote", "SuggestionUpVote")
                     else SuggestionsVoteTypeEnum.DownVote
                 )
                 component_key = f"suggestion {vote_enum.value}"
@@ -368,12 +383,24 @@ async def create_bot(  # noqa: PLR0915, C901
                     )
 
                 else:
+                    internal_error: InternalErrors = await InternalErrors.persist_error(
+                        f"Unknown Component Key: {component_key}",
+                        command_name=component_key,
+                    )
+                    # Cant confirm easily until in prod
+                    await notify_ethan_of_something(
+                        title="Unknown Component Key",
+                        message="Finally observed the legacy component key. "
+                        f"Out of the possible choices, it is this: `{component_key}`",
+                        internal_error_reference=internal_error,
+                    )
                     await ctx.respond(
                         embed=utils.error_embed(
                             "Unknown Event",
                             "Please contact support if this keeps happening "
                             "and describe what you did before seeing this error."
                             f"\n\nComponent key: `{component_key}`",
+                            internal_error_reference=internal_error,
                         ),
                         ephemeral=True,
                     )

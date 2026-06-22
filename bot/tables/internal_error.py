@@ -47,15 +47,20 @@ class InternalErrors(AuditMixin, Table):
     @classmethod
     async def persist_error(
         cls,
-        exception: Exception,
+        exception: Exception | str,
         *,
         command_name: str,
         user_id: int | None = None,
         guild_id: int | None = None,
     ) -> InternalErrors:
+        traceback_for_col = (
+            exception
+            if isinstance(exception, str)
+            else "".join(traceback.format_exception(exception))
+        )
         internal_error = cls(
             id=generate_id(),
-            traceback="".join(traceback.format_exception(exception)),
+            traceback=traceback_for_col,
             error_name=exception.__class__.__name__,
             command_name=command_name,
             guild_id=guild_id,
@@ -63,3 +68,8 @@ class InternalErrors(AuditMixin, Table):
         )
         await internal_error.save()
         return internal_error
+
+    @property
+    def url(self) -> str:
+        """Return a URL to view in the dashboard."""
+        return f"https://dashboard.suggestions.gg/errors/{self.id}"

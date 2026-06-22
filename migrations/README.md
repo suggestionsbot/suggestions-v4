@@ -29,6 +29,10 @@ alter table suggestion_votes
 add constraint unique_votes UNIQUE (user_id, suggestion);
 ```
 
+---
+
+Notes below
+
 ```sql
 \copy suggestion_votes (created_at, last_modified_at, suggestion, user_id, vote_type)
 from '/home/skelmis/Code/Suggestions/suggestions_version_4/migrations/votes.csv'
