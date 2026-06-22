@@ -405,6 +405,16 @@ class Suggestions(Table, AuditMixin):
 
             content.write(
                 localisations.get_localized_string(
+                    "components.suggestions.resolved_type",
+                    locale,
+                    extras={
+                        "RESOLVED_TYPE": self.state.value.capitalize(),
+                    },
+                    guild_config=guild_config,
+                )
+            )
+            content.write(
+                localisations.get_localized_string(
                     "components.suggestions.resolved",
                     locale,
                     extras={
