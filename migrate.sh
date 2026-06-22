@@ -1,2 +1,2 @@
-piccolo migrations forwards shared --trace
-piccolo migrations forwards all --trace
+uv run piccolo migrations forwards shared --trace
+uv run piccolo migrations forwards all --trace
