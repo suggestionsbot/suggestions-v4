@@ -610,7 +610,7 @@ class GuildConfigurationMenus:
             hikari.impl.MessageActionRowBuilder(
                 components=[
                     hikari.impl.LinkButtonBuilder(
-                        url="https://docs.suggestions.gg/docs/configuration/guild",
+                        url="https://docs.suggestions.gg/docs/guild-configuration",
                         label="View more documentation here",
                     ),
                 ],
@@ -858,7 +858,7 @@ class GuildConfigurationMenus:
             hikari.impl.MessageActionRowBuilder(
                 components=[
                     hikari.impl.LinkButtonBuilder(
-                        url="https://docs.suggestions.gg/docs/configuration/guild",
+                        url="https://docs.suggestions.gg/docs/guild-configuration",
                         label="View the documentation here",
                     ),
                 ],
@@ -1145,7 +1145,7 @@ class GuildConfigurationMenus:
             hikari.impl.MessageActionRowBuilder(
                 components=[
                     hikari.impl.LinkButtonBuilder(
-                        url="https://docs.suggestions.gg/docs/configuration/guild",
+                        url="https://docs.suggestions.gg/docs/guild-configuration",
                         label="View the documentation here",
                     ),
                 ],

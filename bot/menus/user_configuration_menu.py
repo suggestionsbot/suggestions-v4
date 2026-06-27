@@ -208,7 +208,7 @@ class UserConfigurationMenus:
             hikari.impl.MessageActionRowBuilder(
                 components=[
                     hikari.impl.LinkButtonBuilder(
-                        url="https://docs.suggestions.gg/docs/configuration/user",
+                        url="https://docs.suggestions.gg/docs/user-configuration",
                         label="View the documentation here",
                     ),
                 ],
