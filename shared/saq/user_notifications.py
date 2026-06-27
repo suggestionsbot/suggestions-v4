@@ -62,7 +62,14 @@ async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int
         )
         return
 
+    guild_config = await configs.ensure_guild_config(guild_id)
     user_config = await configs.ensure_user_config(suggestion.author_id)
+    if (
+        guild_config.generic_dm_messages_disabled
+        or user_config.generic_dm_messages_disabled
+    ):
+        return
+
     async with constants.DISCORD_REST_CLIENT.acquire(
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
