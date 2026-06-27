@@ -6,7 +6,7 @@ import hikari
 
 from bot import constants as b_constants
 from shared import utils
-from shared.tables import Suggestions, QueuedSuggestions
+from shared.tables import Suggestions, QueuedSuggestions, SuggestionStateEnum
 from shared.utils.configs import ensure_guild_config
 from web import constants
 from web.constants import REDIS_CLIENT
@@ -125,6 +125,10 @@ async def populate_sid_autocomplete(_):
                     index="shared_sid_autocomplete_index",
                 )
                 if isinstance(row, Suggestions):
+                    if row.state == SuggestionStateEnum.CLEARED:
+                        # Dont add cleared suggestions to autocomplete
+                        continue
+
                     await utils.cache_sid_in_autocomplete(
                         guild_id=row.guild_configuration.guild_id,
                         suggestion_id=row.sID,
