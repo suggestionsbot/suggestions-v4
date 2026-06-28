@@ -147,6 +147,7 @@ class SuggestionsQueueMenu:
             if guild_config.allow_anonymous_moderators is False
             else "Anonymous"
         )
+        await queued_suggestion.save()
         suggestion: Suggestions | None = await SuggestionMenu.handle_suggestion(
             suggestion=queued_suggestion.suggestion,
             image_urls=queued_suggestion.image_urls,
@@ -185,6 +186,7 @@ class SuggestionsQueueMenu:
             if guild_config.allow_anonymous_moderators is False
             else "Anonymous"
         )
+        await queued_suggestion.save()
         if queued_suggestion.is_physical:
             # Delete from channel
             try:
@@ -192,6 +194,8 @@ class SuggestionsQueueMenu:
                     channel=hikari.Snowflake(queued_suggestion.channel_id),
                     message=hikari.Snowflake(queued_suggestion.message_id),
                 )
+                queued_suggestion.channel_id = None
+                queued_suggestion.message_id = None
             except hikari.NotFoundError:
                 # Good, already gone
                 pass

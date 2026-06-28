@@ -58,6 +58,7 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
     suggestion.resolved_by_display_text = (
         f"<@{ctx.user.id}>" if anonymously is False else "Anonymous"
     )
+    await suggestion.save()
 
     # Archive thread if required
     if guild_config.auto_archive_threads and suggestion.thread_id:
