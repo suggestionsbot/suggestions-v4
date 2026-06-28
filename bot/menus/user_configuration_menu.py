@@ -49,7 +49,7 @@ class UserConfigurationMenus:
             await ctx.respond(
                 constants.LOCALISATIONS.get_localized_string(
                     f"menus.user_configuration.responses.{id_data}.{key}",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
             )
             return
@@ -64,7 +64,7 @@ class UserConfigurationMenus:
             await ctx.respond(
                 constants.LOCALISATIONS.get_localized_string(
                     f"menus.user_configuration.responses.{id_data}.{key}",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
             )
             return
@@ -75,7 +75,7 @@ class UserConfigurationMenus:
             await ctx.respond(
                 constants.LOCALISATIONS.get_localized_string(
                     "menus.guild_configuration.responses.primary_language",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                     extras={
                         "LANGUAGE": language_as_word(user_config.primary_language_raw)
                     },
@@ -90,7 +90,6 @@ class UserConfigurationMenus:
     async def build_base_components_page_1(
         cls,
         *,
-        ctx: lightbulb.Context | lightbulb.components.MenuContext,
         user_config: UserConfigs,
         localisations: Localisation,
         link_id: str | None = None,
@@ -102,7 +101,7 @@ class UserConfigurationMenus:
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "menus.user_configuration.base_menu.overall_description",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
             ),
             hikari.impl.ContainerComponentBuilder(
@@ -110,7 +109,7 @@ class UserConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.user_configuration.base_menu.generic_dm_messages_disabled",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -121,7 +120,7 @@ class UserConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.user_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=not user_config.generic_dm_messages_disabled,  # noqa: E501
@@ -129,7 +128,7 @@ class UserConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.user_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=user_config.generic_dm_messages_disabled,
@@ -143,7 +142,7 @@ class UserConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.user_configuration.base_menu.ping_on_thread_creation",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -154,7 +153,7 @@ class UserConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.user_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=user_config.ping_on_thread_creation,  # noqa: E501
@@ -162,7 +161,7 @@ class UserConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.user_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=not user_config.ping_on_thread_creation,
@@ -176,7 +175,7 @@ class UserConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.user_configuration.base_menu.primary_language",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(

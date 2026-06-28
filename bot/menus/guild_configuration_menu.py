@@ -11,7 +11,7 @@ from hikari.api import special_endpoints, ComponentBuilder
 from bot import utils
 from bot.exceptions import SuggestionException
 from bot.localisation import Localisation
-from shared.tables import GuildConfigs
+from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs, get_cached_interaction_id
 from shared.utils.locales import language_as_word
 from web import constants as t_constants
@@ -57,8 +57,9 @@ class GuildConfigurationMenus:
                 await ctx.respond(
                     localisations.get_localized_string(
                         f"menus.guild_configuration.responses.{id_data}.empty",
-                        ctx.interaction.locale,
+                        user_config.primary_language,
                     ),
+                    ephemeral=True,
                 )
                 return
 
@@ -78,9 +79,10 @@ class GuildConfigurationMenus:
             await ctx.respond(
                 localisations.get_localized_string(
                     f"menus.guild_configuration.responses.{id_data}.set",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                     extras={"CHANNEL": f"<#{getattr(guild_config, id_data)}>"},
                 ),
+                ephemeral=True,
             )
             return
 
@@ -100,8 +102,9 @@ class GuildConfigurationMenus:
             await ctx.respond(
                 localisations.get_localized_string(
                     f"menus.guild_configuration.responses.{id_data}.{key}",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
+                ephemeral=True,
             )
             return
 
@@ -115,7 +118,7 @@ class GuildConfigurationMenus:
             await ctx.respond(
                 localisations.get_localized_string(
                     f"menus.guild_configuration.responses.{id_data}.{key}",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
             )
             return
@@ -126,7 +129,7 @@ class GuildConfigurationMenus:
             await ctx.respond(
                 localisations.get_localized_string(
                     "menus.guild_configuration.responses.primary_language",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                     extras={
                         "LANGUAGE": language_as_word(guild_config.primary_language_raw)
                     },
@@ -141,7 +144,7 @@ class GuildConfigurationMenus:
                 await ctx.respond(
                     localisations.get_localized_string(
                         "menus.guild_configuration.responses.keep_logs.set",
-                        ctx.interaction.locale,
+                        user_config.primary_language,
                     ),
                 )
                 return
@@ -153,6 +156,7 @@ class GuildConfigurationMenus:
                     localisations=localisations,
                     guild_config=guild_config,
                     link_id=link_id,
+                    user_config=user_config,
                 ),
             )
             return
@@ -165,7 +169,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.responses.sent_suggestions_button.description",
-                            ctx.interaction.locale,
+                            guild_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -174,7 +178,7 @@ class GuildConfigurationMenus:
                                 style=hikari.ButtonStyle.PRIMARY,
                                 label=localisations.get_localized_string(
                                     "menus.guild_configuration.responses.sent_suggestions_button.button",
-                                    ctx.interaction.locale,
+                                    guild_config.primary_language,
                                 ),
                                 custom_id="v4_suggest_button",
                             ),
@@ -185,7 +189,7 @@ class GuildConfigurationMenus:
             await ctx.respond(
                 localisations.get_localized_string(
                     "menus.guild_configuration.responses.sent_suggestions_button",
-                    ctx.interaction.locale,
+                    guild_config.primary_language,
                 ),
             )
             return
@@ -199,6 +203,7 @@ class GuildConfigurationMenus:
                         localisations=localisations,
                         guild_config=guild_config,
                         link_id=link_id,
+                        user_config=user_config,
                     ),
                 )
             else:
@@ -209,6 +214,7 @@ class GuildConfigurationMenus:
                         localisations=localisations,
                         guild_config=guild_config,
                         link_id=link_id,
+                        user_config=user_config,
                     ),
                 )
                 await ctx.respond(
@@ -229,6 +235,7 @@ class GuildConfigurationMenus:
                         localisations=localisations,
                         guild_config=guild_config,
                         link_id=link_id,
+                        user_config=user_config,
                     ),
                 )
             else:
@@ -239,6 +246,7 @@ class GuildConfigurationMenus:
                         localisations=localisations,
                         guild_config=guild_config,
                         link_id=link_id,
+                        user_config=user_config,
                     ),
                 )
                 await ctx.respond(
@@ -258,7 +266,7 @@ class GuildConfigurationMenus:
                 await ctx.respond(
                     localisations.get_localized_string(
                         "menus.guild_configuration.responses.suggestion_queue.none",
-                        ctx.interaction.locale,
+                        user_config.primary_language,
                     ),
                 )
                 return
@@ -272,7 +280,7 @@ class GuildConfigurationMenus:
                 await ctx.respond(
                     localisations.get_localized_string(
                         "menus.guild_configuration.responses.suggestion_queue.virtual",
-                        ctx.interaction.locale,
+                        user_config.primary_language,
                     ),
                 )
                 return
@@ -284,6 +292,7 @@ class GuildConfigurationMenus:
                         localisations=localisations,
                         guild_config=guild_config,
                         link_id=link_id,
+                        user_config=user_config,
                     ),
                 )
                 return
@@ -342,6 +351,7 @@ class GuildConfigurationMenus:
         *,
         ctx: lightbulb.components.MenuContext | lightbulb.Context,
         guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
         link_id: str | None = None,
     ) -> Sequence[special_endpoints.ComponentBuilder]:
@@ -352,7 +362,7 @@ class GuildConfigurationMenus:
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "menus.guild_configuration.queue_menu.overall_description",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
             ),
             hikari.impl.ContainerComponentBuilder(
@@ -360,7 +370,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.queue_menu.queued_suggestion_channel_id",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -381,7 +391,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.queue_menu.queued_suggestion_log_channel_id",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -419,6 +429,7 @@ class GuildConfigurationMenus:
         *,
         ctx: lightbulb.components.MenuContext | lightbulb.Context,
         guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
         link_id: str | None = None,
     ) -> Sequence[special_endpoints.ComponentBuilder]:
@@ -431,7 +442,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.log_menu.log_channel_id",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -459,6 +470,7 @@ class GuildConfigurationMenus:
         *,
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
         link_id: str | None = None,
     ) -> list[ComponentBuilder]:
@@ -478,7 +490,7 @@ class GuildConfigurationMenus:
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "menus.setup.base_menu.overall_description",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
             ),
             hikari.impl.ContainerComponentBuilder(
@@ -486,7 +498,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.suggestions_channel_id",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -507,7 +519,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.threads_for_suggestions",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -518,7 +530,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=guild_config.threads_for_suggestions,
@@ -526,7 +538,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=not guild_config.threads_for_suggestions,  # noqa: E501
@@ -540,7 +552,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.log_menu.log_channel_id",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -563,7 +575,7 @@ class GuildConfigurationMenus:
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "menus.setup.base_menu.optional_description",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
             ),
             hikari.impl.ContainerComponentBuilder(
@@ -571,7 +583,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.suggestion_queue.description",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -582,7 +594,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.base_menu.suggestion_queue.none",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="none",
                                         is_default=no_queue_is_default,
@@ -590,7 +602,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.base_menu.suggestion_queue.virtual",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="virtual",
                                         is_default=virtual_is_default,
@@ -598,7 +610,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.base_menu.suggestion_queue.channel",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="channel",
                                         is_default=channel_is_default,
@@ -612,7 +624,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.suggestions_via_button",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -628,7 +640,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.update_channel_id",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -665,6 +677,7 @@ class GuildConfigurationMenus:
         *,
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
         link_id: str | None = None,
     ) -> Sequence[special_endpoints.ComponentBuilder]:
@@ -675,7 +688,7 @@ class GuildConfigurationMenus:
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "menus.guild_configuration.base_menu.overall_description",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
             ),
             hikari.impl.ContainerComponentBuilder(
@@ -683,7 +696,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.suggestions_channel_id",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -704,7 +717,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.threads_for_suggestions",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -715,7 +728,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=guild_config.threads_for_suggestions,
@@ -723,7 +736,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=not guild_config.threads_for_suggestions,  # noqa: E501
@@ -737,7 +750,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.auto_archive_threads",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -748,7 +761,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=guild_config.auto_archive_threads,
@@ -756,7 +769,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=not guild_config.auto_archive_threads,
@@ -770,7 +783,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.ping_on_thread_creation",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -781,7 +794,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=guild_config.ping_on_thread_creation,
@@ -789,7 +802,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=not guild_config.ping_on_thread_creation,  # noqa: E501
@@ -803,7 +816,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.can_have_anonymous_suggestions",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -814,7 +827,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=guild_config.can_have_anonymous_suggestions,
@@ -822,7 +835,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=not guild_config.can_have_anonymous_suggestions,  # noqa: E501
@@ -836,7 +849,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.can_have_images_in_suggestions",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -847,7 +860,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=guild_config.can_have_images_in_suggestions,
@@ -855,7 +868,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=not guild_config.can_have_images_in_suggestions,  # noqa: E501
@@ -869,7 +882,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.suggestions_via_button",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -890,7 +903,7 @@ class GuildConfigurationMenus:
                         style=hikari.ButtonStyle.PRIMARY,
                         label=localisations.get_localized_string(
                             "menus.guild_configuration.responses.pagination.view_next",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                         custom_id=f"gcm:{link_id}:view_page_2",
                     ),
@@ -921,6 +934,7 @@ class GuildConfigurationMenus:
         *,
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         guild_config: GuildConfigs,
+        user_config: UserConfigs,
         localisations: Localisation,
         link_id: str | None = None,
     ) -> Sequence[special_endpoints.ComponentBuilder]:
@@ -931,7 +945,7 @@ class GuildConfigurationMenus:
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
                     "menus.guild_configuration.base_menu.overall_description",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
             ),
         ]
@@ -952,7 +966,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.log_channel.description",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -964,7 +978,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.base_menu.log_channel.same_channel",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="same_channel",
                                         is_default=guild_config.keep_logs,
@@ -973,7 +987,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.base_menu.log_channel.dedicated_channel",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="dedicated_channel",
                                         is_default=(
@@ -993,7 +1007,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.allow_anonymous_moderators",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -1004,7 +1018,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=guild_config.allow_anonymous_moderators,
@@ -1012,7 +1026,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=not guild_config.allow_anonymous_moderators,  # noqa: E501
@@ -1032,7 +1046,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.suggestion_queue.description",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -1043,7 +1057,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.base_menu.suggestion_queue.none",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="none",
                                         is_default=no_queue_is_default,
@@ -1051,7 +1065,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.base_menu.suggestion_queue.virtual",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="virtual",
                                         is_default=virtual_is_default,
@@ -1059,7 +1073,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.base_menu.suggestion_queue.channel",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="channel",
                                         is_default=channel_is_default,
@@ -1081,7 +1095,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.generic_dm_messages_disabled",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -1092,7 +1106,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.yes",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="yes",
                                         is_default=not guild_config.generic_dm_messages_disabled,  # noqa: E501
@@ -1100,7 +1114,7 @@ class GuildConfigurationMenus:
                                     hikari.impl.SelectOptionBuilder(
                                         label=localisations.get_localized_string(
                                             "menus.guild_configuration.no",
-                                            ctx.interaction.locale,
+                                            user_config.primary_language,
                                         ),
                                         value="no",
                                         is_default=guild_config.generic_dm_messages_disabled,
@@ -1114,7 +1128,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.primary_language",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -1144,7 +1158,7 @@ class GuildConfigurationMenus:
                     hikari.impl.TextDisplayComponentBuilder(
                         content=localisations.get_localized_string(
                             "menus.guild_configuration.base_menu.update_channel_id",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     hikari.impl.MessageActionRowBuilder(
@@ -1173,7 +1187,7 @@ class GuildConfigurationMenus:
                         style=hikari.ButtonStyle.PRIMARY,
                         label=localisations.get_localized_string(
                             "menus.guild_configuration.responses.pagination.view_previous",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                         custom_id=f"gcm:{link_id}:view_page_1",
                     ),

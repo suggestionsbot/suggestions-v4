@@ -81,7 +81,7 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
                 await thread.send(
                     localisations.get_localized_string(
                         "commands.resolve.responses.locking_thread",
-                        ctx.interaction.locale,
+                        guild_config.primary_language,
                     ),
                 )
                 await thread.edit(locked=True, archived=True)
@@ -103,7 +103,7 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
         content.write(
             localisations.get_localized_string(
                 "commands.resolve.responses.keep_logs_edit_soon",
-                ctx.interaction.locale,
+                user_config.primary_language,
                 extras={"SID": suggestion.sID},
             ),
         )
@@ -128,8 +128,9 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.no_log_channel",
-                ctx.interaction.locale,
+                user_config.primary_language,
             ),
+            ephemeral=True,
         )
         return
 
@@ -140,8 +141,9 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.cant_get_log_channel",
-                ctx.interaction.locale,
+                user_config.primary_language,
             ),
+            ephemeral=True,
         )
         return
 
@@ -159,8 +161,9 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.cant_get_log_channel",
-                ctx.interaction.locale,
+                user_config.primary_language,
             ),
+            ephemeral=True,
         )
         return
 
@@ -185,8 +188,9 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
             await ctx.respond(
                 localisations.get_localized_string(
                     "commands.resolve.responses.missing_suggestion_channel_perms",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
+                ephemeral=True,
             )
 
     suggestion.channel_id = log_message.channel_id
@@ -196,7 +200,7 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
     content.write(
         localisations.get_localized_string(
             "commands.resolve.responses.resolved_immediately",
-            ctx.interaction.locale,
+            user_config.primary_language,
             extras={"SID": suggestion.sID, "JUMP": suggestion.message_jump_link},
         ),
     )
@@ -213,7 +217,7 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
         content.write("\n\n")
         content.write(await ma.as_string())
 
-    await ctx.respond(content.getvalue())
+    await ctx.respond(content.getvalue(), ephemeral=True)
     return
 
 
@@ -321,8 +325,9 @@ class ResolveCmd(
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.suggestion_not_found",
-                ctx.interaction.locale,
+                user_config.primary_language,
             ),
+            ephemeral=True,
         )
 
 
@@ -393,8 +398,9 @@ class ApproveCmd(
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.suggestion_not_found",
-                ctx.interaction.locale,
+                user_config.primary_language,
             ),
+            ephemeral=True,
         )
 
 
@@ -465,8 +471,9 @@ class RejectCmd(
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.suggestion_not_found",
-                ctx.interaction.locale,
+                user_config.primary_language,
             ),
+            ephemeral=True,
         )
 
 

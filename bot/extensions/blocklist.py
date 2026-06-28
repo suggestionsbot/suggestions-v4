@@ -85,11 +85,11 @@ class BlocklistAddCmd(
                     embed=utils.error_embed(
                         localisations.get_localized_string(
                             "menus.suggestion.not_found.title",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                         localisations.get_localized_string(
                             "menus.suggestion.not_found.description",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
                     ephemeral=True,
@@ -101,7 +101,7 @@ class BlocklistAddCmd(
             await ctx.respond(
                 localisations.get_localized_string(
                     "commands.blocklist.add.responses.already_blocked",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
                 ephemeral=True,
             )
@@ -112,7 +112,7 @@ class BlocklistAddCmd(
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.blocklist.add.responses.added_to_blocklist",
-                ctx.interaction.locale,
+                user_config.primary_language,
             ),
             ephemeral=True,
         )
@@ -173,7 +173,7 @@ class BlocklistRemoveCmd(
             await ctx.respond(
                 localisations.get_localized_string(
                     "commands.blocklist.remove.responses.argument_required",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
                 ephemeral=True,
             )
@@ -183,7 +183,7 @@ class BlocklistRemoveCmd(
             await ctx.respond(
                 localisations.get_localized_string(
                     "commands.blocklist.remove.responses.too_many_arguments",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
                 ephemeral=True,
             )
@@ -219,11 +219,11 @@ class BlocklistRemoveCmd(
                         embed=utils.error_embed(
                             localisations.get_localized_string(
                                 "menus.suggestion.not_found.title",
-                                ctx.interaction.locale,
+                                user_config.primary_language,
                             ),
                             localisations.get_localized_string(
                                 "menus.suggestion.not_found.description",
-                                ctx.interaction.locale,
+                                user_config.primary_language,
                             ),
                         ),
                         ephemeral=True,
@@ -236,7 +236,7 @@ class BlocklistRemoveCmd(
             await ctx.respond(
                 localisations.get_localized_string(
                     "commands.blocklist.remove.responses.not_blocked",
-                    ctx.interaction.locale,
+                    user_config.primary_language,
                 ),
                 ephemeral=True,
             )
@@ -247,7 +247,7 @@ class BlocklistRemoveCmd(
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.blocklist.remove.responses.now_unblocked",
-                ctx.interaction.locale,
+                user_config.primary_language,
             ),
             ephemeral=True,
         )

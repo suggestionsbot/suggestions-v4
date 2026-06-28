@@ -119,11 +119,11 @@ class Suggest(
                 embed=utils.error_embed(
                     localisations.get_localized_string(
                         "commands.suggest.responses.blocked.title",
-                        ctx.interaction.locale,
+                        user_config.primary_language,
                     ),
                     localisations.get_localized_string(
                         "commands.suggest.responses.blocked.description",
-                        ctx.interaction.locale,
+                        user_config.primary_language,
                     ),
                 ),
                 ephemeral=True,
@@ -134,13 +134,14 @@ class Suggest(
             guild_config=guild_config,
             localisations=localisations,
             ctx=ctx,
+            user_config=user_config,
         )
 
         link_id: str = await utils.otel.generate_trace_link_state()
         await ctx.respond_with_modal(
             localisations.get_localized_string(
                 "commands.suggest.responses.menu_title",
-                ctx.interaction.locale,
+                user_config.primary_language,
             ),
             f"suggest_modal:{link_id}",
             components=components,

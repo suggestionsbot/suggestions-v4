@@ -43,5 +43,6 @@ class SetupCmd(
             ctx=ctx,
             guild_config=guild_config,
             localisations=localisations,
+            user_config=user_config,
         )
         await ctx.respond(components=components)

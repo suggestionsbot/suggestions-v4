@@ -67,6 +67,7 @@ class ConfigureGuildCmd(
                 guild_config=guild_config,
                 localisations=localisations,
                 link_id=link_id,
+                user_config=user_config,
             )
         elif self.menu == "queue_settings":
             components = await GuildConfigurationMenus.build_queue_components(
@@ -74,6 +75,7 @@ class ConfigureGuildCmd(
                 guild_config=guild_config,
                 localisations=localisations,
                 link_id=link_id,
+                user_config=user_config,
             )
         else:
             components = await GuildConfigurationMenus.build_base_components_page_1(
@@ -81,6 +83,7 @@ class ConfigureGuildCmd(
                 guild_config=guild_config,
                 localisations=localisations,
                 link_id=link_id,
+                user_config=user_config,
             )
 
         resp = await ctx.respond(components=components)

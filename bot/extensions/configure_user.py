@@ -35,7 +35,6 @@ class ConfigureUserCmd(
             command_type=CommandTypes.SLASH_COMMAND,
         )
         components = await UserConfigurationMenus.build_base_components_page_1(
-            ctx=ctx,
             user_config=user_config,
             localisations=localisations,
         )

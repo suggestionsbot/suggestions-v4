@@ -123,7 +123,7 @@ class SuggestionsQueueMenu:
                 message.write(
                     localisations.get_localized_string(
                         "commands.resolve.responses.missing_queued_suggestion_channel_perms",
-                        ctx.interaction.locale,
+                        user_config.primary_language,
                     ),
                 )
             await ctx.respond(message.getvalue())
@@ -204,13 +204,14 @@ class SuggestionsQueueMenu:
                     embed=utils.error_embed(
                         localisations.get_localized_string(
                             "menus.queue.responses.queue_channel_no_perms.title",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                         localisations.get_localized_string(
                             "menus.queue.responses.queue_channel_no_perms.description",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
+                    ephemeral=True,
                 )
                 return
 
@@ -232,13 +233,14 @@ class SuggestionsQueueMenu:
                     embed=utils.error_embed(
                         localisations.get_localized_string(
                             "menus.queue.responses.queue_log_channel_not_found.title",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                         localisations.get_localized_string(
                             "menus.queue.responses.queue_log_channel_not_found.description",
-                            ctx.interaction.locale,
+                            user_config.primary_language,
                         ),
                     ),
+                    ephemeral=True,
                 )
                 return
 
