@@ -4,7 +4,13 @@ from .autocomplete import (
     get_sid_autocomplete_for_guild,
     delete_autocomplete_cache,
 )
-from .redis import get_accurate_guild_count, cache_guild_queue_info, get_guild_queue_info
+from .redis import (
+    get_accurate_guild_count,
+    cache_guild_queue_info,
+    get_guild_queue_info,
+    get_cached_interaction_id,
+    set_cached_interaction_id,
+)
 
 __all__ = [
     "cache_guild_queue_info",
@@ -12,8 +18,10 @@ __all__ = [
     "configs",
     "delete_autocomplete_cache",
     "get_accurate_guild_count",
+    "get_cached_interaction_id",
     "get_guild_queue_info",
     "get_sid_autocomplete_for_guild",
     "ntfy",
+    "set_cached_interaction_id",
     "upload_file_to_r2",
 ]

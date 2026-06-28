@@ -3,11 +3,13 @@ import logging
 import hikari
 import lightbulb
 
+from bot import utils
 from bot.constants import CONFIGURE_GROUP
 from bot.localisation import Localisation
 from bot.menus.guild_configuration_menu import GuildConfigurationMenus
 from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import GuildConfigs, UserConfigs
+from shared.utils import set_cached_interaction_id
 
 logger = logging.getLogger(__name__)
 
@@ -58,22 +60,28 @@ class ConfigureGuildCmd(
             action="/configure guild",
             command_type=CommandTypes.SLASH_COMMAND,
         )
+        link_id = await utils.otel.generate_trace_link_state()
         if self.menu == "log_channel":
             components = await GuildConfigurationMenus.build_log_channel_components(
                 ctx=ctx,
                 guild_config=guild_config,
                 localisations=localisations,
+                link_id=link_id,
             )
         elif self.menu == "queue_settings":
             components = await GuildConfigurationMenus.build_queue_components(
                 ctx=ctx,
                 guild_config=guild_config,
                 localisations=localisations,
+                link_id=link_id,
             )
         else:
             components = await GuildConfigurationMenus.build_base_components_page_1(
                 ctx=ctx,
                 guild_config=guild_config,
                 localisations=localisations,
+                link_id=link_id,
             )
-        await ctx.respond(components=components)
+
+        resp = await ctx.respond(components=components)
+        await set_cached_interaction_id(link_id, resp)

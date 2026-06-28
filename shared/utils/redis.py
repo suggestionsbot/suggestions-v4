@@ -43,3 +43,20 @@ async def get_guild_queue_info(guild_id: int) -> dict | None:
     from web.constants import REDIS_CLIENT
 
     return await REDIS_CLIENT.hgetall(f"guild_queue:{guild_id}")
+
+
+async def set_cached_interaction_id(link_id: str, interaction_id: int) -> None:
+    from web.constants import REDIS_CLIENT
+
+    await REDIS_CLIENT.set(
+        f"interaction_id:{link_id}",
+        interaction_id,
+        ex=timedelta(minutes=20),
+    )
+
+
+async def get_cached_interaction_id(link_id: str) -> int | None:
+    from web.constants import REDIS_CLIENT
+
+    data = await REDIS_CLIENT.get(f"interaction_id:{link_id}")
+    return int(data) if data else None

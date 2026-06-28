@@ -12,7 +12,7 @@ from bot import utils
 from bot.exceptions import SuggestionException
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs
-from shared.utils import configs
+from shared.utils import configs, get_cached_interaction_id
 from shared.utils.locales import language_as_word
 from web import constants as t_constants
 import contextlib
@@ -32,6 +32,9 @@ class GuildConfigurationMenus:
         link_id: str,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        user_config = await configs.ensure_user_config(
+            cast("int", ctx.user.id), locale=ctx.interaction.locale
+        )
         guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         event_values: Sequence[str] = event.interaction.values
         log.debug(
@@ -188,25 +191,63 @@ class GuildConfigurationMenus:
             return
 
         if id_data == "view_page_2":
-            await ctx.respond(
-                components=await cls.build_base_components_page_2(
-                    ctx=ctx,
-                    localisations=localisations,
-                    guild_config=guild_config,
-                    link_id=link_id,
-                ),
-            )
+            original_id = await get_cached_interaction_id(link_id)
+            if original_id is None:
+                await ctx.respond(
+                    components=await cls.build_base_components_page_2(
+                        ctx=ctx,
+                        localisations=localisations,
+                        guild_config=guild_config,
+                        link_id=link_id,
+                    ),
+                )
+            else:
+                await ctx.edit_response(
+                    original_id,
+                    components=await cls.build_base_components_page_2(
+                        ctx=ctx,
+                        localisations=localisations,
+                        guild_config=guild_config,
+                        link_id=link_id,
+                    ),
+                )
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.responses.changed_page_inline",
+                        user_config.primary_language,
+                    ),
+                    ephemeral=True,
+                )
             return
 
         if id_data == "view_page_1":
-            await ctx.respond(
-                components=await cls.build_base_components_page_1(
-                    ctx=ctx,
-                    localisations=localisations,
-                    guild_config=guild_config,
-                    link_id=link_id,
-                ),
-            )
+            original_id = await get_cached_interaction_id(link_id)
+            if original_id is None:
+                await ctx.respond(
+                    components=await cls.build_base_components_page_1(
+                        ctx=ctx,
+                        localisations=localisations,
+                        guild_config=guild_config,
+                        link_id=link_id,
+                    ),
+                )
+            else:
+                await ctx.edit_response(
+                    original_id,
+                    components=await cls.build_base_components_page_1(
+                        ctx=ctx,
+                        localisations=localisations,
+                        guild_config=guild_config,
+                        link_id=link_id,
+                    ),
+                )
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.responses.changed_page_inline",
+                        user_config.primary_language,
+                    ),
+                    ephemeral=True,
+                )
             return
 
         if id_data == "suggestions_queue":
