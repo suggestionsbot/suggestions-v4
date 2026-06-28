@@ -48,6 +48,8 @@ CONFIGURE_GROUP = lightbulb.Group(
     name="commands.configure.name",
     description="commands.configure.description",
     localize=True,
+    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
+    contexts=[hikari.ApplicationContextType.GUILD],
 )
 NOTES_GROUP = lightbulb.Group(
     name="commands.note.name",
@@ -55,6 +57,11 @@ NOTES_GROUP = lightbulb.Group(
     localize=True,
     default_member_permissions=hikari.Permissions.MANAGE_GUILD,
     contexts=[hikari.ApplicationContextType.GUILD],
+)
+USER_GROUP = lightbulb.Group(
+    name="commands.user.name",
+    description="commands.user.description",
+    localize=True,
 )
 BLOCKLIST_GROUP = lightbulb.Group(
     name="commands.blocklist.name",

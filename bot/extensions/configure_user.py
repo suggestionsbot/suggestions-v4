@@ -2,7 +2,7 @@ import logging
 
 import lightbulb
 
-from bot.constants import CONFIGURE_GROUP
+from bot.constants import USER_GROUP
 from bot.localisation import Localisation
 from bot.menus.user_configuration_menu import UserConfigurationMenus
 from bot.tables import CommandInvokes, CommandTypes
@@ -11,11 +11,11 @@ from shared.tables import GuildConfigs, UserConfigs
 logger = logging.getLogger(__name__)
 
 
-@CONFIGURE_GROUP.register
+@USER_GROUP.register
 class ConfigureUserCmd(
     lightbulb.SlashCommand,
-    name="commands.configure.user.name",
-    description="commands.configure.user.description",
+    name="commands.user.configure.name",
+    description="commands.user.configure.description",
     localize=True,
 ):
 

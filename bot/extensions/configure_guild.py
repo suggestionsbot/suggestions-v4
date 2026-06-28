@@ -18,8 +18,6 @@ class ConfigureGuildCmd(
     name="commands.configure.guild.name",
     description="commands.configure.guild.description",
     localize=True,
-    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
-    contexts=[hikari.ApplicationContextType.GUILD],
 ):
     menu = lightbulb.string(
         "commands.configure.guild.options.menu.name",

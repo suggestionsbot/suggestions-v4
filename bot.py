@@ -11,10 +11,11 @@ from bot import create_bot
 from bot.constants import (
     CONFIGURE_GROUP,
     NOTES_GROUP,
-    BLOCKLIST_GROUP,
+    USER_GROUP,
     QUEUE_GROUP,
     VIEW_GROUP,
     CLUSTER_ID,
+    BLOCKLIST_GROUP,
 )
 from bot.extensions.resolve import ResolveMessageCommand
 from shared.tables import GuildConfigs
@@ -69,6 +70,7 @@ async def main():
         client.register(CONFIGURE_GROUP)
         client.register(NOTES_GROUP)
         client.register(BLOCKLIST_GROUP)
+        client.register(USER_GROUP)
         client.register(QUEUE_GROUP)
         client.register(VIEW_GROUP)
         client.register(ResolveMessageCommand)
