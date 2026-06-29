@@ -121,7 +121,7 @@ class GuildConfigs(AuditMixin, Table):
     @property
     def still_requires_setup(self) -> bool:
         """Returns true if the guild does not meet the minimum setup requirements."""
-        return self.suggestions_channel_id is None and self.log_channel_id is None
+        return self.suggestions_channel_id is None or self.log_channel_id is None
 
     async def ensure_config_is_setup(
         self,
