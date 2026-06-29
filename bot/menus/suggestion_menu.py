@@ -53,6 +53,12 @@ class SuggestionMenu:
     ) -> None:
         guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         user_config = await configs.ensure_user_config(ctx.user.id)
+        sent_setup_message = await guild_config.ensure_config_is_setup(
+            ctx=ctx, locale=user_config.primary_language
+        )
+        if sent_setup_message:
+            return
+
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,

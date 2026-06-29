@@ -295,6 +295,12 @@ class ResolveCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        sent_setup_message = await guild_config.ensure_config_is_setup(
+            ctx=ctx, locale=user_config.primary_language
+        )
+        if sent_setup_message:
+            return
+
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
@@ -368,6 +374,12 @@ class ApproveCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        sent_setup_message = await guild_config.ensure_config_is_setup(
+            ctx=ctx, locale=user_config.primary_language
+        )
+        if sent_setup_message:
+            return
+
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
@@ -441,6 +453,12 @@ class RejectCmd(
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        sent_setup_message = await guild_config.ensure_config_is_setup(
+            ctx=ctx, locale=user_config.primary_language
+        )
+        if sent_setup_message:
+            return
+
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,

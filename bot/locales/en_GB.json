@@ -406,5 +406,7 @@
   "saq.queued_suggestion_resolved_notifications.responses.rejected.description": "Hey $AUTHOR.\nA queued suggestion of yours has been rejected by $RESOLVED_BY.\n\nThe suggestion which was rejected is attached for your convenience.",
   "saq.queued_suggestion_resolved_notifications.responses.suggestion_resolved.footer": "Guild ID: $GUILD_ID | sID: $SID",
   "errors.on_global_cooldown.title": "Command On Cooldown",
-  "errors.on_global_cooldown.description": "Ahh man so fast! You must wait $TIME to run this command again"
+  "errors.on_global_cooldown.description": "Ahh man so fast! You must wait $TIME to run this command again",
+  "errors.requires_setup.title": "Missing bot configuration",
+  "errors.requires_setup.description": "The bot requires further configuration to setup.\nPlease get an administrator to run `/setup` and complete the provided form before redoing this action."
 }

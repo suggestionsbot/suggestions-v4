@@ -1,3 +1,5 @@
+from bot import utils
+from bot.constants import LOCALISATIONS, ErrorCode
 import hikari
 import lightbulb
 from piccolo.columns import (
@@ -115,6 +117,36 @@ class GuildConfigs(AuditMixin, Table):
     @property
     def primary_language(self) -> hikari.Locale:
         return hikari.Locale(self.primary_language_raw)
+
+    @property
+    def still_requires_setup(self) -> bool:
+        """Returns true if the guild does not meet the minimum setup requirements."""
+        return self.suggestions_channel_id is None and self.log_channel_id is None
+
+    async def ensure_config_is_setup(
+        self,
+        *,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        locale: hikari.Locale,
+    ) -> bool:
+        """Returns true if the user was informed the guild still requires setup."""
+        if not self.still_requires_setup:
+            # It's good to go
+            return False
+
+        await ctx.respond(
+            embed=utils.error_embed(
+                title=LOCALISATIONS.get_localized_string(
+                    "errors.requires_setup.title", locale
+                ),
+                description=LOCALISATIONS.get_localized_string(
+                    "errors.requires_setup.description", locale
+                ),
+                error_code=ErrorCode.BOT_NOT_CONFIGURED,
+            ),
+            ephemeral=True,
+        )
+        return True
 
     async def premium_is_enabled(
         self, ctx: lightbulb.Context | lightbulb.components.MenuContext

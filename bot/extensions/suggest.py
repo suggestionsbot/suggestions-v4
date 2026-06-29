@@ -108,6 +108,12 @@ class Suggest(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
+        sent_setup_message = await guild_config.ensure_config_is_setup(
+            ctx=ctx, locale=user_config.primary_language
+        )
+        if sent_setup_message:
+            return
+
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
