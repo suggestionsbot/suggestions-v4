@@ -18,7 +18,7 @@ from hikari.interactions.interaction_components import (
 import shared.utils
 from bot import constants, utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
-from bot.exceptions import MissingQueueChannel, MessageTooLong
+from bot.exceptions import MissingQueueChannel, MessageTooLong, InvalidFileType
 from bot.tables import (
     InternalErrors,
     MessageAddons,
@@ -233,6 +233,7 @@ class SuggestionMenu:
             suggestion_content: str | None = None
             image_urls: list[str] = []
             anonymously: bool = False
+            has_bad_file: bool = False
             for entry in response_fields:
                 if entry.component.custom_id == "suggestion":
                     entry.component = cast(
@@ -276,15 +277,19 @@ class SuggestionMenu:
                             )
                             continue
 
-                        image_urls.append(
-                            await r2.upload_file_to_r2(
-                                file_name=item.filename,
-                                # TODO try optimise this to do image streaming?
-                                file_data=await item.read(),
-                                guild_id=guild_config.guild_id,
-                                user_id=user_config.user_id,
-                            ),
-                        )
+                        try:
+                            image_urls.append(
+                                await r2.upload_file_to_r2(
+                                    file_name=item.filename,
+                                    # TODO try optimise this to do image streaming?
+                                    file_data=await item.read(),
+                                    guild_id=guild_config.guild_id,
+                                    user_id=user_config.user_id,
+                                ),
+                            )
+                        except InvalidFileType:
+                            # TODO Rework to delete already uploaded images if last uploaded fails
+                            has_bad_file = True
 
             assert suggestion_content is not None
             if len(suggestion_content) > MAX_CONTENT_LENGTH:
@@ -304,6 +309,16 @@ class SuggestionMenu:
                     attachment=hikari.files.Bytes(
                         io.StringIO(suggestion_content),
                         "content.txt",
+                    ),
+                    ephemeral=True,
+                )
+                return None
+
+            if has_bad_file:
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "values.suggest.allowed_image_types",
+                        user_config.primary_language,
                     ),
                     ephemeral=True,
                 )
