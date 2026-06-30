@@ -117,103 +117,124 @@ async def create_bot(  # noqa: PLR0915, C901
 
         otel_ctx = None
         component_key = f"{custom_id} modal"
-        if custom_id.startswith("suggest_modal"):
-            component_key = "suggestion modal"
-            link_id = custom_id.split(":", maxsplit=1)[1]
-            if link_id is not None and link_id:
-                otel_ctx = await utils.otel.get_context_from_link_state(
-                    custom_id.split(":", maxsplit=1)[1],
-                )
-
-        elif custom_id.startswith("resolve_modal"):
-            component_key = "resolve modal"
-            _, link_id, suggestion_id = custom_id.split(":", maxsplit=2)
-            if link_id is not None and link_id:
-                otel_ctx = await utils.otel.get_context_from_link_state(link_id)
-
-        with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
-            span.set_attribute("interaction.user.id", ctx.user.id)
-            span.set_attribute(
-                "interaction.user.global_name",
-                (ctx.user.global_name or ctx.user.username),
-            )
-            if ctx.guild_id:
-                span.set_attribute("interaction.guild.id", ctx.guild_id)
-
-            await ctx.defer(ephemeral=True)
-            guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
-            user_config = await configs.ensure_user_config(ctx.user.id)
+        try:
             if custom_id.startswith("suggest_modal"):
-                await SuggestionMenu.handle_interaction(
-                    event.interaction.components,
-                    ctx=ctx,
-                    localisations=constants.LOCALISATIONS,
-                    event=event,
-                    guild_config=guild_config,
-                    user_config=user_config,
-                )
+                component_key = "suggestion modal"
+                link_id = custom_id.split(":", maxsplit=1)[1]
+                if link_id is not None and link_id:
+                    otel_ctx = await utils.otel.get_context_from_link_state(
+                        custom_id.split(":", maxsplit=1)[1],
+                    )
 
             elif custom_id.startswith("resolve_modal"):
-                suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-                    suggestion_id, guild_config.guild_id  # noqa
-                )
-                resolution_state_raw: str
-                response: str | None = None
-                anonymously: bool = False
-                for entry in event.interaction.components:
-                    if entry.component.custom_id == "resolution_state_raw":
-                        entry.component = cast(
-                            "FileUploadInteractionComponent",
-                            entry.component,
-                        )
-                        resolution_state_raw: str = entry.component.values[0]
-                    elif entry.component.custom_id == "response":
-                        entry.component = cast(
-                            "TextInputInteractionComponent",
-                            entry.component,
-                        )
-                        response = entry.component.value
+                component_key = "resolve modal"
+                _, link_id, suggestion_id = custom_id.split(":", maxsplit=2)
+                if link_id is not None and link_id:
+                    otel_ctx = await utils.otel.get_context_from_link_state(link_id)
 
-                    elif entry.component.custom_id == "anonymously":
-                        entry.component = cast(
-                            "FileUploadInteractionComponent",
-                            entry.component,
-                        )
-                        anonymously = commons.value_to_bool(entry.component.values[0])
+            with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
+                span.set_attribute("interaction.user.id", ctx.user.id)
+                span.set_attribute(
+                    "interaction.user.global_name",
+                    (ctx.user.global_name or ctx.user.username),
+                )
+                if ctx.guild_id:
+                    span.set_attribute("interaction.guild.id", ctx.guild_id)
 
-                # We know by here this is always true
-                suggestion: Suggestions = cast("Suggestions", suggestion)
-                await resolve_suggestion(
-                    suggestion,
-                    response,
-                    anonymously,
-                    SuggestionStateEnum(resolution_state_raw),
-                    ctx,
-                    guild_config,
-                    user_config,
-                    LOCALISATIONS,
+                await ctx.defer(ephemeral=True)
+                guild_config = await configs.ensure_guild_config(
+                    cast("int", ctx.guild_id)
                 )
+                user_config = await configs.ensure_user_config(ctx.user.id)
+                if custom_id.startswith("suggest_modal"):
+                    await SuggestionMenu.handle_interaction(
+                        event.interaction.components,
+                        ctx=ctx,
+                        localisations=constants.LOCALISATIONS,
+                        event=event,
+                        guild_config=guild_config,
+                        user_config=user_config,
+                    )
 
-            else:
-                internal_error: InternalErrors = await InternalErrors.persist_error(
-                    f"Unknown Modal Key: {component_key}",
-                    command_name=component_key,
-                )
-                await notify_ethan_of_something(
-                    title="Unknown Modal Event",
-                    message=f"Observed an unhandled modal event: `{component_key!r}`",
-                    internal_error_reference=internal_error,
-                    tags="warning",
-                )
-                await ctx.respond(
-                    embed=utils.error_embed(
-                        title="Unknown Modal",
-                        description=f"Please reach out to support with a screenshot of "
-                        f"this message.\n\nCustom ID: {custom_id}",
+                elif custom_id.startswith("resolve_modal"):
+                    suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
+                        suggestion_id, guild_config.guild_id  # noqa
+                    )
+                    resolution_state_raw: str
+                    response: str | None = None
+                    anonymously: bool = False
+                    for entry in event.interaction.components:
+                        if entry.component.custom_id == "resolution_state_raw":
+                            entry.component = cast(
+                                "FileUploadInteractionComponent",
+                                entry.component,
+                            )
+                            resolution_state_raw: str = entry.component.values[0]
+                        elif entry.component.custom_id == "response":
+                            entry.component = cast(
+                                "TextInputInteractionComponent",
+                                entry.component,
+                            )
+                            response = entry.component.value
+
+                        elif entry.component.custom_id == "anonymously":
+                            entry.component = cast(
+                                "FileUploadInteractionComponent",
+                                entry.component,
+                            )
+                            anonymously = commons.value_to_bool(entry.component.values[0])
+
+                    # We know by here this is always true
+                    suggestion: Suggestions = cast("Suggestions", suggestion)
+                    await resolve_suggestion(
+                        suggestion,
+                        response,
+                        anonymously,
+                        SuggestionStateEnum(resolution_state_raw),
+                        ctx,
+                        guild_config,
+                        user_config,
+                        LOCALISATIONS,
+                    )
+
+                else:
+                    internal_error: InternalErrors = await InternalErrors.persist_error(
+                        f"Unknown Modal Key: {component_key}",
+                        command_name=component_key,
+                    )
+                    await notify_ethan_of_something(
+                        title="Unknown Modal Event",
+                        message=f"Observed an unhandled modal event: `{component_key!r}`",
                         internal_error_reference=internal_error,
-                    ),
-                    ephemeral=True,
-                )
+                        tags="warning",
+                    )
+                    await ctx.respond(
+                        embed=utils.error_embed(
+                            title="Unknown Modal",
+                            description=f"Please reach out to support with a screenshot of "
+                            f"this message.\n\nCustom ID: {custom_id}",
+                            internal_error_reference=internal_error,
+                        ),
+                        ephemeral=True,
+                    )
+        except Exception as e:
+            internal_error: InternalErrors = await InternalErrors.persist_error(
+                e,
+                command_name=component_key,
+            )
+            await notify_ethan_of_something(
+                title="Unknown Modal Error",
+                message=f"Observed an unhandled modal error in: `{component_key!r}`",
+                internal_error_reference=internal_error,
+                tags="warning",
+            )
+            await ctx.respond(
+                embed=utils.error_embed(
+                    "Something went wrong.",
+                    "Please contact support if this keeps happening.",
+                    internal_error_reference=internal_error,
+                ),
+            )
 
     def build_ctx(
         interaction: (
@@ -423,6 +444,12 @@ async def create_bot(  # noqa: PLR0915, C901
             internal_error: InternalErrors = await InternalErrors.persist_error(
                 exc,
                 command_name=component_key,
+            )
+            await notify_ethan_of_something(
+                title="Unknown Component Error",
+                message=f"Observed an unhandled component error in: `{component_key!r}`",
+                internal_error_reference=internal_error,
+                tags="warning",
             )
             await ctx.respond(
                 embed=utils.error_embed(

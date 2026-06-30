@@ -1,3 +1,4 @@
+from web.constants import IS_PRODUCTION
 import asyncio
 import logging
 from pathlib import Path
@@ -87,11 +88,12 @@ async def main():
             "bot.tasks.store_guilds_in_redis",
         )
 
-        await notify_ethan_of_something(
-            title="Bot Starting",
-            message=f"Woo! A cluster is starting.\n\nCluster ID: `{CLUSTER_ID}`",
-            priority=2,
-        )
+        if IS_PRODUCTION:
+            await notify_ethan_of_something(
+                title="Bot Starting",
+                message=f"Woo! A cluster is starting.\n\nCluster ID: `{CLUSTER_ID}`",
+                priority=2,
+            )
 
         await client.start()
 
