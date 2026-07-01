@@ -361,10 +361,7 @@ class SuggestionMenu:
             )
 
         except Exception as exception:
-            this_will_handle: tuple[type[Exception], ...] = (
-                MessageTooLong,
-                MissingQueueChannel,
-            )
+            this_will_handle: tuple[type[Exception], ...] = (MissingQueueChannel,)
             if isinstance(exception, this_will_handle):
                 with utils.start_error_span(exception, "command error handler"):
                     internal_error: InternalErrors = await InternalErrors.persist_error(
@@ -373,28 +370,6 @@ class SuggestionMenu:
                         guild_id=cast("int", ctx.guild_id),
                         user_id=ctx.user.id,
                     )
-
-                    if isinstance(exception, MessageTooLong):
-                        await ctx.respond(
-                            embed=utils.error_embed(
-                                localisations.get_localized_string(
-                                    "errors.suggest.content_too_long.title",
-                                    user_config.primary_language,
-                                ),
-                                localisations.get_localized_string(
-                                    "errors.suggest.content_too_long.description",
-                                    user_config.primary_language,
-                                    extras={"MAX_CONTENT_LENGTH": MAX_CONTENT_LENGTH},
-                                ),
-                                error_code=ErrorCode.SUGGESTION_CONTENT_TOO_LONG,
-                                internal_error_reference=internal_error,
-                            ),
-                            attachment=hikari.files.Bytes(
-                                io.StringIO(exception.message_text),
-                                "content.txt",
-                            ),
-                        )
-                        return None
 
                     if isinstance(exception, MissingQueueChannel):
                         await ctx.respond(
