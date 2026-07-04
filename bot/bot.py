@@ -303,7 +303,8 @@ async def create_bot(  # noqa: PLR0915, C901
 
             elif custom_id.startswith(("suggestion_up_vote", "suggestion_down_vote")):
                 # Legacy button type one
-                custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
+                sep = ":" if ":" in custom_id else "|"
+                custom_id, suggestion_id = custom_id.split(sep, maxsplit=2)
                 if not custom_id.endswith("e"):
                     custom_id = custom_id[:-1]
 
