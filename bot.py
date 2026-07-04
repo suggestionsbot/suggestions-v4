@@ -114,7 +114,6 @@ async def main():
 
         cluster_kwargs = {
             "shard_count": TOTAL_SHARDS,
-            "cluster": CLUSTER_ID,
             "shard_ids": shard_ids,
         }
         logger.info("Cluster %s - Handling shards %s", CLUSTER_ID, shard_ids)
