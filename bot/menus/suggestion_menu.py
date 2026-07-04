@@ -489,15 +489,39 @@ class SuggestionMenu:
             and guild_config.premium.queued_suggestions_prefix is not None
             else ""
         )
-        message: hikari.Message = await channel.send(
-            content=prefix,
-            components=await s.as_components(
-                rest=bot.rest,
-                locale=guild_config.primary_language,
-                localisations=localisations,
-                guild_config=guild_config,
-            ),
-        )
+        try:
+            message: hikari.Message = await channel.send(
+                content=prefix,
+                components=await s.as_components(
+                    rest=bot.rest,
+                    locale=guild_config.primary_language,
+                    localisations=localisations,
+                    guild_config=guild_config,
+                ),
+            )
+        except hikari.ForbiddenError as e:
+            internal_error: InternalErrors = await InternalErrors.persist_error(
+                e,
+                command_name="suggest",
+                guild_id=cast("int", ctx.guild_id),
+                user_id=ctx.user.id,
+            )
+            await ctx.respond(
+                embed=utils.error_embed(
+                    title=localisations.get_localized_string(
+                        "errors.suggest.responses.missing_suggestion_channel_perms.title",
+                        user_config.primary_language,
+                    ),
+                    description=localisations.get_localized_string(
+                        "errors.suggest.responses.missing_suggestion_channel_perms.description",
+                        user_config.primary_language,
+                    ),
+                    internal_error_reference=internal_error,
+                )
+            )
+            await s.delete().where(Suggestions.id == s.id)
+            return None
+
         s.channel_id = message.channel_id
         s.message_id = message.id
         await s.save()
