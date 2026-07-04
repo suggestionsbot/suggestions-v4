@@ -196,18 +196,18 @@ saq = SAQPlugin(
                         timeout=saq_worker.SAQ_TIMEOUT,
                         retries=1,
                     ),
-                    CronJob(
-                        saq_worker.log_current_valid_sessions,
-                        cron="*/5 * * * *",
-                        timeout=saq_worker.SAQ_TIMEOUT,
-                        retries=1,
-                    ),
-                    CronJob(
-                        saq_worker.log_current_api_tokens,
-                        cron="*/5 * * * *",
-                        timeout=saq_worker.SAQ_TIMEOUT,
-                        retries=1,
-                    ),
+                    # CronJob(
+                    #     saq_worker.log_current_valid_sessions,
+                    #     cron="*/5 * * * *",
+                    #     timeout=saq_worker.SAQ_TIMEOUT,
+                    #     retries=1,
+                    # ),
+                    # CronJob(
+                    #     saq_worker.log_current_api_tokens,
+                    #     cron="*/5 * * * *",
+                    #     timeout=saq_worker.SAQ_TIMEOUT,
+                    #     retries=1,
+                    # ),
                     CronJob(
                         suggestions_worker.populate_sid_autocomplete,
                         cron="0 */2 * * *",  # Every second hour
