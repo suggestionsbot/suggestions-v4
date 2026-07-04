@@ -98,12 +98,19 @@ async def create_bot(  # noqa: PLR0915, C901
                 guild_id=cast("int", ctx.guild_id),
                 user_id=ctx.user.id,
             )
+            await notify_ethan_of_something(
+                title="Unknown Error",
+                message="Observed an unhandled global error",
+                internal_error_reference=internal_error,
+                tags="warning",
+            )
             await ctx.respond(
                 embed=utils.error_embed(
                     "Something went wrong.",
                     "Please contact support if this keeps happening.",
                     internal_error_reference=internal_error,
                 ),
+                ephemeral=True,
             )
 
         raise exc
@@ -198,25 +205,28 @@ async def create_bot(  # noqa: PLR0915, C901
                     )
 
                 else:
-                    internal_error: InternalErrors = await InternalErrors.persist_error(
-                        f"Unknown Modal Key: {component_key}",
-                        command_name=component_key,
-                    )
-                    await notify_ethan_of_something(
-                        title="Unknown Modal Event",
-                        message=f"Observed an unhandled modal event: `{component_key!r}`",
-                        internal_error_reference=internal_error,
-                        tags="warning",
-                    )
-                    await ctx.respond(
-                        embed=utils.error_embed(
-                            title="Unknown Modal",
-                            description=f"Please reach out to support with a screenshot of "
-                            f"this message.\n\nCustom ID: {custom_id}",
+                    with utils.start_error_span(e, "modal error handler"):
+                        internal_error: InternalErrors = (
+                            await InternalErrors.persist_error(
+                                f"Unknown Modal Key: {component_key}",
+                                command_name=component_key,
+                            )
+                        )
+                        await notify_ethan_of_something(
+                            title="Unknown Modal Event",
+                            message=f"Observed an unhandled modal event: `{component_key!r}`",
                             internal_error_reference=internal_error,
-                        ),
-                        ephemeral=True,
-                    )
+                            tags="warning",
+                        )
+                        await ctx.respond(
+                            embed=utils.error_embed(
+                                title="Unknown Modal",
+                                description=f"Please reach out to support with a screenshot of "
+                                f"this message.\n\nCustom ID: {custom_id}",
+                                internal_error_reference=internal_error,
+                            ),
+                            ephemeral=True,
+                        )
         except Exception as e:
             with utils.start_error_span(e, "modal error handler"):
                 internal_error: InternalErrors = await InternalErrors.persist_error(
@@ -235,6 +245,7 @@ async def create_bot(  # noqa: PLR0915, C901
                         "Please contact support if this keeps happening.",
                         internal_error_reference=internal_error,
                     ),
+                    ephemeral=True,
                 )
 
     def build_ctx(
@@ -474,6 +485,7 @@ async def create_bot(  # noqa: PLR0915, C901
                         "Please contact support if this keeps happening.",
                         internal_error_reference=internal_error,
                     ),
+                    ephemeral=True,
                 )
 
     return bot, client
