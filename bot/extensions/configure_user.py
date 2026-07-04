@@ -23,14 +23,12 @@ class ConfigureUserCmd(
     async def invoke(
         self,
         ctx: lightbulb.Context,
-        guild_config: GuildConfigs,
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
         await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
-            guild_config=guild_config,
             action="/configure user",
             command_type=CommandTypes.SLASH_COMMAND,
         )
