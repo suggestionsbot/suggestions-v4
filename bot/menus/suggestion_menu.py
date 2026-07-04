@@ -1,5 +1,4 @@
 from __future__ import annotations
-from bot.utils import generate_id
 
 import contextlib
 import io
@@ -19,7 +18,7 @@ from hikari.interactions.interaction_components import (
 import shared.utils
 from bot import constants, utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
-from bot.exceptions import MissingQueueChannel, MessageTooLong, InvalidFileType
+from bot.exceptions import MissingQueueChannel, InvalidFileType
 from bot.tables import (
     InternalErrors,
     MessageAddons,
@@ -27,6 +26,7 @@ from bot.tables import (
     CommandInvokes,
     CommandTypes,
 )
+from bot.utils import generate_id
 from shared.utils import r2, configs
 
 if typing.TYPE_CHECKING:
@@ -579,6 +579,7 @@ class SuggestionMenu:
             author_display_name=(
                 f"<@{ctx.user.id}>" if is_anonymous is False else "Anonymous"
             ),
+            sID=generate_id(),
         )
 
         if guild_config.virtual_suggestions_queue is False:
