@@ -303,8 +303,10 @@ async def create_bot(  # noqa: PLR0915, C901
 
             elif custom_id.startswith(("suggestion_up_vote", "suggestion_down_vote")):
                 # Legacy button type one
-                custom_id, suggestion_id = custom_id.split("|", maxsplit=2)
-                custom_id = custom_id[:-1]
+                custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
+                if not custom_id.endswith("e"):
+                    custom_id = custom_id[:-1]
+
                 vote_enum = (
                     SuggestionsVoteTypeEnum.UpVote
                     if custom_id == "suggestion_up_vote"
@@ -328,7 +330,19 @@ async def create_bot(  # noqa: PLR0915, C901
                     f"Out of the possible choices, it is this: `{component_key}`",
                     priority=2,
                 )
-                custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
+                try:
+                    custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
+                except ValueError:
+                    await notify_ethan_of_something(
+                        title="Legacy component key split",
+                        message=f"Its not `:` in `{component_key}` to split on...",
+                        priority=2,
+                    )
+                    custom_id, suggestion_id = custom_id.split("|", maxsplit=2)
+
+                if not custom_id.endswith("e"):
+                    custom_id = custom_id[:-1]
+
                 vote_enum = (
                     SuggestionsVoteTypeEnum.UpVote
                     if custom_id in ("SuggestionsUpVote", "SuggestionUpVote")
