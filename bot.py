@@ -1,3 +1,5 @@
+import os
+
 from web.constants import IS_PRODUCTION
 import asyncio
 import logging
@@ -17,6 +19,8 @@ from bot.constants import (
     VIEW_GROUP,
     CLUSTER_ID,
     BLOCKLIST_GROUP,
+    TOTAL_SHARDS,
+    SHARDS_PER_CLUSTER,
 )
 from bot.extensions.resolve import ResolveMessageCommand
 from shared.tables import GuildConfigs
@@ -97,7 +101,27 @@ async def main():
 
         await client.start()
 
-    await bot.start()
+    if IS_PRODUCTION:
+        offset = CLUSTER_ID - 1
+        shard_ids = [
+            i
+            for i in range(
+                offset * SHARDS_PER_CLUSTER,
+                (offset * SHARDS_PER_CLUSTER) + SHARDS_PER_CLUSTER,
+            )
+            if i < TOTAL_SHARDS
+        ]
+
+        cluster_kwargs = {
+            "shard_count": TOTAL_SHARDS,
+            "cluster": CLUSTER_ID,
+            "shard_ids": shard_ids,
+        }
+        logger.info("Cluster %s - Handling shards %s", CLUSTER_ID, shard_ids)
+    else:
+        cluster_kwargs = {}
+
+    await bot.start(**cluster_kwargs)  # ty:ignore[invalid-argument-type]
     await bot.join()
 
 
