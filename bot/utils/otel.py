@@ -20,13 +20,18 @@ IGNORABLE_EXCEPTION_TYPES: tuple[type[Exception], ...] = (
 @contextmanager
 def start_error_span(  # noqa: ANN201 #I Dont know how to type this
     base_exception: Exception,
-    span_name: Literal["global error handler", "command error handler"],
+    span_name: Literal[
+        "global error handler",
+        "command error handler",
+        "modal error handler",
+        "component error handler",
+    ],
 ):
     with OTEL_TRACER.start_as_current_span(span_name) as child:
         child.set_attribute("error.name", base_exception.__class__.__name__)
         if isinstance(base_exception, IGNORABLE_EXCEPTION_TYPES):
             # all these we dont need to care about being logged
-            # as we handle them enough for end users to
+            # as we handle them enough for end us`ers to
             # theoretically fix themselves
             child.set_attribute("error.handled", value=True)
 

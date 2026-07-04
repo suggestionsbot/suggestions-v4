@@ -218,23 +218,24 @@ async def create_bot(  # noqa: PLR0915, C901
                         ephemeral=True,
                     )
         except Exception as e:
-            internal_error: InternalErrors = await InternalErrors.persist_error(
-                e,
-                command_name=component_key,
-            )
-            await notify_ethan_of_something(
-                title="Unknown Modal Error",
-                message=f"Observed an unhandled modal error in: `{component_key!r}`",
-                internal_error_reference=internal_error,
-                tags="warning",
-            )
-            await ctx.respond(
-                embed=utils.error_embed(
-                    "Something went wrong.",
-                    "Please contact support if this keeps happening.",
+            with utils.start_error_span(e, "modal error handler"):
+                internal_error: InternalErrors = await InternalErrors.persist_error(
+                    e,
+                    command_name=component_key,
+                )
+                await notify_ethan_of_something(
+                    title="Unknown Modal Error",
+                    message=f"Observed an unhandled modal error in: `{component_key!r}`",
                     internal_error_reference=internal_error,
-                ),
-            )
+                    tags="warning",
+                )
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        "Something went wrong.",
+                        "Please contact support if this keeps happening.",
+                        internal_error_reference=internal_error,
+                    ),
+                )
 
     def build_ctx(
         interaction: (
@@ -441,22 +442,23 @@ async def create_bot(  # noqa: PLR0915, C901
             if not t_constants.IS_PRODUCTION:
                 raise
 
-            internal_error: InternalErrors = await InternalErrors.persist_error(
-                exc,
-                command_name=component_key,
-            )
-            await notify_ethan_of_something(
-                title="Unknown Component Error",
-                message=f"Observed an unhandled component error in: `{component_key!r}`",
-                internal_error_reference=internal_error,
-                tags="warning",
-            )
-            await ctx.respond(
-                embed=utils.error_embed(
-                    "Something went wrong.",
-                    "Please contact support if this keeps happening.",
+            with utils.start_error_span(exc, "component error handler"):
+                internal_error: InternalErrors = await InternalErrors.persist_error(
+                    exc,
+                    command_name=component_key,
+                )
+                await notify_ethan_of_something(
+                    title="Unknown Component Error",
+                    message=f"Observed an unhandled component error in: `{component_key!r}`",
                     internal_error_reference=internal_error,
-                ),
-            )
+                    tags="warning",
+                )
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        "Something went wrong.",
+                        "Please contact support if this keeps happening.",
+                        internal_error_reference=internal_error,
+                    ),
+                )
 
     return bot, client
