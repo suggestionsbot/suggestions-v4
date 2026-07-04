@@ -8,16 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 async def ensure_guild_config(guild_id: int) -> GuildConfigs:
-    pgc: PremiumGuildConfigs = await PremiumGuildConfigs.objects().get_or_create(
-        PremiumGuildConfigs.guild_id == guild_id
-    )
-    gc: GuildConfigs = await GuildConfigs.objects().get_or_create(
-        (GuildConfigs.guild_id == guild_id) & (GuildConfigs.premium == pgc)
-    )
-    if gc._was_created:
-        logger.debug("Created new GuildConfig for %s", guild_id)
-
-    # return gc
     pgc_insert = (
         await PremiumGuildConfigs.insert(
             PremiumGuildConfigs(guild_id=guild_id),
