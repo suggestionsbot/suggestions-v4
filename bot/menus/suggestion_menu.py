@@ -142,11 +142,34 @@ class SuggestionMenu:
             return
 
         async with SuggestionVotes._meta.db.transaction():
-            vote_obj, was_created = await SuggestionVotes.get_or_create(
-                suggestion=suggestion,
-                vote_type=vote,
-                user_id=ctx.user.id,
+            was_created = False
+            try_insert = (
+                await SuggestionVotes.insert(
+                    SuggestionVotes(
+                        suggestion=suggestion,
+                        vote_type=vote,
+                        user_id=ctx.user.id,
+                    ),
+                )
+                .on_conflict(
+                    action="DO NOTHING",
+                    target=(SuggestionVotes.user_id, SuggestionVotes.suggestion),
+                )
+                .returning(*SuggestionVotes.all_columns())
             )
+            if try_insert:
+                vote_obj: SuggestionVotes = SuggestionVotes(**try_insert[0])
+                vote_obj._exists_in_db = True
+                was_created = True
+
+            else:
+                vote_obj: SuggestionVotes = (
+                    await SuggestionVotes.objects()
+                    .first()
+                    .where(SuggestionVotes.suggestion == suggestion)
+                    .where(SuggestionVotes.user_id == ctx.user.id)
+                )
+
             if not was_created and vote_obj.vote_type == vote.value:
                 # Trying to vote again for the same item
                 key = (
