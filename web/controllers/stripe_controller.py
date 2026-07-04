@@ -13,7 +13,7 @@ from starlette.responses import Response
 
 from web import constants
 from web.controllers import AuthController
-from web.middleware import EnsureAuth
+from web.middleware import EnsureAuth, EnsureAdmin
 from web.tables import Users, GuildTokens
 from web.util import html_template, alert
 from web.util.table_mixins import utc_now
@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 class StripeController(Controller):
     path = "/stripe"
     include_in_schema = False
+    middleware = [EnsureAdmin]  # TODO Change when live
 
     @get("/customer-portal", name="stripe_customer_portal", middleware=[EnsureAuth])
     async def redirect_to_customer_portal(

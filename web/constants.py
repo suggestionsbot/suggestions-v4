@@ -177,6 +177,7 @@ SIGNOZ_API_KEY = get_secret("SIGNOZ_API_KEY", infisical_client)
 SIGNOZ_API_URL = get_secret("SIGNOZ_API_URL", infisical_client)
 
 # Stripe things
+# TODO Configure for production
 STRIPE_API_KEY = get_secret("STRIPE_API_KEY", infisical_client)
 STRIPE_PRICE_ID_GUILDS_MONTHLY = get_secret(
     "STRIPE_PRICE_ID_GUILDS_MONTHLY", infisical_client
