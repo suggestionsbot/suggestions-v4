@@ -11,7 +11,7 @@ Migration execution order:
 9. Python: `migrate_votes.py`
 10. Use psql to import
     - `psql -h localhost -p 2501 -U suggestions_db_user -W -d suggestions_db -c "\copy suggestion_votes (created_at, last_modified_at, suggestion, user_id, vote_type)
-from '/home/skelmis/Code/Suggestions/suggestions_version_4/migrations/votes.csv'
+from '/home/skelmis/Documents/Code/Suggestions/suggestions-v4/migrations/votes.csv'
 with (FORMAT csv)"` - roughly 5-7 minutes
 11. Recreate indexes
 ```sql
@@ -53,3 +53,6 @@ uv run piccolo migrations shared new
 
     manager.add_raw(run)
 ```
+
+
+39648 total, 468 failed to lookup from qs builder

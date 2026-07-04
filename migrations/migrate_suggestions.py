@@ -69,7 +69,6 @@ async def build_initial_objects(pbar):
 
         if not s.uses_views_for_votes:
             # We no longer support reaction voting
-            # None left anywho
             continue
 
         if s.anonymous_resolution is None:
