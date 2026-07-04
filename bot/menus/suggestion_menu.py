@@ -581,6 +581,7 @@ class SuggestionMenu:
             ),
             sID=generate_id(),
         )
+        await qs.save()
 
         if guild_config.virtual_suggestions_queue is False:
             # Need to send to a channel
