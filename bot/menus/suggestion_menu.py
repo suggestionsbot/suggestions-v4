@@ -192,7 +192,7 @@ class SuggestionMenu:
                 )
                 logger.debug(
                     "Member voted on %s with %s",
-                    suggestion.suggestion,
+                    suggestion.sID,
                     vote.value,
                     extra={
                         "interaction.user.id": ctx.user.id,
@@ -211,7 +211,7 @@ class SuggestionMenu:
                 )
                 logger.debug(
                     "Member modified their vote on %s to a %s",
-                    suggestion.suggestion,
+                    suggestion.sID,
                     vote.value,
                     extra={
                         "interaction.user.id": ctx.user.id,
