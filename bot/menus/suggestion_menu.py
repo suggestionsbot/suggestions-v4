@@ -1,4 +1,5 @@
 from __future__ import annotations
+from bot.utils import generate_id
 
 import contextlib
 import io
@@ -416,6 +417,7 @@ class SuggestionMenu:
             image_urls=image_urls,
             author_display_name=author_display_name,
             state_raw=SuggestionStateEnum.PENDING,
+            sID=generate_id(),
         )
         await s.save()  # This is needed for components
 
