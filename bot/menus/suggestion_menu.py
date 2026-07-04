@@ -271,7 +271,10 @@ class SuggestionMenu:
                         "FileUploadInteractionComponent",
                         entry.component,
                     )
-                    anonymously = commons.value_to_bool(entry.component.values[0])
+                    anonymously = False
+                    if entry.component.values:
+                        # anon by default unless you provide the value
+                        anonymously = commons.value_to_bool(entry.component.values[0])
 
                 elif entry.component.custom_id == "files":
                     entry.component = cast(
