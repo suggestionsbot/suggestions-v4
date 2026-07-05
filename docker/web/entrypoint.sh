@@ -2,4 +2,4 @@
 
 EXPOSED_PORT="${PORT:-2200}"
 /code/migrate.sh
-uv run uvicorn app:app --proxy-headers --host 0.0.0.0 --port "$EXPOSED_PORT" --log-config=log_conf.yaml
+uv run uvicorn app:app --proxy-headers --host 0.0.0.0 --port "$EXPOSED_PORT"
