@@ -1,3 +1,4 @@
+from bot.tables import InternalErrors
 import logging
 from datetime import timedelta
 from collections.abc import Sequence
@@ -163,35 +164,59 @@ class GuildConfigurationMenus:
 
         if id_data == "send_suggestions_button":
             channel = int(event_values[0])
-            await ctx.client.rest.create_message(
-                channel,
-                components=[
-                    hikari.impl.TextDisplayComponentBuilder(
-                        content=localisations.get_localized_string(
-                            "menus.guild_configuration.responses.sent_suggestions_button.description",
-                            guild_config.primary_language,
-                        ),
-                    ),
-                    hikari.impl.MessageActionRowBuilder(
-                        components=[
-                            hikari.impl.InteractiveButtonBuilder(
-                                style=hikari.ButtonStyle.PRIMARY,
-                                label=localisations.get_localized_string(
-                                    "menus.guild_configuration.responses.sent_suggestions_button.button",
-                                    guild_config.primary_language,
-                                ),
-                                custom_id="v4_suggest_button",
+            try:
+                await ctx.client.rest.create_message(
+                    channel,
+                    components=[
+                        hikari.impl.TextDisplayComponentBuilder(
+                            content=localisations.get_localized_string(
+                                "menus.guild_configuration.responses.sent_suggestions_button.description",
+                                guild_config.primary_language,
                             ),
-                        ],
+                        ),
+                        hikari.impl.MessageActionRowBuilder(
+                            components=[
+                                hikari.impl.InteractiveButtonBuilder(
+                                    style=hikari.ButtonStyle.PRIMARY,
+                                    label=localisations.get_localized_string(
+                                        "menus.guild_configuration.responses.sent_suggestions_button.button",
+                                        guild_config.primary_language,
+                                    ),
+                                    custom_id="v4_suggest_button",
+                                ),
+                            ],
+                        ),
+                    ],
+                )
+            except hikari.ForbiddenError as e:
+                internal_error = await InternalErrors.persist_error(
+                    e,
+                    command_name="send suggestion button",
+                    guild_id=guild_config.guild_id,
+                    user_id=user_config.user_id,
+                )
+                await ctx.respond(
+                    utils.error_embed(
+                        localisations.get_localized_string(
+                            "errors.suggest.missing_suggest_button_perms.title",
+                            user_config.primary_language,
+                        ),
+                        localisations.get_localized_string(
+                            "errors.suggest.missing_suggest_button_perms.description",
+                            user_config.primary_language,
+                        ),
+                        internal_error_reference=internal_error,
                     ),
-                ],
-            )
-            await ctx.respond(
-                localisations.get_localized_string(
-                    "menus.guild_configuration.responses.sent_suggestions_button",
-                    guild_config.primary_language,
-                ),
-            )
+                    ephemeral=True,
+                )
+            else:
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.responses.sent_suggestions_button",
+                        user_config.primary_language,
+                    ),
+                    ephemeral=True,
+                )
             return
 
         if id_data == "view_page_2":

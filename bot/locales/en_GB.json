@@ -190,6 +190,8 @@
   "errors.suggest.content_too_long.title": "Command Failed",
   "errors.suggest.missing_create_thread_perms.description": "I am unable to create threads in your suggestions channel, please contact an administrator and ask them to give me 'Create Public Threads' permissions.\n\nAlternatively, ask your administrator to disable automatic thread creation using `/configure`.\n\nNote your suggestion was still created successfully.",
   "errors.suggest.missing_create_thread_perms.title": "Missing Permissions",
+  "errors.suggest.missing_suggest_button_perms.title": "Missing Permissions",
+  "errors.suggest.missing_suggest_button_perms.description": "I am unable to send a message to your selected channel, please contact an administrator and ask them to give me permissions.",
   "errors.suggest.missing_queue_channel.description": "This command requires a queue channel to use.\nPlease contact an administrator and ask them to set one up using the following command.\n`/configure guild`",
   "errors.suggest.missing_queue_channel.title": "Command Failed",
   "errors.suggest.queue_channel_not_found.description": "The bot does not have permissions to interact with the queue channel.\nPlease contact an administrator and ask them to ensure the channel exists and that the bot can see it.",
