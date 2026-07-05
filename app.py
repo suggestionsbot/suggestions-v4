@@ -39,6 +39,7 @@ from web.controllers import (
     DebugController,
     GuildController,
     StripeController,
+    ErrorController,
 )
 from web.controllers import OAuthController
 from web.controllers.api import APIAlertController, APIAuthTokenController
@@ -300,6 +301,7 @@ routes = [
     OAuthController,
     GuildController,
     StripeController,
+    ErrorController,
 ]
 if not constants.IS_PRODUCTION:
     routes.append(DebugController)

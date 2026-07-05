@@ -1,0 +1,42 @@
+{% extends "base.jinja" %}
+
+{% block content %}
+    <div class="page">
+        <div class="container py-4">
+            <br>
+            {% include 'alerts.jinja' %}
+            <div class="justify-content-center">
+                <header class="hero pb-0">
+                    <div class="container">
+                        <h1 class="hero-title">Viewing an error</h1>
+                        <p class="hero-description mt-4">
+                            This page displays information about errors to help debug issues you are experiencing.
+                        </p>
+                        <div class="my-5">
+                            <div class="row g-3">
+                                {% if request.user.admin %}
+                                    <div class="col-auto">
+                                        <a href="{{ error.otel_url }}" target="_blank" class="btn btn-lg">View related
+                                            trace</a>
+                                    </div>
+                                {% else %}
+                                    <div class="col-auto">
+                                        <a href="#" class="btn btn-lg">Send staff a notification about this issue</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if request.user.admin %}
+                            <div>
+                                <p><i>{{ error.error_name }}</i> in <i>{{ error.command_name }}</i></p>
+                                <div class="highlight">
+                                    <pre class="highlight">{{ error.traceback }}</pre>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </header>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
