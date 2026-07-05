@@ -96,7 +96,6 @@
                 {{ dropdown_item('API Docs', '/docs') }}
                 {% if request.user.admin %}
                     {{ dropdown_item('SAQ Queues', '/saq/') }}
-                    {{ dropdown_item('Admin', '/admin/') }}
                 {% endif %}
                 {{ end_dropdown() }}
                 {% if not is_production %}
