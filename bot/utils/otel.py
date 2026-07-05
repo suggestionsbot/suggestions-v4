@@ -4,6 +4,7 @@ from typing import Literal
 
 import orjson
 from fastnanoid import generate
+from opentelemetry import trace
 from opentelemetry.context import Context
 from opentelemetry.trace import Status, StatusCode
 
@@ -43,6 +44,12 @@ def start_error_span(  # noqa: ANN201 #I Dont know how to type this
             child.record_exception(base_exception)
 
         yield child
+
+
+def get_trace_id() -> str:
+    current_span = trace.get_current_span()
+    span_context = current_span.get_span_context()
+    return format(span_context.trace_id, "032x")
 
 
 async def generate_trace_link_state() -> str:

@@ -5,6 +5,7 @@ import traceback
 from piccolo.columns import Text, Varchar, BigInt, Boolean
 from piccolo.table import Table
 
+from bot.utils.otel import get_trace_id
 from shared.tables.mixins import AuditMixin
 from bot.utils import generate_id
 
@@ -38,6 +39,11 @@ class InternalErrors(AuditMixin, Table):
         help_text="Has this specific error been fixed? "
         "'This' being hash((self.error_name, self.traceback, self.command_name))",
     )
+    trace_id = Text(
+        help_text="The OTEL trace id if applicable associated with this error",
+        default=None,
+        null=True,
+    )
 
     def __hash__(self) -> int:
         # Error objects should 'unique' based off the error itself
@@ -58,6 +64,7 @@ class InternalErrors(AuditMixin, Table):
             if isinstance(exception, str)
             else "".join(traceback.format_exception(exception))
         )
+        otel_ctx = get_trace_id()
         internal_error = cls(
             id=generate_id(),
             traceback=traceback_for_col,
@@ -65,6 +72,7 @@ class InternalErrors(AuditMixin, Table):
             command_name=command_name,
             guild_id=guild_id,
             user_id=user_id,
+            trace_id=otel_ctx or None,
         )
         await internal_error.save()
         return internal_error
@@ -73,3 +81,8 @@ class InternalErrors(AuditMixin, Table):
     def url(self) -> str:
         """Return a URL to view in the dashboard."""
         return f"https://dashboard.suggestions.gg/errors/{self.id}"
+
+    @property
+    def otel_url(self) -> str:
+        """Return a URL to view this trace in the signoz dashboard."""
+        return f"https://signals.oof.nz/trace/{self.trace_id}"
