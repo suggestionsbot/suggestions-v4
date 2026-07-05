@@ -85,7 +85,6 @@ def configure_piccolo_admin():
     guild_tokens_tc = TableConfig(
         GuildTokens,
         menu_group="Stripe",
-        exclude_visible_columns=[GuildTokens.checkout_session_id],
         order_by=[
             OrderBy(GuildTokens.id, ascending=False),
         ],
