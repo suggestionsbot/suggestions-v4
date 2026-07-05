@@ -724,8 +724,7 @@ class SuggestionMenu:
         )
 
         logger.debug(
-            "User %s created new queued suggestion in guild %s",
-            ctx.user.id,
+            "Created new queued suggestion in guild %s",
             ctx.guild_id,
             extra={
                 "interaction.user.id": ctx.user.id,
