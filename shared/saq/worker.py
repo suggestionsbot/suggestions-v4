@@ -1,11 +1,13 @@
 import datetime
 import os
+from typing import cast
 
 import saq
 from dotenv import load_dotenv
 from opentelemetry.metrics import get_meter_provider
 from piccolo_api.session_auth.tables import SessionsBase
 from saq import Queue
+from saq.types import Context
 
 from web import constants
 from web.tables import APIToken
@@ -51,8 +53,22 @@ async def before_process(ctx):
     job.timeout = SAQ_TIMEOUT
 
 
-async def after_process(ctx):
+async def after_process(ctx: Context):
     print(f"Finished job: {ctx['job'].function}\n\tWith kwargs: {ctx['job'].kwargs}")
+    if "exception" in ctx:
+        from bot.tables import InternalErrors
+        from shared.utils.ntfy import notify_ethan_of_something
+
+        internal_error: InternalErrors = await InternalErrors.persist_error(
+            cast("Exception", ctx["exception"]),
+            command_name=ctx["job"].function,
+        )
+        await notify_ethan_of_something(
+            title="SAQ Error",
+            message=f"Observed an error in the following saq function: `{ctx["job"].function!r}`",
+            internal_error_reference=internal_error,
+            tags="warning",
+        )
 
 
 async def startup(_):
