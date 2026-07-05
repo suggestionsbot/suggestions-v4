@@ -315,14 +315,12 @@ class Suggestions(Table, AuditMixin):
             ),
         ]
         if self.image_urls:
-            items = []
-            for entry in self.image_urls:
-                items.append(
-                    hikari.impl.MediaGalleryItemBuilder(
-                        media=entry,
-                    ),
+            items: list[hikari.api.special_endpoints.MediaGalleryItemBuilder] = [
+                hikari.impl.MediaGalleryItemBuilder(
+                    media=entry,
                 )
-
+                for entry in self.image_urls
+            ]
             components.append(hikari.impl.MediaGalleryComponentBuilder(items=items))
 
         components.append(
