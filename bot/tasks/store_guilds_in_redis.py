@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 #
 # We also don't mind if edits occur in a short period
 # after the bot leaves as thats basically a noop
-time_to_cache = datetime.timedelta(minutes=15)
+time_to_cache = datetime.timedelta(minutes=30)
 
 
 @loader.task(lightbulb.uniformtrigger(minutes=15, wait_first=False))
