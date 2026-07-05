@@ -617,6 +617,14 @@ class SuggestionMenu:
 
             await ctx.respond(content.getvalue(), ephemeral=True)
 
+        logger.debug(
+            "Created new suggestion in guild %s",
+            ctx.guild_id,
+            extra={
+                "interaction.user.id": ctx.user.id,
+                "interaction.guild.id": ctx.guild_id,
+            },
+        )
         return s
 
     @classmethod
