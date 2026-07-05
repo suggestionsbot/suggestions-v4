@@ -136,6 +136,7 @@ async def build_queued_user_resolution_notification(
             locale=user_config.primary_language,
             localisations=LOCALISATIONS,
             include_buttons=False,
+            skip_user_avatar=True,
         )
 
     data: list[ContainerComponentBuilder | MessageActionRowBuilder] = [

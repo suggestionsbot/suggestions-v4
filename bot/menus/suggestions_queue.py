@@ -228,6 +228,25 @@ class SuggestionsQueueMenu:
                     hikari.Snowflake(guild_config.queued_suggestion_log_channel_id),
                     components=components,
                 )
+                try:
+                    await event.interaction.app.rest.create_message(
+                        hikari.Snowflake(guild_config.queued_suggestion_log_channel_id),
+                        components=components,
+                    )
+                except hikari.ClientHTTPResponseError:
+                    # Seems like avatars can be unsupported sometime for no reason?
+                    # See kexb3-nux7i
+                    await event.interaction.app.rest.create_message(
+                        hikari.Snowflake(guild_config.queued_suggestion_log_channel_id),
+                        components=await queued_suggestion.as_components(
+                            event.interaction.app.rest,
+                            guild_config.primary_language,
+                            localisations,
+                            include_buttons=False,
+                            skip_user_avatar=True,
+                        ),
+                    )
+
             except (hikari.NotFoundError, hikari.ForbiddenError):
                 await ctx.respond(
                     embed=utils.error_embed(

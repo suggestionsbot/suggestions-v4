@@ -148,15 +148,27 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
         return
 
     try:
-        components = await suggestion.as_components(
-            guild_config=guild_config,
-            locale=guild_config.primary_language,
-            rest=ctx.client.rest,
-            localisations=localisations,
-            exclude_buttons=True,
-            as_resolved=True,
-        )
-        log_message = await log_channel.send(components=components)
+        try:
+            components = await suggestion.as_components(
+                guild_config=guild_config,
+                locale=guild_config.primary_language,
+                rest=ctx.client.rest,
+                localisations=localisations,
+                exclude_buttons=True,
+                as_resolved=True,
+            )
+            log_message = await log_channel.send(components=components)
+        except hikari.ClientHTTPResponseError:
+            components = await suggestion.as_components(
+                guild_config=guild_config,
+                locale=guild_config.primary_language,
+                rest=ctx.client.rest,
+                localisations=localisations,
+                exclude_buttons=True,
+                as_resolved=True,
+                skip_user_avatar=True,
+            )
+            log_message = await log_channel.send(components=components)
     except (hikari.NotFoundError, hikari.ForbiddenError):
         await ctx.respond(
             localisations.get_localized_string(

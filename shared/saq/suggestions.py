@@ -54,22 +54,39 @@ async def edit_suggestion_message(
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
         guild_config = await ensure_guild_config(suggestion.guild_id)
-        components = await suggestion.as_components(
-            guild_config=guild_config,
-            locale=guild_config.primary_language,
-            rest=client,
-            localisations=b_constants.LOCALISATIONS,
-            exclude_buttons=exclude_buttons,
-            as_resolved=as_resolved,
-        )
-        await client.edit_message(
-            suggestion.channel_id,
-            suggestion.message_id,
-            components=components,
-            # This must be set to None to clear old embeds
-            # to ensure we remain backwards compatible
-            embeds=None,
-        )
+        try:
+            components = await suggestion.as_components(
+                guild_config=guild_config,
+                locale=guild_config.primary_language,
+                rest=client,
+                localisations=b_constants.LOCALISATIONS,
+                exclude_buttons=exclude_buttons,
+                as_resolved=as_resolved,
+            )
+            await client.edit_message(
+                suggestion.channel_id,
+                suggestion.message_id,
+                components=components,
+                # This must be set to None to clear old embeds
+                # to ensure we remain backwards compatible
+                embeds=None,
+            )
+        except hikari.ClientHTTPResponseError:
+            components = await suggestion.as_components(
+                guild_config=guild_config,
+                locale=guild_config.primary_language,
+                rest=client,
+                localisations=b_constants.LOCALISATIONS,
+                exclude_buttons=exclude_buttons,
+                as_resolved=as_resolved,
+                skip_user_avatar=True,
+            )
+            await client.edit_message(
+                suggestion.channel_id,
+                suggestion.message_id,
+                components=components,
+                embeds=None,
+            )
 
 
 async def populate_sid_autocomplete(_):

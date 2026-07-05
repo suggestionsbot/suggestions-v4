@@ -273,6 +273,7 @@ class QueuedSuggestions(Table, AuditMixin):
         include_buttons: bool = True,
         paginator_id: str | None = None,
         link_id: str | None = None,
+        skip_user_avatar: bool = False,
     ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
@@ -300,7 +301,9 @@ class QueuedSuggestions(Table, AuditMixin):
                 spacing=hikari.SpacingType.SMALL,
             )
         )
-        if self.is_anonymous:
+        if self.is_anonymous or skip_user_avatar:
+            # skip_user_avatar is used as sometimes the avatar appears to be invalid?
+            # Odd error that doesnt seem like it should occur but does:
             components.append(
                 hikari.impl.TextDisplayComponentBuilder(
                     content=localisations.get_localized_string(
