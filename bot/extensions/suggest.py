@@ -34,7 +34,12 @@ class Suggest(
         localisations: Localisation,
     ) -> None:
         sent_setup_message = await guild_config.ensure_config_is_setup(
-            ctx=ctx, locale=user_config.primary_language
+            ctx=ctx,
+            locale=user_config.primary_language,
+            # Dont need logs in suggest
+            # We assume if suggest button that someone has
+            # already done the configuration though so we only do this here
+            skip_log_channel_check=True,
         )
         if sent_setup_message:
             return

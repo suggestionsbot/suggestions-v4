@@ -118,20 +118,17 @@ class GuildConfigs(AuditMixin, Table):
     def primary_language(self) -> hikari.Locale:
         return hikari.Locale(self.primary_language_raw)
 
-    @property
-    def still_requires_setup(self) -> bool:
-        """Returns true if the guild does not meet the minimum setup requirements."""
-        return self.suggestions_channel_id is None or self.log_channel_id is None
-
     async def ensure_config_is_setup(
         self,
         *,
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
         locale: hikari.Locale,
+        skip_log_channel_check: bool = False,
     ) -> bool:
         """Returns true if the user was informed the guild still requires setup."""
-        if not self.still_requires_setup:
-            # It's good to go
+        if self.suggestions_channel_id is not None and (
+            skip_log_channel_check or self.log_channel_id is not None
+        ):
             return False
 
         await ctx.respond(
