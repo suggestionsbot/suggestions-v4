@@ -64,7 +64,7 @@ async def edit_suggestion_message(
             exclude_buttons=exclude_buttons,
             as_resolved=as_resolved,
         )
-        with contextlib.suppress(hikari.NotFoundError):
+        with contextlib.suppress(hikari.NotFoundError, hikari.ForbiddenError):
             await client.edit_message(
                 suggestion.channel_id,
                 suggestion.message_id,
