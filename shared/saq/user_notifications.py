@@ -31,12 +31,16 @@ async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_
             dm_channel = await client.create_dm_channel(
                 hikari.Snowflake(suggestion.author_id)
             )
-            message_components = await cv2.build_queued_user_resolution_notification(
-                user_config=user_config, suggestion=suggestion, rest=client
+            message_components, suggestion_components = (
+                await cv2.build_queued_user_resolution_notification(
+                    user_config=user_config, suggestion=suggestion, rest=client
+                )
             )
             await dm_channel.send(components=message_components)
+            if suggestion_components is not None:
+                await dm_channel.send(components=suggestion_components)
 
-        except (hikari.ForbiddenError,):
+        except hikari.ForbiddenError:
             # I'd consider it 'fine' if the bot can't send this message
             logger.debug(
                 "Failed to dm user about a queued suggestion resolution",
@@ -132,9 +136,9 @@ async def notify_users_of_new_suggestion(_, suggestion_id: str, guild_id: int):
                 exclude_buttons=True,
                 exclude_votes=True,
             )
-            components.extend(suggestion_components)
             await dm_channel.send(components=components)
-        except (hikari.ForbiddenError,):
+            await dm_channel.send(components=suggestion_components)
+        except hikari.ForbiddenError:
             # I'd consider it 'fine' if the bot can't send this message
             logger.debug(
                 "Failed to dm user about a suggestion",

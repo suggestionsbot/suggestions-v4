@@ -45,7 +45,7 @@ async def build_new_suggestion_notification(
                 ),
                 hikari.impl.TextDisplayComponentBuilder(
                     content=LOCALISATIONS.get_localized_string(
-                        "commands.note.add.responses.dm_change_footer",
+                        "saq.notify_users_of_new_suggestion.responses.suggestion_created.footer",
                         user_config.primary_language,
                         extras={
                             "GUILD_ID": suggestion.guild_id,
@@ -104,7 +104,11 @@ async def build_queued_user_resolution_notification(
     user_config: UserConfigs,
     suggestion: QueuedSuggestions,
     rest: hikari.api.RESTClient,
-) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
+) -> tuple[
+    list[ContainerComponentBuilder | MessageActionRowBuilder],
+    list[ContainerComponentBuilder | MessageActionRowBuilder] | None,
+]:
+    """Returns two lists as one was too big with: Content Too Large 413."""
     extra = None
     if suggestion.state == QueuedSuggestionStateEnum.APPROVED:
         related_suggestion: Suggestions = suggestion.related_suggestion
@@ -165,10 +169,7 @@ async def build_queued_user_resolution_notification(
             ],
         ),
     ]
-    if extra is not None:
-        data.extend(extra)
-
-    return data
+    return data, extra
 
 
 class SegmentData(Protocol):

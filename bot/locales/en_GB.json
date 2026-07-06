@@ -308,6 +308,7 @@
   "message_commands.view_down_voters.name": "View Down Voters",
   "message_commands.view_up_voters.name": "View Up Voters",
   "message_commands.view_voters.name": "View Voters",
+  "saq.notify_users_of_new_suggestion.responses.suggestion_created.footer": "Guild ID: $GUILD_ID | sID: $SID",
   "saq.notify_users_of_new_suggestion.responses.suggestion_created": "Hey $AUTHOR.\nYour suggestion has been sent to $CHANNEL to be voted on!\n\nI have attached a copy of your suggestion below for reference. You can also find the version containing votes here: $SUGGESTION_LINK",
   "saq.queued_suggestion_resolved_notifications.responses.approved.description": "Hey $AUTHOR.\nA queued suggestion of yours has been approved by $RESOLVED_BY.\n\nYou can view the now public suggestion at this link: $JUMP_TO",
   "saq.queued_suggestion_resolved_notifications.responses.rejected.description": "Hey $AUTHOR.\nA queued suggestion of yours has been rejected by $RESOLVED_BY.\n\nThe suggestion which was rejected is attached for your convenience.",
