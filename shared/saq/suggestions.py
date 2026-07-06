@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import time
 from datetime import timedelta
@@ -63,18 +64,19 @@ async def edit_suggestion_message(
             exclude_buttons=exclude_buttons,
             as_resolved=as_resolved,
         )
-        await client.edit_message(
-            suggestion.channel_id,
-            suggestion.message_id,
-            components=components,
-            # This must be set to None to clear old embeds
-            # to ensure we remain backwards compatible
-            embeds=None,
-        )
+        with contextlib.suppress(hikari.NotFoundError):
+            await client.edit_message(
+                suggestion.channel_id,
+                suggestion.message_id,
+                components=components,
+                # This must be set to None to clear old embeds
+                # to ensure we remain backwards compatible
+                embeds=None,
+            )
 
 
 async def populate_sid_autocomplete(_):
-    """Populates autocomplete of all queued and regular suggestion sids when called
+    """Populates autocomplete of all queued and regular suggestion sids when called.
 
     We shouldn't need to do this often given they add themselves but it
     will help ensure the consistency of data if I miss something
