@@ -1,3 +1,4 @@
+import orjson
 import hikari
 from datetime import timedelta
 
@@ -31,18 +32,19 @@ async def cache_guild_queue_info(guild: hikari.Guild | hikari.RESTGuild) -> dict
         "icon": icon,
     }
 
-    await REDIS_CLIENT.hsetex(
+    await REDIS_CLIENT.set(
         f"guild_queue:{guild.id}",
-        mapping=data,
+        orjson.dumps(data),
         ex=timedelta(minutes=15),
-    )  # ty:ignore[no-matching-overload]
+    )
     return data
 
 
 async def get_guild_queue_info(guild_id: int) -> dict | None:
     from web.constants import REDIS_CLIENT
 
-    return await REDIS_CLIENT.hgetall(f"guild_queue:{guild_id}")
+    data = await REDIS_CLIENT.get(f"guild_queue:{guild_id}")
+    return orjson.loads(data) if data else None
 
 
 async def set_cached_interaction_id(link_id: str, interaction_id: int) -> None:
