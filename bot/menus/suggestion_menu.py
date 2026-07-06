@@ -493,29 +493,15 @@ class SuggestionMenu:
             else ""
         )
         try:
-            try:
-                message: hikari.Message = await channel.send(
-                    content=prefix,
-                    components=await s.as_components(
-                        rest=bot.rest,
-                        locale=guild_config.primary_language,
-                        localisations=localisations,
-                        guild_config=guild_config,
-                    ),
-                )
-            except hikari.ClientHTTPResponseError:
-                # Seems like avatars can be unsupported sometime for no reason?
-                # See kexb3-nux7i
-                message: hikari.Message = await channel.send(
-                    content=prefix,
-                    components=await s.as_components(
-                        rest=bot.rest,
-                        locale=guild_config.primary_language,
-                        localisations=localisations,
-                        guild_config=guild_config,
-                        skip_user_avatar=True,
-                    ),
-                )
+            message: hikari.Message = await channel.send(
+                content=prefix,
+                components=await s.as_components(
+                    rest=bot.rest,
+                    locale=guild_config.primary_language,
+                    localisations=localisations,
+                    guild_config=guild_config,
+                ),
+            )
         except hikari.ForbiddenError as e:
             internal_error: InternalErrors = await InternalErrors.persist_error(
                 e,
@@ -687,27 +673,14 @@ class SuggestionMenu:
                 if await guild_config.premium_is_enabled(ctx)
                 else hikari.undefined.UNDEFINED
             )
-            try:
-                message: hikari.Message = await channel.send(
-                    content=prefix,
-                    components=await qs.as_components(
-                        rest=bot.rest,
-                        locale=guild_config.primary_language,
-                        localisations=localisations,
-                    ),
-                )
-            except hikari.ClientHTTPResponseError:
-                # Seems like avatars can be unsupported sometime for no reason?
-                # See kexb3-nux7i
-                message: hikari.Message = await channel.send(
-                    content=prefix,
-                    components=await qs.as_components(
-                        rest=bot.rest,
-                        locale=guild_config.primary_language,
-                        localisations=localisations,
-                        skip_user_avatar=True,
-                    ),
-                )
+            message: hikari.Message = await channel.send(
+                content=prefix,
+                components=await qs.as_components(
+                    rest=bot.rest,
+                    locale=guild_config.primary_language,
+                    localisations=localisations,
+                ),
+            )
             qs.channel_id = message.channel_id
             qs.message_id = message.id
 

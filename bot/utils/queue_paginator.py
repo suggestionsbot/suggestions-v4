@@ -149,7 +149,6 @@ class QueuedSuggestionsPaginator:
                 locale=self._locale,
                 paginator_id=self._pid,
                 link_id=self._link_id,
-                skip_user_avatar=True,
             )
             components.extend(qsc)
             components.extend(

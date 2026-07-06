@@ -21,7 +21,7 @@ from piccolo.columns.indexes import IndexMethod
 from piccolo.columns.operators import Equal
 from piccolo.table import Table
 
-from bot import constants
+from bot import constants, utils
 from bot.constants import (
     REJECTED_COLOR,
     APPROVED_COLOR,
@@ -303,7 +303,6 @@ class Suggestions(Table, AuditMixin):
         exclude_buttons: bool = False,
         exclude_votes: bool = False,
         guild_config: GuildConfigs | None = None,
-        skip_user_avatar: bool = False,
     ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
@@ -330,41 +329,14 @@ class Suggestions(Table, AuditMixin):
                 spacing=hikari.SpacingType.SMALL,
             )
         )
-        if self.is_anonymous or skip_user_avatar:
-            # skip_user_avatar is used as sometimes the avatar appears to be invalid?
-            # Odd error that doesnt seem like it should occur but does
-            components.append(
-                hikari.impl.TextDisplayComponentBuilder(
-                    content=localisations.get_localized_string(
-                        "components.suggestions.submitter",
-                        locale,
-                        extras={"AUTHOR_DISPLAY": self.author_display_name},
-                        guild_config=guild_config,
-                    )
-                )
-            )
-
-        else:
-            user: hikari.User = await rest.fetch_user(
-                self.author_id
-            )  # TODO Cache avatar URL
-            components.append(
-                hikari.impl.SectionComponentBuilder(
-                    components=[
-                        hikari.impl.TextDisplayComponentBuilder(
-                            content=localisations.get_localized_string(
-                                "components.suggestions.submitter",
-                                locale,
-                                extras={"AUTHOR_DISPLAY": self.author_display_name},
-                                guild_config=guild_config,
-                            )
-                        ),
-                    ],
-                    accessory=hikari.impl.ThumbnailComponentBuilder(
-                        media=user.display_avatar_url,
-                    ),
-                )
-            )
+        await utils.insert_user_segment(
+            user_id=self.author_id,
+            components=components,
+            rest=rest,
+            locale=locale,
+            data=self,
+            locale_key="components.suggestions.submitter",
+        )
 
         if self.moderator_note:
             components.append(

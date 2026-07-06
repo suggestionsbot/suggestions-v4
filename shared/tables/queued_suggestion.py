@@ -23,6 +23,7 @@ from piccolo.columns.indexes import IndexMethod
 from piccolo.columns.operators import Equal
 from piccolo.table import Table
 
+from bot import utils
 from bot.localisation import Localisation
 from bot.utils.id import generate_id
 from shared.saq.worker import SAQ_QUEUE
@@ -273,7 +274,6 @@ class QueuedSuggestions(Table, AuditMixin):
         include_buttons: bool = True,
         paginator_id: str | None = None,
         link_id: str | None = None,
-        skip_user_avatar: bool = False,
     ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
@@ -301,37 +301,14 @@ class QueuedSuggestions(Table, AuditMixin):
                 spacing=hikari.SpacingType.SMALL,
             )
         )
-        if self.is_anonymous or skip_user_avatar:
-            # skip_user_avatar is used as sometimes the avatar appears to be invalid?
-            # Odd error that doesnt seem like it should occur but does:
-            components.append(
-                hikari.impl.TextDisplayComponentBuilder(
-                    content=localisations.get_localized_string(
-                        "components.queued_suggestions.submitter",
-                        locale,
-                        extras={"AUTHOR_DISPLAY": self.author_display_name},
-                    )
-                )
-            )
-
-        else:
-            user: hikari.User = await rest.fetch_user(self.author_id)  # TODO Cache
-            components.append(
-                hikari.impl.SectionComponentBuilder(
-                    components=[
-                        hikari.impl.TextDisplayComponentBuilder(
-                            content=localisations.get_localized_string(
-                                "components.queued_suggestions.submitter",
-                                locale,
-                                extras={"AUTHOR_DISPLAY": self.author_display_name},
-                            )
-                        ),
-                    ],
-                    accessory=hikari.impl.ThumbnailComponentBuilder(
-                        media=user.display_avatar_url,
-                    ),
-                )
-            )
+        await utils.insert_user_segment(
+            user_id=self.author_id,
+            components=components,
+            rest=rest,
+            locale=locale,
+            data=self,
+            locale_key="components.queued_suggestions.submitter",
+        )
 
         if self.state is QueuedSuggestionStateEnum.REJECTED:
             # Means it's been rejected so we should show it

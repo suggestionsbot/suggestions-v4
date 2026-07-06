@@ -1,17 +1,22 @@
 from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING, Protocol
+
 import hikari
 
 from bot.constants import LOCALISATIONS, EMBED_COLOR
+from bot.utils import fetch_user_avatar
 from shared.tables import (
     UserConfigs,
     Suggestions,
     QueuedSuggestions,
     QueuedSuggestionStateEnum,
 )
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from hikari.api import ContainerComponentBuilder, MessageActionRowBuilder
+logger = logging.getLogger(__name__)
 
 
 async def build_new_suggestion_notification(
@@ -136,7 +141,6 @@ async def build_queued_user_resolution_notification(
             locale=user_config.primary_language,
             localisations=LOCALISATIONS,
             include_buttons=False,
-            skip_user_avatar=True,
         )
 
     data: list[ContainerComponentBuilder | MessageActionRowBuilder] = [
@@ -165,3 +169,61 @@ async def build_queued_user_resolution_notification(
         data.extend(extra)
 
     return data
+
+
+class SegmentData(Protocol):
+    is_anonymous: bool
+    author_display_name: str
+    sID: str
+
+
+async def insert_user_segment(
+    *,
+    user_id: int,
+    data: SegmentData,
+    rest: hikari.api.RESTClient,
+    components: list,
+    locale: hikari.Locale | str,
+    locale_key: str,
+) -> None:
+    """Safely insert user segments that handle 415 status codes."""
+    user_avatar = await fetch_user_avatar(user_id=user_id, rest=rest)
+    if not data.is_anonymous and user_avatar is None:
+        logger.debug(
+            "Skipping avatar for %s %s as the avatar is not available",
+            data.__class__.__name__,
+            data.sID,
+            extra={
+                "interaction.user.id": user_id,
+            },
+        )
+
+    if data.is_anonymous or user_avatar is None:
+        components.append(
+            hikari.impl.TextDisplayComponentBuilder(
+                content=LOCALISATIONS.get_localized_string(
+                    locale_key,
+                    locale,
+                    extras={"AUTHOR_DISPLAY": data.author_display_name},
+                )
+            )
+        )
+
+    else:
+        assert user_avatar is not None
+        components.append(
+            hikari.impl.SectionComponentBuilder(
+                components=[
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=LOCALISATIONS.get_localized_string(
+                            locale_key,
+                            locale,
+                            extras={"AUTHOR_DISPLAY": data.author_display_name},
+                        )
+                    ),
+                ],
+                accessory=hikari.impl.ThumbnailComponentBuilder(
+                    media=user_avatar,
+                ),
+            )
+        )
