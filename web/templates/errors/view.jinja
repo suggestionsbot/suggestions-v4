@@ -1,5 +1,5 @@
 {% extends "base.jinja" %}
-
+{% block title %}Error Viewer | Suggestions{% endblock %}
 {% block content %}
     <div class="page">
         <div class="container py-4">
@@ -33,6 +33,14 @@
                                     <pre class="highlight">{{ error.traceback }}</pre>
                                 </div>
                             </div>
+                            {% if error.extra_info %}
+                                <div>
+                                    <p>Extra info present on error</p>
+                                    <div class="highlight">
+                                        <pre class="highlight">{{ error.extra_info }}</pre>
+                                    </div>
+                                </div>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </header>
