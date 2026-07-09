@@ -44,6 +44,11 @@ class InternalErrors(AuditMixin, Table):
         default=None,
         null=True,
     )
+    extra_info = Text(
+        help_text="Extra info added to this error",
+        default=None,
+        null=True,
+    )
 
     def __hash__(self) -> int:
         # Error objects should 'unique' based off the error itself
@@ -58,6 +63,7 @@ class InternalErrors(AuditMixin, Table):
         command_name: str,
         user_id: int | None = None,
         guild_id: int | None = None,
+        extra_info: str | None = None,
     ) -> InternalErrors:
         traceback_for_col = (
             exception
@@ -73,6 +79,7 @@ class InternalErrors(AuditMixin, Table):
             guild_id=guild_id,
             user_id=user_id,
             trace_id=otel_ctx or None,
+            extra_info=extra_info,
         )
         await internal_error.save()
         return internal_error

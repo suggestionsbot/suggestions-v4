@@ -1,5 +1,7 @@
+from bot.tables import InternalErrors
 from datetime import timedelta
 
+from shared.utils.ntfy import notify_ethan_of_something
 from web.constants import REDIS_CLIENT
 import asyncio
 import inspect
@@ -12,8 +14,9 @@ import httpx
 
 
 class HandleClientHTTPResponse:
-    def __init__(self, caller_name: str) -> None:
+    def __init__(self, caller_name: str, context: str | None = None) -> None:
         self.caller_name = caller_name
+        self.context = context
 
     async def __aenter__(self) -> Self:
         return self
@@ -32,9 +35,19 @@ class HandleClientHTTPResponse:
 
     async def handle_client_http_response(self, exc: BaseException) -> None:
         """Handles the various responses we've seen."""
-        print(self.caller_name)
-        if isinstance(exc, hikari.ClientHTTPResponseError):
-            pass
+        if isinstance(exc, hikari.ClientHTTPResponseError) and exc.code == 40005:
+            internal_error: InternalErrors = await InternalErrors.persist_error(
+                exc,
+                command_name=self.caller_name,
+                extra_info=self.context,
+            )
+            await notify_ethan_of_something(
+                title="ClientHTTPResponseError",
+                message="Observed an unhandled ClientHTTPResponseError. "
+                "I have created an error with context",
+                internal_error_reference=internal_error,
+                tags="warning",
+            )
 
 
 async def fetch_user_avatar(user_id: int, *, rest) -> hikari.URL | None:

@@ -1,9 +1,10 @@
+import inspect
 import logging
 
 import hikari
 
 from bot.constants import LOCALISATIONS
-from bot.utils import cv2
+from bot.utils import cv2, HandleClientHTTPResponse
 from shared.tables import Suggestions, QueuedSuggestions
 from shared.utils import configs
 from web import constants
@@ -36,9 +37,13 @@ async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_
                     user_config=user_config, suggestion=suggestion, rest=client
                 )
             )
-            await dm_channel.send(components=message_components)
-            if suggestion_components is not None:
-                await dm_channel.send(components=suggestion_components)
+            async with HandleClientHTTPResponse(
+                inspect.currentframe().f_code.co_name,  # ty:ignore[unresolved-attribute],
+                f"queued_suggestion_id={suggestion.id}",
+            ):
+                await dm_channel.send(components=message_components)
+                if suggestion_components is not None:
+                    await dm_channel.send(components=suggestion_components)
 
         except hikari.ForbiddenError:
             # I'd consider it 'fine' if the bot can't send this message
@@ -84,7 +89,11 @@ async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int
             message_components = await cv2.build_user_resolution_notification(
                 user_config=user_config, suggestion=suggestion
             )
-            await dm_channel.send(components=message_components)
+            async with HandleClientHTTPResponse(
+                inspect.currentframe().f_code.co_name,  # ty:ignore[unresolved-attribute],
+                f"suggestion_id={suggestion.id}",
+            ):
+                await dm_channel.send(components=message_components)
 
         except (hikari.ForbiddenError,):
             # I'd consider it 'fine' if the bot can't send this message
