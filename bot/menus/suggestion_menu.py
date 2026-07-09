@@ -379,7 +379,9 @@ class SuggestionMenu:
                 suggestion=suggestion_content,
                 image_urls=image_urls,
                 author_display_name=(
-                    f"<@{ctx.user.id}>" if anonymously is False else "Anonymous"
+                    f"{ctx.user.display_name}\n<@{ctx.user.id}>"
+                    if anonymously is False
+                    else "Anonymous"
                 ),
                 ctx=ctx,
                 guild_config=guild_config,
@@ -635,7 +637,9 @@ class SuggestionMenu:
             suggestion=suggestion,
             image_urls=image_urls,
             author_display_name=(
-                f"<@{ctx.user.id}>" if is_anonymous is False else "Anonymous"
+                f"{ctx.user.display_name}\n<@{ctx.user.id}>"
+                if is_anonymous is False
+                else "Anonymous"
             ),
             sID=generate_id(),
         )
