@@ -81,7 +81,6 @@ VIEW_GROUP = lightbulb.Group(
     name="commands.view.name",
     description="commands.view.description",
     localize=True,
-    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
     contexts=[hikari.ApplicationContextType.GUILD],
 )
 
