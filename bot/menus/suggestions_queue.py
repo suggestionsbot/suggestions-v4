@@ -119,7 +119,7 @@ class SuggestionsQueueMenu:
                         ],
                         min_values=1,
                         max_values=1,
-                        is_required=False,
+                        is_required=True,
                     ),
                 ),
             )
