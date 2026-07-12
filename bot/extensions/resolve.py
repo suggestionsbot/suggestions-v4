@@ -576,6 +576,7 @@ class ResolveMessageCommand(
         cls,
         *,
         user_configs: UserConfigs,
+        guild_config: GuildConfigs,
         localisations: Localisation,
     ) -> list[hikari.impl.LabelComponentBuilder]:
         components = [
@@ -644,41 +645,45 @@ class ResolveMessageCommand(
                     label="response",
                 ),
             ),
-            hikari.impl.LabelComponentBuilder(
-                label=localisations.get_localized_string(
-                    "commands.resolve.options.anonymously.name",
-                    user_configs.primary_language,
-                ).capitalize(),
-                description=localisations.get_localized_string(
-                    "commands.resolve.options.anonymously.description",
-                    user_configs.primary_language,
-                ),
-                component=hikari.impl.TextSelectMenuBuilder(
-                    custom_id="anonymously",
-                    parent=None,
-                    options=[
-                        hikari.impl.SelectOptionBuilder(
-                            label=localisations.get_localized_string(
-                                "menus.resolve.yes",
-                                user_configs.primary_language,
-                            ),
-                            value="yes",
-                        ),
-                        hikari.impl.SelectOptionBuilder(
-                            label=localisations.get_localized_string(
-                                "menus.resolve.no",
-                                user_configs.primary_language,
-                            ),
-                            value="no",
-                            is_default=True,
-                        ),
-                    ],
-                    min_values=1,
-                    max_values=1,
-                    is_required=False,
-                ),
-            ),
         ]
+
+        if guild_config.allow_anonymous_moderators:
+            components.append(
+                hikari.impl.LabelComponentBuilder(
+                    label=localisations.get_localized_string(
+                        "commands.resolve.options.anonymously.name",
+                        user_configs.primary_language,
+                    ).capitalize(),
+                    description=localisations.get_localized_string(
+                        "commands.resolve.options.anonymously.description",
+                        user_configs.primary_language,
+                    ),
+                    component=hikari.impl.TextSelectMenuBuilder(
+                        custom_id="anonymously",
+                        parent=None,
+                        options=[
+                            hikari.impl.SelectOptionBuilder(
+                                label=localisations.get_localized_string(
+                                    "menus.resolve.yes",
+                                    user_configs.primary_language,
+                                ),
+                                value="yes",
+                            ),
+                            hikari.impl.SelectOptionBuilder(
+                                label=localisations.get_localized_string(
+                                    "menus.resolve.no",
+                                    user_configs.primary_language,
+                                ),
+                                value="no",
+                                is_default=True,
+                            ),
+                        ],
+                        min_values=1,
+                        max_values=1,
+                        is_required=False,
+                    ),
+                )
+            )
 
         return components
 
@@ -713,7 +718,9 @@ class ResolveMessageCommand(
             return
 
         components = await self.build_resolve_modal(
-            localisations=localisations, user_configs=user_config
+            localisations=localisations,
+            user_configs=user_config,
+            guild_config=guild_config,
         )
 
         link_id: str = await utils.otel.generate_trace_link_state()
