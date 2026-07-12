@@ -702,7 +702,7 @@ class SuggestionMenu:
                         internal_error_reference=internal_error,
                     )
                 )
-                await qs.delete().where(Suggestions.id == qs.id)
+                await qs.delete().where(QueuedSuggestions.id == qs.id)
                 return
 
             qs.channel_id = message.channel_id
