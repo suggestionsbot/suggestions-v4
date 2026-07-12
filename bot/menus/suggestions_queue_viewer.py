@@ -28,12 +28,10 @@ class SuggestionsQueueViewerMenu:
         localisations: Localisation,
         event: hikari.ComponentInteractionCreateEvent,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         user_config: UserConfigs = await configs.ensure_user_config(
             user_id=event.interaction.user.id,
             locale=event.interaction.locale,
         )
-        guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         try:
             paginator = PAGINATOR_OBJECTS.get_entry(queue_id)
         except NonExistentEntry:
@@ -42,8 +40,11 @@ class SuggestionsQueueViewerMenu:
                     "menus.queue_paginator.responses.expired",
                     user_config.primary_language,
                 ),
+                ephemeral=True,
             )
             return
+        if action not in ("approve", "reject"):
+            await ctx.defer(ephemeral=True)
 
         if action == "back":
             paginator.current_page -= 1
@@ -94,7 +95,6 @@ class SuggestionsQueueViewerMenu:
                 to_approve=True,
                 ctx=ctx,
                 localisations=localisations,
-                guild_config=guild_config,
                 event=event,
             )
             return
@@ -115,7 +115,6 @@ class SuggestionsQueueViewerMenu:
                 to_approve=False,
                 ctx=ctx,
                 localisations=localisations,
-                guild_config=guild_config,
                 event=event,
             )
             return

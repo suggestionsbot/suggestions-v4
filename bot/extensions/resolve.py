@@ -14,11 +14,43 @@ from shared.tables import (
     UserConfigs,
     Suggestions,
     SuggestionStateEnum,
+    QueuedSuggestions,
 )
 from web.util.table_mixins import utc_now
 
 loader = lightbulb.Loader()
 logger = logging.getLogger(__name__)
+
+
+async def notify_of_new_queue_resolution(
+    *,
+    ctx: lightbulb.Context,
+    reason: str | None,
+    user_config: UserConfigs,
+    localisations: Localisation,
+) -> None:
+    """Notify users not to use this command anymore."""
+    extra = {}
+    if reason is not None:
+        extra["attachment"] = hikari.files.Bytes(
+            io.StringIO(reason),
+            "response.txt",
+        )
+
+    await ctx.respond(
+        embed=utils.error_embed(
+            title=localisations.get_localized_string(
+                "commands.resolve.responses.queued_suggestion.title",
+                user_config.primary_language,
+            ),
+            description=localisations.get_localized_string(
+                "commands.resolve.responses.queued_suggestion.description",
+                user_config.primary_language,
+            ),
+        ),
+        ephemeral=True,
+        **extra,
+    )
 
 
 async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
@@ -328,6 +360,19 @@ class ResolveCmd(
             )
             return
 
+        qs: QueuedSuggestions | None = await QueuedSuggestions.fetch_queued_suggestion(
+            self.suggestion_id,
+            guild_config.guild_id,
+        )
+        if qs:
+            await notify_of_new_queue_resolution(
+                ctx=ctx,
+                reason=note,
+                user_config=user_config,
+                localisations=localisations,
+            )
+            return
+
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.suggestion_not_found",
@@ -407,6 +452,19 @@ class ApproveCmd(
             )
             return
 
+        qs: QueuedSuggestions | None = await QueuedSuggestions.fetch_queued_suggestion(
+            self.suggestion_id,
+            guild_config.guild_id,
+        )
+        if qs:
+            await notify_of_new_queue_resolution(
+                ctx=ctx,
+                reason=note,
+                user_config=user_config,
+                localisations=localisations,
+            )
+            return
+
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.suggestion_not_found",
@@ -483,6 +541,19 @@ class RejectCmd(
                 user_config,
                 localisations,
                 apply_message_addon=True,
+            )
+            return
+
+        qs: QueuedSuggestions | None = await QueuedSuggestions.fetch_queued_suggestion(
+            self.suggestion_id,
+            guild_config.guild_id,
+        )
+        if qs:
+            await notify_of_new_queue_resolution(
+                ctx=ctx,
+                reason=note,
+                user_config=user_config,
+                localisations=localisations,
             )
             return
 

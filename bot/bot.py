@@ -18,7 +18,13 @@ from bot.menus import (
     UserConfigurationMenus,
 )
 from bot.tables import InternalErrors
-from shared.tables import GuildConfigs, UserConfigs, Suggestions, SuggestionStateEnum
+from shared.tables import (
+    GuildConfigs,
+    UserConfigs,
+    Suggestions,
+    SuggestionStateEnum,
+    QueuedSuggestions,
+)
 from shared.utils import configs
 from shared.utils.ntfy import notify_ethan_of_something
 from web import constants as t_constants
@@ -27,6 +33,7 @@ if TYPE_CHECKING:
     from hikari.interactions.interaction_components import (
         TextInputInteractionComponent,
         FileUploadInteractionComponent,
+        TextSelectMenuInteractionComponent,
     )
 
 logger = logging.getLogger(__name__)
@@ -139,6 +146,12 @@ async def create_bot(  # noqa: PLR0915, C901
                 if link_id is not None and link_id:
                     otel_ctx = await utils.otel.get_context_from_link_state(link_id)
 
+            elif custom_id.startswith("queue_resolve_modal"):
+                component_key = "queue resolve modal"
+                _, link_id, suggestion_id = custom_id.split(":", maxsplit=2)
+                if link_id is not None and link_id:
+                    otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+
             with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
                 span.set_attribute("interaction.user.id", ctx.user.id)
                 span.set_attribute(
@@ -161,6 +174,42 @@ async def create_bot(  # noqa: PLR0915, C901
                         event=event,
                         guild_config=guild_config,
                         user_config=user_config,
+                    )
+
+                elif custom_id.startswith("queue_resolve_modal"):
+                    resolution_state_raw: str
+                    response: str | None = None
+                    anonymously: bool = False
+                    for entry in event.interaction.components:
+                        if entry.component.custom_id == "state":
+                            entry.component = cast(
+                                "TextSelectMenuInteractionComponent",
+                                entry.component,
+                            )
+                            resolution_state_raw: str = entry.component.values[0]
+                        elif entry.component.custom_id == "response":
+                            entry.component = cast(
+                                "TextInputInteractionComponent",
+                                entry.component,
+                            )
+                            response = entry.component.value
+
+                        elif entry.component.custom_id == "anonymously":
+                            entry.component = cast(
+                                "TextSelectMenuInteractionComponent",
+                                entry.component,
+                            )
+                            anonymously = commons.value_to_bool(entry.component.values[0])
+
+                    await SuggestionsQueueMenu.handle_modal_interaction(
+                        queued_suggestion_id=suggestion_id,
+                        to_approve=resolution_state_raw == "approve",
+                        anonymously=anonymously,
+                        ctx=ctx,
+                        guild_config=guild_config,
+                        localisations=LOCALISATIONS,
+                        event=event,
+                        reason=response,
                     )
 
                 elif custom_id.startswith("resolve_modal"):
@@ -421,16 +470,12 @@ async def create_bot(  # noqa: PLR0915, C901
                     )
 
                 elif component_key in ("queue approve", "queue reject"):
-                    guild_config = await configs.ensure_guild_config(
-                        cast("int", ctx.guild_id)
-                    )
                     await SuggestionsQueueMenu.handle_physical_interaction(
                         queued_suggestion_id,
                         to_approve,
                         ctx=ctx,
                         localisations=constants.LOCALISATIONS,
                         event=event,
-                        guild_config=guild_config,
                     )
 
                 elif component_key in ("suggestion UpVote", "suggestion DownVote"):
