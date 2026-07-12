@@ -60,7 +60,12 @@ async def fetch_user_avatar(user_id: int, *, rest) -> hikari.URL | None:
     async with httpx.AsyncClient() as client:
         user: hikari.User = await rest.fetch_user(user_id)
         url = user.display_avatar_url.url
-        resp = await client.get(url)
+
+        try:
+            resp = await client.get(url)
+        except httpx.ReadTimeout:
+            return None
+
         if resp.status_code != 200:  # noqa: PLR2004
             return None
 
