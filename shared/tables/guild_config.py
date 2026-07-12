@@ -126,9 +126,13 @@ class GuildConfigs(AuditMixin, Table):
         skip_log_channel_check: bool = False,
     ) -> bool:
         """Returns true if the user was informed the guild still requires setup."""
-        if self.suggestions_channel_id is not None and (
-            skip_log_channel_check or self.log_channel_id is not None
-        ):
+        has_suggestion_channel: bool = self.suggestions_channel_id is not None
+        has_log_channel: bool = skip_log_channel_check or self.log_channel_id is not None
+        if self.keep_logs:
+            # dont need a log channel with keep logs
+            has_log_channel = True
+
+        if has_suggestion_channel and has_log_channel:
             return False
 
         await ctx.respond(
