@@ -5,6 +5,7 @@ import hikari
 import lightbulb
 
 import shared.utils
+from bot import utils
 from bot.localisation import Localisation
 from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import (
@@ -107,8 +108,8 @@ class ClearCmd(
                 pass
 
         suggestion.resolved_by = user_config.user_id
-        suggestion.resolved_by_display_text = (
-            "Anonymous" if self.anonymously else f"<@{user_config.user_id}>"
+        suggestion.resolved_by_display_text = utils.generate_author_text(
+            ctx.user.display_name, ctx.user.id, is_anonymous=self.anonymously
         )
         suggestion.resolved_note = self.response
         suggestion.resolved_at = utc_now()

@@ -192,8 +192,8 @@ class NotesAddCmd(
         suggestion.moderator_note = note
         suggestion.moderator_note_added_by = user_config.user_id
         # All moderator note authors are public
-        suggestion.moderator_note_added_by_display_text = (
-            f"<@{ctx.user.id}>" if self.anonymously is False else "Anonymous"
+        suggestion.moderator_note_added_by_display_text = utils.generate_author_text(
+            ctx.user.display_name, ctx.user.id, is_anonymous=self.anonymously
         )
         await suggestion.save()
         await suggestion.queue_message_edit()

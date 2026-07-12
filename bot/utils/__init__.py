@@ -1,5 +1,5 @@
 from bot.utils.id import generate_id
-from bot.utils.embeds import error_embed
+from bot.utils.embeds import error_embed, generate_author_text
 from .otel import start_error_span
 from .queue_paginator import QueuedSuggestionsPaginator
 from .voter_paginator import ViewVotersPaginator
@@ -10,9 +10,10 @@ __all__ = [
     "HandleClientHTTPResponse",
     "QueuedSuggestionsPaginator",
     "ViewVotersPaginator",
-    "insert_user_segment",
     "error_embed",
     "fetch_user_avatar",
+    "generate_author_text",
     "generate_id",
+    "insert_user_segment",
     "start_error_span",
 ]

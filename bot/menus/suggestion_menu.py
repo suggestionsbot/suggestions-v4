@@ -378,10 +378,8 @@ class SuggestionMenu:
             return await cls.handle_suggestion(
                 suggestion=suggestion_content,
                 image_urls=image_urls,
-                author_display_name=(
-                    f"{ctx.user.display_name}\n<@{ctx.user.id}>"
-                    if anonymously is False
-                    else "Anonymous"
+                author_display_name=utils.generate_author_text(
+                    ctx.user.display_name, ctx.user.id, is_anonymous=anonymously
                 ),
                 ctx=ctx,
                 guild_config=guild_config,
@@ -636,10 +634,8 @@ class SuggestionMenu:
             user_configuration=user_config,
             suggestion=suggestion,
             image_urls=image_urls,
-            author_display_name=(
-                f"{ctx.user.display_name}\n<@{ctx.user.id}>"
-                if is_anonymous is False
-                else "Anonymous"
+            author_display_name=utils.generate_author_text(
+                ctx.user.display_name, ctx.user.id, is_anonymous=is_anonymous
             ),
             sID=generate_id(),
         )

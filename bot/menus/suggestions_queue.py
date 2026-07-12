@@ -305,8 +305,8 @@ class SuggestionsQueueMenu:
         queued_suggestion.resolved_at = utc_now()
         queued_suggestion.resolved_by = event.interaction.user.id
         queued_suggestion.resolved_note = resolved_note
-        queued_suggestion.resolved_by_display_text = (
-            f"<@{ctx.user.id}>" if is_anonymous is False else "Anonymous"
+        queued_suggestion.resolved_by_display_text = utils.generate_author_text(
+            ctx.user.display_name, ctx.user.id, is_anonymous=is_anonymous
         )
         await queued_suggestion.save()
         suggestion: Suggestions | None = await SuggestionMenu.handle_suggestion(
@@ -345,8 +345,8 @@ class SuggestionsQueueMenu:
         queued_suggestion.resolved_at = utc_now()
         queued_suggestion.resolved_by = event.interaction.user.id
         queued_suggestion.resolved_note = resolved_note
-        queued_suggestion.resolved_by_display_text = (
-            f"<@{ctx.user.id}>" if is_anonymous is False else "Anonymous"
+        queued_suggestion.resolved_by_display_text = utils.generate_author_text(
+            ctx.user.display_name, ctx.user.id, is_anonymous=is_anonymous
         )
         await queued_suggestion.save()
         if queued_suggestion.is_physical:

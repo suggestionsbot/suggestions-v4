@@ -87,8 +87,8 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
     suggestion.resolved_at = utc_now()
     suggestion.resolved_note = response
     suggestion.resolved_by = user_config.user_id
-    suggestion.resolved_by_display_text = (
-        f"<@{ctx.user.id}>" if anonymously is False else "Anonymous"
+    suggestion.resolved_by_display_text = utils.generate_author_text(
+        ctx.user.display_name, ctx.user.id, is_anonymous=anonymously
     )
     await suggestion.save()
 

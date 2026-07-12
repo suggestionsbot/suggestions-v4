@@ -14,6 +14,15 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def generate_author_text(
+    user_name: str | None | hikari.UndefinedNoneOr, user_id: int, is_anonymous: bool
+) -> str:
+    if is_anonymous:
+        return "Anonymous"
+
+    return f"{user_name} (<@{user_id}>)"
+
+
 def error_embed(
     title: str,
     description: str,
