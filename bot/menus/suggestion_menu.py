@@ -673,14 +673,38 @@ class SuggestionMenu:
                 if await guild_config.premium_is_enabled(ctx)
                 else hikari.undefined.UNDEFINED
             )
-            message: hikari.Message = await channel.send(
-                content=prefix,
-                components=await qs.as_components(
-                    rest=bot.rest,
-                    locale=guild_config.primary_language,
-                    localisations=localisations,
-                ),
-            )
+            try:
+                message: hikari.Message = await channel.send(
+                    content=prefix,
+                    components=await qs.as_components(
+                        rest=bot.rest,
+                        locale=guild_config.primary_language,
+                        localisations=localisations,
+                    ),
+                )
+            except hikari.ForbiddenError as e:
+                internal_error: InternalErrors = await InternalErrors.persist_error(
+                    e,
+                    command_name="suggest",
+                    guild_id=cast("int", ctx.guild_id),
+                    user_id=ctx.user.id,
+                )
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        title=localisations.get_localized_string(
+                            "errors.suggest.responses.missing_queue_channel_perms.title",
+                            user_config.primary_language,
+                        ),
+                        description=localisations.get_localized_string(
+                            "errors.suggest.responses.missing_queue_channel_perms.description",
+                            user_config.primary_language,
+                        ),
+                        internal_error_reference=internal_error,
+                    )
+                )
+                await qs.delete().where(Suggestions.id == qs.id)
+                return
+
             qs.channel_id = message.channel_id
             qs.message_id = message.id
 

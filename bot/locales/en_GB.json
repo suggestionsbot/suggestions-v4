@@ -201,6 +201,8 @@
   "errors.suggest.queue_channel_not_found.title": "Command Failed",
   "errors.suggest.suggest_channel_not_found.description": "This command requires a queue channel to use.\nPlease contact an administrator and ask them to set one up using the following command.\n`/configure guild`",
   "errors.suggest.suggest_channel_not_found.title": "Command Failed",
+  "errors.suggest.responses.missing_queue_channel_perms.title": "Command Failed",
+  "errors.suggest.responses.missing_queue_channel_perms.description": "The bot does not have permissions to interact with the suggestions queue channel.\nPlease contact an administrator and ask them to ensure the channel exists and that the bot can see it/send messages to it.",
   "errors.suggest.responses.missing_suggestion_channel_perms.title": "Command Failed",
   "errors.suggest.responses.missing_suggestion_channel_perms.description": "The bot does not have permissions to interact with the suggestions channel.\nPlease contact an administrator and ask them to ensure the channel exists and that the bot can see it/send messages to it.",
   "menus.guild_configuration.base_menu.allow_anonymous_moderators": "Can moderators be anonymous when resolving suggestions or adding notes?",
