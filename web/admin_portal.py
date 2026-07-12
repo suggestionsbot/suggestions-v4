@@ -1,3 +1,4 @@
+from bot.tables import InternalErrors, MessageAddons
 from piccolo_admin import create_admin
 from piccolo_admin.endpoints import TableConfig
 from piccolo_admin.example.tables import AuthenticatorSecret
@@ -89,6 +90,20 @@ def configure_piccolo_admin():
             OrderBy(GuildTokens.id, ascending=False),
         ],
     )
+    internal_errors_tc = TableConfig(
+        InternalErrors,
+        menu_group="Bot",
+        order_by=[
+            OrderBy(InternalErrors.id, ascending=False),
+        ],
+    )
+    message_addons_tc = TableConfig(
+        MessageAddons,
+        menu_group="Bot",
+        order_by=[
+            OrderBy(MessageAddons.id, ascending=False),
+        ],
+    )
 
     return create_admin(
         tables=[
@@ -99,6 +114,8 @@ def configure_piccolo_admin():
             alert_tc,
             auth_attempt_tc,
             guild_tokens_tc,
+            internal_errors_tc,
+            message_addons_tc,
         ],
         production=constants.IS_PRODUCTION,
         allowed_hosts=constants.SERVING_DOMAIN,
