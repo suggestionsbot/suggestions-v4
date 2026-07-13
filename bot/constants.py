@@ -1,4 +1,5 @@
 from __future__ import annotations
+import arrow
 import commons
 
 import os
@@ -35,6 +36,8 @@ PENDING_COLOR = Color.of((255, 214, 99))
 EMBED_COLOR = Color.of((255, 214, 99))
 OTEL_TRACER = trace.get_tracer(__name__)
 LOADED_AT = datetime.datetime.now(datetime.UTC)  # Uptime calc
+IS_MIGRATION_DATA_PRIOR_TO = arrow.get("2026-07-04 10:00:00.151313+00:00")
+"""Creation dates prior to this can be considered as coming from v3"""
 LOCALISATIONS = Localisation(
     base_path=Path("bot"),
 )
