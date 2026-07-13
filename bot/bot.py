@@ -377,29 +377,13 @@ async def create_bot(  # noqa: PLR0915, C901
 
             elif custom_id.startswith(
                 (
-                    "SuggestionsUpVote",
-                    "SuggestionsDownVote",
                     "SuggestionUpVote",
                     "SuggestionDownVote",
                 )
             ):
                 # Other legacy button type
-                # Cant confirm easily until in prod
-                await notify_ethan_of_something(
-                    title="Legacy component key",
-                    message="Finally observed the legacy component key. "
-                    f"Out of the possible choices, it is this: `{component_key}`",
-                    priority=2,
-                )
-                try:
-                    custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
-                except ValueError:
-                    await notify_ethan_of_something(
-                        title="Legacy component key split",
-                        message=f"Its not `:` in `{component_key}` to split on...",
-                        priority=2,
-                    )
-                    custom_id, suggestion_id = custom_id.split("|", maxsplit=2)
+                # "SuggestionUpVote	|1234abcd" (non ascii, not a space)
+                custom_id, suggestion_id = custom_id.split("|", maxsplit=2)
 
                 if not custom_id.endswith("e"):
                     custom_id = custom_id[:-1]
