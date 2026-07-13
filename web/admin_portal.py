@@ -1,4 +1,5 @@
-from bot.tables import InternalErrors, MessageAddons
+from shared.tables import UserConfigs, GuildConfigs, PremiumGuildConfigs
+from bot.tables import InternalErrors, MessageAddons, CommandInvokes
 from piccolo_admin import create_admin
 from piccolo_admin.endpoints import TableConfig
 from piccolo_admin.example.tables import AuthenticatorSecret
@@ -94,7 +95,14 @@ def configure_piccolo_admin():
         InternalErrors,
         menu_group="Bot",
         order_by=[
-            OrderBy(InternalErrors.id, ascending=False),
+            OrderBy(InternalErrors.created_at, ascending=False),
+        ],
+        visible_columns=[
+            InternalErrors.id,
+            InternalErrors.created_at,
+            InternalErrors.error_name,
+            InternalErrors.command_name,
+            InternalErrors.extra_info,
         ],
     )
     message_addons_tc = TableConfig(
@@ -102,6 +110,34 @@ def configure_piccolo_admin():
         menu_group="Bot",
         order_by=[
             OrderBy(MessageAddons.id, ascending=False),
+        ],
+    )
+    uc_tc = TableConfig(
+        UserConfigs,
+        menu_group="Configurations",
+        order_by=[
+            OrderBy(UserConfigs.id, ascending=False),
+        ],
+    )
+    gc_tc = TableConfig(
+        GuildConfigs,
+        menu_group="Configurations",
+        order_by=[
+            OrderBy(GuildConfigs.id, ascending=False),
+        ],
+    )
+    pgc_tc = TableConfig(
+        PremiumGuildConfigs,
+        menu_group="Configurations",
+        order_by=[
+            OrderBy(PremiumGuildConfigs.id, ascending=False),
+        ],
+    )
+    invoke_tc = TableConfig(
+        CommandInvokes,
+        menu_group="Bot",
+        order_by=[
+            OrderBy(CommandInvokes.id, ascending=False),
         ],
     )
 
@@ -116,6 +152,10 @@ def configure_piccolo_admin():
             guild_tokens_tc,
             internal_errors_tc,
             message_addons_tc,
+            uc_tc,
+            gc_tc,
+            invoke_tc,
+            pgc_tc,
         ],
         production=constants.IS_PRODUCTION,
         allowed_hosts=constants.SERVING_DOMAIN,
