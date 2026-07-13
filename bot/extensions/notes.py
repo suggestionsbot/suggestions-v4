@@ -71,7 +71,7 @@ async def notify_user_of_change(
                 "commands.note.add.responses.dm_change_footer",
                 user_config.primary_language,
                 guild_config=guild_config,
-                extras={"GUILD_ID": ctx.guild_id, "SID": suggestion.footer_sid},
+                extras={"GUILD_ID": guild_config.guild_id, "SID": suggestion.footer_sid},
             ),
         ),
     ]
@@ -83,16 +83,17 @@ async def notify_user_of_change(
         ),
     ]
     try:
-        dm_channel = await ctx.client.rest.create_dm_channel(ctx.user)
+        dm_channel = await ctx.client.rest.create_dm_channel(
+            hikari.Snowflake(user_config.user_id)
+        )
         await dm_channel.send(components=result)
     except hikari.ForbiddenError:
         # I'd consider it 'fine' if the bot can't send this message
         logger.debug(
             "Failed to dm user about a suggestion note",
             extra={
-                "interaction.user.id": ctx.user.id,
-                "interaction.user.username": ctx.user.display_name,
-                "interaction.guild.id": ctx.guild_id,
+                "interaction.user.id": user_config.user_id,
+                "interaction.guild.id": guild_config.guild_id,
                 "suggestion.id": suggestion.sID,
             },
         )
