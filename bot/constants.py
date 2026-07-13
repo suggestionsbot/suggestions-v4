@@ -1,4 +1,5 @@
 from __future__ import annotations
+import commons
 
 import os
 import datetime
@@ -118,6 +119,11 @@ DEFAULT_DOWN_VOTE = hikari.CustomEmoji(
 CLUSTER_ID = int(os.environ.get("CLUSTER_ID", "1"))
 TOTAL_SHARDS = int(os.environ.get("TOTAL_SHARDS", "1"))
 SHARDS_PER_CLUSTER = int(os.environ.get("SHARDS_PER_CLUSTER", "10"))
+
+# Command sync so only one cluster syncs
+SYNC_APPLICATION_COMMANDS: bool = commons.value_to_bool(
+    os.environ.get("SYNC_APPLICATION_COMMANDS", "1")
+)
 
 
 class ErrorCode(IntEnum):

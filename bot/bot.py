@@ -8,7 +8,7 @@ import lightbulb
 from hikari.impl import CacheSettings, config
 
 from bot import overrides, utils, constants
-from bot.constants import OTEL_TRACER, LOCALISATIONS
+from bot.constants import OTEL_TRACER, LOCALISATIONS, SYNC_APPLICATION_COMMANDS
 from bot.extensions.resolve import resolve_suggestion
 from bot.menus import (
     GuildConfigurationMenus,
@@ -71,6 +71,7 @@ async def create_bot(  # noqa: PLR0915, C901
         bot,
         default_enabled_guilds=default_enabled_guilds,
         default_locale=hikari.Locale.EN_GB,
+        sync_commands=SYNC_APPLICATION_COMMANDS,
         localization_provider=constants.LOCALISATIONS.lightbulb_provider,
     )
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
