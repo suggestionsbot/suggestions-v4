@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Annotated, Any, cast
 
 import commons
+import hikari
 import orjson
 from httpx_oauth.clients.discord import DiscordOAuth2
 from httpx_oauth.exceptions import GetProfileError
@@ -26,10 +27,14 @@ CACHE_TYPES = bool | dict | int | list
 
 # noinspection PyMethodMayBeStatic
 class DiscordOAuth(DiscordOAuth2):
-    async def cache_set(self, cache_key: str, data: CACHE_TYPES) -> None:
-        await constants.REDIS_CLIENT.setex(
-            cache_key, timedelta(minutes=5), orjson.dumps(data)
-        )
+    async def cache_set(
+        self,
+        cache_key: str,
+        data: CACHE_TYPES,
+        *,
+        ex: timedelta = timedelta(minutes=5),
+    ) -> None:
+        await constants.REDIS_CLIENT.setex(cache_key, ex, orjson.dumps(data))
 
     async def cache_get(self, cache_key: str) -> CACHE_TYPES | None:
         data_raw = await constants.REDIS_CLIENT.get(cache_key)
@@ -72,6 +77,18 @@ class DiscordOAuth(DiscordOAuth2):
         data = await self.cache_get(cache_key)
         if data:
             return True
+
+        async with constants.DISCORD_REST_CLIENT.acquire(
+            constants.BOT_TOKEN, hikari.TokenType.BOT
+        ) as client:
+            try:
+                await client.fetch_guild(guild_id)
+                await self.cache_set(cache_key, guild_id, ex=timedelta(minutes=30))
+            except:
+                return False
+            else:
+                return True
+
         return False
 
     async def get_user_data_in_guild(
