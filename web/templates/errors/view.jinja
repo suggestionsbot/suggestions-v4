@@ -16,8 +16,13 @@
                             <div class="row g-3">
                                 {% if request.user.admin %}
                                     <div class="col-auto">
-                                        <a href="{{ error.otel_url }}" target="_blank" class="btn btn-lg">View related
-                                            trace</a>
+                                        {% if error.trace_id %}
+                                            <a href="{{ error.otel_url }}" target="_blank" class="btn btn-lg">View
+                                                related
+                                                trace</a>
+                                        {% else %}
+                                            <p>No associated trace</p>
+                                        {% endif %}
                                     </div>
                                 {% else %}
                                     <div class="col-auto">

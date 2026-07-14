@@ -72,6 +72,10 @@ class InternalErrors(AuditMixin, Table):
             else "".join(traceback.format_exception(exception))
         )
         otel_ctx = get_trace_id()
+        if otel_ctx == "00000000000000000000000000000000":
+            # Sometimes it dont got a trace??
+            otel_ctx = None
+
         internal_error = cls(
             id=generate_id(),
             traceback=traceback_for_col,
