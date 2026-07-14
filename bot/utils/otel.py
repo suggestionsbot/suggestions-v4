@@ -1,4 +1,5 @@
-from contextlib import contextmanager
+import lightbulb
+from contextlib import asynccontextmanager
 from datetime import timedelta
 from typing import Literal
 
@@ -8,18 +9,15 @@ from opentelemetry import trace
 from opentelemetry.context import Context
 from opentelemetry.trace import Status, StatusCode
 
+from bot import utils
 from bot.constants import OTEL_TRACER
-from bot.exceptions import MessageTooLong, MissingQueueChannel
+from bot.tables import InternalErrors
+from shared.utils.ntfy import notify_ethan_of_something
 from web import constants
 
-IGNORABLE_EXCEPTION_TYPES: tuple[type[Exception], ...] = (
-    MessageTooLong,
-    MissingQueueChannel,
-)
 
-
-@contextmanager
-def start_error_span(  # noqa: ANN201 #I Dont know how to type this
+@asynccontextmanager
+async def start_error_span(  # noqa: ANN201 #I Dont know how to type this
     base_exception: Exception,
     span_name: Literal[
         "global error handler",
@@ -27,10 +25,20 @@ def start_error_span(  # noqa: ANN201 #I Dont know how to type this
         "modal error handler",
         "component error handler",
     ],
+    *,
+    command_name: str,
+    guild_id: int | None = None,
+    user_id: int | None = None,
 ):
     with OTEL_TRACER.start_as_current_span(span_name) as child:
+        internal_error: InternalErrors = await InternalErrors.persist_error(
+            base_exception,
+            command_name=command_name,
+            guild_id=guild_id,
+            user_id=user_id,
+        )
         child.set_attribute("error.name", base_exception.__class__.__name__)
-        if isinstance(base_exception, IGNORABLE_EXCEPTION_TYPES):
+        if not utils.should_handle_error(base_exception):
             # all these we dont need to care about being logged
             # as we handle them enough for end us`ers to
             # theoretically fix themselves
@@ -42,8 +50,14 @@ def start_error_span(  # noqa: ANN201 #I Dont know how to type this
             child.set_attribute("error.handled", value=False)
             child.set_status(Status(StatusCode.ERROR))
             child.record_exception(base_exception)
+            await notify_ethan_of_something(
+                title="Unknown Error",
+                message=f"Observed an unhandled error in `{command_name!r}`",
+                internal_error_reference=internal_error,
+                tags="warning",
+            )
 
-        yield child
+        yield internal_error
 
 
 def get_trace_id() -> str:

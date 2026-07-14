@@ -5,7 +5,6 @@ import traceback
 from piccolo.columns import Text, Varchar, BigInt, Boolean
 from piccolo.table import Table
 
-from bot.utils.otel import get_trace_id
 from shared.tables.mixins import AuditMixin
 from bot.utils import generate_id
 
@@ -65,6 +64,8 @@ class InternalErrors(AuditMixin, Table):
         guild_id: int | None = None,
         extra_info: str | None = None,
     ) -> InternalErrors:
+        from bot.utils import get_trace_id
+
         traceback_for_col = (
             exception
             if isinstance(exception, str)

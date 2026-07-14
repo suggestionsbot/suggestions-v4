@@ -100,20 +100,14 @@ async def create_bot(  # noqa: PLR0915, C901
             # If we have yet to send some form of response
             await ctx.defer(ephemeral=True)
 
-        with utils.start_error_span(exc.causes[0], "global error handler"):
+        async with utils.start_error_span(
+            exc.causes[0],
+            "global error handler",
+            command_name=ctx.command_data.name,
+            guild_id=cast("int", ctx.guild_id),
+            user_id=ctx.user.id,
+        ) as internal_error:
             # TODO Implement later once we have error data that hits here
-            internal_error: InternalErrors = await InternalErrors.persist_error(
-                exc.causes[0],
-                command_name=ctx.command_data.name,
-                guild_id=cast("int", ctx.guild_id),
-                user_id=ctx.user.id,
-            )
-            await notify_ethan_of_something(
-                title="Unknown Error",
-                message="Observed an unhandled global error",
-                internal_error_reference=internal_error,
-                tags="warning",
-            )
             await ctx.respond(
                 embed=utils.error_embed(
                     "Something went wrong.",
@@ -277,17 +271,9 @@ async def create_bot(  # noqa: PLR0915, C901
                         ephemeral=True,
                     )
         except Exception as e:
-            with utils.start_error_span(e, "modal error handler"):
-                internal_error: InternalErrors = await InternalErrors.persist_error(
-                    e,
-                    command_name=component_key,
-                )
-                await notify_ethan_of_something(
-                    title="Unknown Modal Error",
-                    message=f"Observed an unhandled modal error in: `{component_key!r}`",
-                    internal_error_reference=internal_error,
-                    tags="warning",
-                )
+            async with utils.start_error_span(
+                e, "modal error handler", command_name=component_key
+            ) as internal_error:
                 await ctx.respond(
                     embed=utils.error_embed(
                         "Something went wrong.",
@@ -497,17 +483,9 @@ async def create_bot(  # noqa: PLR0915, C901
             if not t_constants.IS_PRODUCTION:
                 raise
 
-            with utils.start_error_span(exc, "component error handler"):
-                internal_error: InternalErrors = await InternalErrors.persist_error(
-                    exc,
-                    command_name=component_key,
-                )
-                await notify_ethan_of_something(
-                    title="Unknown Component Error",
-                    message=f"Observed an unhandled component error in: `{component_key!r}`",
-                    internal_error_reference=internal_error,
-                    tags="warning",
-                )
+            async with utils.start_error_span(
+                exc, "component error handler", command_name=component_key
+            ) as internal_error:
                 await ctx.respond(
                     embed=utils.error_embed(
                         "Something went wrong.",

@@ -1,16 +1,16 @@
-from bot.tables import InternalErrors
-from datetime import timedelta
-
-from shared.utils.ntfy import notify_ethan_of_something
-from web.constants import REDIS_CLIENT
 import asyncio
 import inspect
+import logging
 from types import TracebackType
+from typing import Self, Final
 
 import hikari
-from typing import Self
 
-import httpx
+from bot.exceptions import MessageTooLong, MissingQueueChannel
+from bot.tables import InternalErrors
+from shared.utils.ntfy import notify_ethan_of_something
+
+logger = logging.getLogger(__name__)
 
 
 class HandleClientHTTPResponse:
@@ -48,6 +48,32 @@ class HandleClientHTTPResponse:
                 internal_error_reference=internal_error,
                 tags="warning",
             )
+
+
+IGNORABLE_EXCEPTION_TYPES: tuple[type[Exception], ...] = (
+    MessageTooLong,
+    MissingQueueChannel,
+)
+UNKNOWN_INTERACTION: Final[int] = 10062
+
+
+def should_handle_error(exc: Exception) -> bool:
+    """A basic helper to decide if errors should be handled."""
+    if isinstance(exc, IGNORABLE_EXCEPTION_TYPES):
+        return False
+
+    if (  # noqa: SIM103
+        isinstance(exc, hikari.NotFoundError) and exc.code == UNKNOWN_INTERACTION
+    ):
+        # #It Happens, Ignore It https://github.com/discord/discord-api-docs/issues/5558
+        # https://discord.com/channels/574921006817476608/1063575318599835778/1241512673015763096
+        logger.debug(
+            "Observed hikari.errors.NotFoundError: "
+            "Not Found 404: (10062) 'Unknown interaction'"
+        )
+        return False
+
+    return True
 
 
 async def main():
