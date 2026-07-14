@@ -8,6 +8,7 @@ import lightbulb
 import shared.utils
 from bot import utils
 from bot.constants import NOTES_GROUP, EMBED_COLOR
+from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.tables import CommandTypes, CommandInvokes
 from shared.tables import (
@@ -116,6 +117,7 @@ class NotesAddCmd(
     description="commands.note.add.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    hooks=[early_ephemeral_defer],
 ):
     suggestion_id = lightbulb.string(
         "commands.note.add.options.suggestion_id.name",
@@ -144,7 +146,6 @@ class NotesAddCmd(
         localisations: Localisation,
     ) -> None:
         # backwards compat for newlines instead of using a modal
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
@@ -225,6 +226,7 @@ class NotesRemoveCmd(
     description="commands.note.remove.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    hooks=[early_ephemeral_defer],
 ):
     suggestion_id = lightbulb.string(
         "commands.note.remove.options.suggestion_id.name",
@@ -241,7 +243,6 @@ class NotesRemoveCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,

@@ -3,6 +3,7 @@ import logging
 import hikari
 import lightbulb
 
+from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.menus.guild_configuration_menu import GuildConfigurationMenus
 from bot.tables import CommandInvokes, CommandTypes
@@ -20,6 +21,7 @@ class SetupCmd(
     localize=True,
     default_member_permissions=hikari.Permissions.MANAGE_GUILD,
     contexts=[hikari.ApplicationContextType.GUILD],
+    hooks=[early_ephemeral_defer],
 ):
 
     @lightbulb.invoke
@@ -30,7 +32,6 @@ class SetupCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,

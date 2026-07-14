@@ -3,6 +3,7 @@ import logging
 import lightbulb
 
 from bot.constants import USER_GROUP
+from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.menus.user_configuration_menu import UserConfigurationMenus
 from bot.tables import CommandInvokes, CommandTypes
@@ -17,6 +18,7 @@ class ConfigureUserCmd(
     name="commands.user.configure.name",
     description="commands.user.configure.description",
     localize=True,
+    hooks=[early_ephemeral_defer],
 ):
 
     @lightbulb.invoke
@@ -26,7 +28,6 @@ class ConfigureUserCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             action="/configure user",

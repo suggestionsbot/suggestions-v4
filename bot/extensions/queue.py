@@ -6,6 +6,7 @@ import lightbulb
 
 from bot import utils
 from bot.constants import QUEUE_GROUP, EMBED_COLOR, PAGINATOR_OBJECTS
+from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.tables import CommandInvokes, CommandTypes
 from bot.utils import QueuedSuggestionsPaginator, generate_id
@@ -26,6 +27,7 @@ class QueueInfoCmd(
     description="commands.queue.info.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    hooks=[early_ephemeral_defer],
 ):
 
     @lightbulb.invoke
@@ -36,7 +38,6 @@ class QueueInfoCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
@@ -103,6 +104,7 @@ class QueueViewCmd(
     description="commands.queue.view.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    hooks=[early_ephemeral_defer],
 ):
 
     @lightbulb.invoke
@@ -113,7 +115,6 @@ class QueueViewCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,

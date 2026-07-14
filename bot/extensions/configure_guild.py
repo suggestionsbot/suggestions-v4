@@ -5,6 +5,7 @@ import lightbulb
 
 from bot import utils
 from bot.constants import CONFIGURE_GROUP
+from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.menus.guild_configuration_menu import GuildConfigurationMenus
 from bot.tables import CommandInvokes, CommandTypes
@@ -20,6 +21,7 @@ class ConfigureGuildCmd(
     name="commands.configure.guild.name",
     description="commands.configure.guild.description",
     localize=True,
+    hooks=[early_ephemeral_defer],
 ):
     menu = lightbulb.string(
         "commands.configure.guild.options.menu.name",
@@ -53,7 +55,6 @@ class ConfigureGuildCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,

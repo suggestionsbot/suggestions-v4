@@ -14,6 +14,7 @@ from bot.constants import (
     DEFAULT_UP_VOTE,
     DEFAULT_DOWN_VOTE,
 )
+from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.tables import CommandInvokes, CommandTypes
 from bot.utils import generate_id, ViewVotersPaginator
@@ -106,6 +107,7 @@ class ViewVotersCmd(
     description="commands.view.voters.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    hooks=[early_ephemeral_defer],
 ):
     suggestion_id = lightbulb.string(
         "commands.view.voters.options.suggestion_id.name",
@@ -149,7 +151,6 @@ class ViewVotersCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
@@ -199,6 +200,7 @@ class ViewVoterMessageCommand(
     lightbulb.MessageCommand,
     name="message_commands.view_voters.name",
     localize=True,
+    hooks=[early_ephemeral_defer],
 ):
     @lightbulb.invoke
     async def invoke(
@@ -209,7 +211,6 @@ class ViewVoterMessageCommand(
         localisations: Localisation,
     ) -> None:
         # 'self.target' contains the message object the command was executed on
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
@@ -254,6 +255,7 @@ class ViewUpVoterMessageCommand(
     lightbulb.MessageCommand,
     name="message_commands.view_up_voters.name",
     localize=True,
+    hooks=[early_ephemeral_defer],
 ):
     @lightbulb.invoke
     async def invoke(
@@ -264,7 +266,6 @@ class ViewUpVoterMessageCommand(
         localisations: Localisation,
     ) -> None:
         # 'self.target' contains the message object the command was executed on
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
@@ -309,6 +310,7 @@ class ViewDownVoterMessageCommand(
     lightbulb.MessageCommand,
     name="message_commands.view_down_voters.name",
     localize=True,
+    hooks=[early_ephemeral_defer],
 ):
     @lightbulb.invoke
     async def invoke(
@@ -319,7 +321,6 @@ class ViewDownVoterMessageCommand(
         localisations: Localisation,
     ) -> None:
         # 'self.target' contains the message object the command was executed on
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,

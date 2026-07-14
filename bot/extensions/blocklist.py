@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import cast
 
@@ -7,6 +8,7 @@ import lightbulb
 import shared.utils
 from bot import utils
 from bot.constants import BLOCKLIST_GROUP
+from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import (
@@ -36,6 +38,7 @@ class BlocklistAddCmd(
     description="commands.blocklist.add.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    hooks=[early_ephemeral_defer],
 ):
     suggestion_id = lightbulb.string(
         "commands.blocklist.add.options.suggestion_id.name",
@@ -52,7 +55,6 @@ class BlocklistAddCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
@@ -139,6 +141,7 @@ class BlocklistRemoveCmd(
     description="commands.blocklist.remove.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    hooks=[early_ephemeral_defer],
 ):
     suggestion_id = lightbulb.string(
         "commands.blocklist.remove.options.suggestion_id.name",
@@ -162,7 +165,6 @@ class BlocklistRemoveCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,

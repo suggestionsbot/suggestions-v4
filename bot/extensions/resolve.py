@@ -1,3 +1,4 @@
+from bot.hooks import early_ephemeral_defer
 import io
 import logging
 from typing import cast
@@ -271,6 +272,7 @@ class ResolveCmd(
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
     default_member_permissions=hikari.Permissions.MANAGE_GUILD,
+    hooks=[early_ephemeral_defer],
 ):
     suggestion_id = lightbulb.string(
         "commands.resolve.options.suggestion_id.name",
@@ -326,7 +328,6 @@ class ResolveCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         sent_setup_message = await guild_config.ensure_config_is_setup(
             ctx=ctx, locale=user_config.primary_language
         )
@@ -390,6 +391,7 @@ class ApproveCmd(
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
     default_member_permissions=hikari.Permissions.MANAGE_GUILD,
+    hooks=[early_ephemeral_defer],
 ):
     suggestion_id = lightbulb.string(
         "commands.approve.options.suggestion_id.name",
@@ -418,7 +420,6 @@ class ApproveCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         sent_setup_message = await guild_config.ensure_config_is_setup(
             ctx=ctx, locale=user_config.primary_language
         )
@@ -482,6 +483,7 @@ class RejectCmd(
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
     default_member_permissions=hikari.Permissions.MANAGE_GUILD,
+    hooks=[early_ephemeral_defer],
 ):
     suggestion_id = lightbulb.string(
         "commands.reject.options.suggestion_id.name",
@@ -510,7 +512,6 @@ class RejectCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         sent_setup_message = await guild_config.ensure_config_is_setup(
             ctx=ctx, locale=user_config.primary_language
         )

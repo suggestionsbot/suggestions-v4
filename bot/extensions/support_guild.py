@@ -6,6 +6,7 @@ import lightbulb
 from humanize import naturaldate
 
 from bot.constants import EMBED_COLOR
+from bot.hooks import early_ephemeral_defer
 from bot.tables import InternalErrors
 from shared.tables.mixins.audit import utc_now
 from web.constants import IS_PRODUCTION
@@ -29,6 +30,7 @@ class ErrorInformation(
     description="commands.error_info.description",
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
+    hooks=[early_ephemeral_defer],
 ):
     error_id = lightbulb.string(
         "commands.error_info.options.error_id.name",
@@ -38,7 +40,6 @@ class ErrorInformation(
 
     @lightbulb.invoke
     async def invoke(self, ctx: lightbulb.Context) -> None:
-        await ctx.defer(ephemeral=True)
         if ctx.user.id != 271612318947868673:  # noqa: PLR2004
             await ctx.respond("I'm sorry this command is only for Ethan.")
             return

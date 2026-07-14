@@ -10,6 +10,7 @@ from hikari.impl import CacheSettings, config
 from bot import overrides, utils, constants
 from bot.constants import OTEL_TRACER, LOCALISATIONS, SYNC_APPLICATION_COMMANDS
 from bot.extensions.resolve import resolve_suggestion
+from bot.hooks import AUTO_DEFER
 from bot.menus import (
     GuildConfigurationMenus,
     SuggestionMenu,
@@ -73,6 +74,7 @@ async def create_bot(  # noqa: PLR0915, C901
         default_locale=hikari.Locale.EN_GB,
         sync_commands=SYNC_APPLICATION_COMMANDS,
         localization_provider=constants.LOCALISATIONS.lightbulb_provider,
+        execution_step_order=[AUTO_DEFER, *lightbulb.DEFAULT_EXECUTION_STEP_ORDER],
     )
     client.di.registry_for(lightbulb.di.Contexts.COMMAND).register_factory(
         GuildConfigs,
@@ -255,28 +257,25 @@ async def create_bot(  # noqa: PLR0915, C901
                     )
 
                 else:
-                    with utils.start_error_span(e, "modal error handler"):
-                        internal_error: InternalErrors = (
-                            await InternalErrors.persist_error(
-                                f"Unknown Modal Key: {component_key}",
-                                command_name=component_key,
-                            )
-                        )
-                        await notify_ethan_of_something(
-                            title="Unknown Modal Event",
-                            message=f"Observed an unhandled modal event: `{component_key!r}`",
+                    internal_error: InternalErrors = await InternalErrors.persist_error(
+                        f"Unknown Modal Key: {component_key}",
+                        command_name=component_key,
+                    )
+                    await notify_ethan_of_something(
+                        title="Unknown Modal Event",
+                        message=f"Observed an unhandled modal event: `{component_key!r}`",
+                        internal_error_reference=internal_error,
+                        tags="warning",
+                    )
+                    await ctx.respond(
+                        embed=utils.error_embed(
+                            title="Unknown Modal",
+                            description=f"Please reach out to support with a screenshot of "
+                            f"this message.\n\nCustom ID: {custom_id}",
                             internal_error_reference=internal_error,
-                            tags="warning",
-                        )
-                        await ctx.respond(
-                            embed=utils.error_embed(
-                                title="Unknown Modal",
-                                description=f"Please reach out to support with a screenshot of "
-                                f"this message.\n\nCustom ID: {custom_id}",
-                                internal_error_reference=internal_error,
-                            ),
-                            ephemeral=True,
-                        )
+                        ),
+                        ephemeral=True,
+                    )
         except Exception as e:
             with utils.start_error_span(e, "modal error handler"):
                 internal_error: InternalErrors = await InternalErrors.persist_error(

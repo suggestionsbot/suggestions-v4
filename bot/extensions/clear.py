@@ -6,6 +6,7 @@ import lightbulb
 
 import shared.utils
 from bot import utils
+from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import (
@@ -40,6 +41,7 @@ class ClearCmd(
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
     default_member_permissions=hikari.Permissions.MANAGE_GUILD,
+    hooks=[early_ephemeral_defer],
 ):
     suggestion_id = lightbulb.string(
         "commands.clear.options.suggestion_id.name",
@@ -68,7 +70,6 @@ class ClearCmd(
         user_config: UserConfigs,
         localisations: Localisation,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         await CommandInvokes.create(
             user_config=user_config,
             guild_config=guild_config,
