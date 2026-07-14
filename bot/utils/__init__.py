@@ -3,7 +3,8 @@ from bot.utils.embeds import error_embed, generate_author_text
 from .otel import start_error_span
 from .queue_paginator import QueuedSuggestionsPaginator
 from .voter_paginator import ViewVotersPaginator
-from .errors import HandleClientHTTPResponse, fetch_user_avatar
+from .errors import HandleClientHTTPResponse
+from .users import fetch_user_avatar
 from .cv2 import insert_user_segment
 
 __all__ = [
