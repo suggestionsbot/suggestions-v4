@@ -28,12 +28,11 @@ class HandleClientHTTPResponse:
         exc_tb: TracebackType | None,
     ) -> bool:
         if exc_val is not None:
-            await self.handle_client_http_response(exc_val)
-            return True
+            return await self.handle_client_http_response(exc_val)
 
         return False
 
-    async def handle_client_http_response(self, exc: BaseException) -> None:
+    async def handle_client_http_response(self, exc: BaseException) -> bool:
         """Handles the various responses we've seen."""
         if isinstance(exc, hikari.ClientHTTPResponseError) and exc.code == 40005:
             internal_error: InternalErrors = await InternalErrors.persist_error(
@@ -48,6 +47,9 @@ class HandleClientHTTPResponse:
                 internal_error_reference=internal_error,
                 tags="warning",
             )
+            return True
+
+        return False
 
 
 IGNORABLE_EXCEPTION_TYPES: tuple[type[Exception], ...] = (

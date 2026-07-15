@@ -145,8 +145,12 @@ async def notify_users_of_new_suggestion(_, suggestion_id: str, guild_id: int):
                 exclude_buttons=True,
                 exclude_votes=True,
             )
-            await dm_channel.send(components=components)
-            await dm_channel.send(components=suggestion_components)
+            async with HandleClientHTTPResponse(
+                inspect.currentframe().f_code.co_name,  # ty:ignore[unresolved-attribute],
+                f"suggestion_id={suggestion.id}",
+            ):
+                await dm_channel.send(components=components)
+                await dm_channel.send(components=suggestion_components)
         except hikari.ForbiddenError:
             # I'd consider it 'fine' if the bot can't send this message
             logger.debug(
