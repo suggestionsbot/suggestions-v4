@@ -98,7 +98,7 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
         try:
             thread = await ctx.client.rest.fetch_channel(suggestion.thread_id)
             thread = cast("hikari.GuildThreadChannel", thread)
-        except hikari.NotFoundError:
+        except (hikari.NotFoundError, hikari.ForbiddenError):
             # While not ideal, we ignore the error here as
             # failing to archive a thread isn't a critical issue
             # worth crashing on. Instead, pass this to the actual
