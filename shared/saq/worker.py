@@ -62,6 +62,7 @@ async def after_process(ctx: Context):
         internal_error: InternalErrors = await InternalErrors.persist_error(
             cast("Exception", ctx["exception"]),
             command_name=ctx["job"].function,
+            extra_info=str(ctx["job"].kwargs),
         )
         await notify_ethan_of_something(
             title="SAQ Error",
