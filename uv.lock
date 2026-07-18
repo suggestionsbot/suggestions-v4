@@ -1080,7 +1080,7 @@ wheels = [
 [[package]]
 name = "hikari"
 version = "2.5.1.dev0"
-source = { git = "https://github.com/mplatypus/hikari.git?rev=feature%2Finteraction-rebuild#25cd8f93e23440a51fc764f9e14c93bda0f9a6e6" }
+source = { git = "https://github.com/mplatypus/hikari.git?rev=feature%2Fmodals-v2#c73864e36c0b3c1cc604cf587c0a351421a08ea0" }
 dependencies = [
     { name = "aiohttp" },
     { name = "attrs" },
@@ -2912,7 +2912,7 @@ requires-dist = [
     { name = "arrow", specifier = ">=1.4.0" },
     { name = "fastnanoid", specifier = ">=0.4.3" },
     { name = "function-cooldowns", specifier = ">=2.2.0" },
-    { name = "hikari", extras = ["speedups"], git = "https://github.com/mplatypus/hikari.git?rev=feature%2Finteraction-rebuild" },
+    { name = "hikari", extras = ["speedups"], git = "https://github.com/mplatypus/hikari.git?rev=feature%2Fmodals-v2" },
     { name = "hikari-lightbulb", specifier = ">=3.2.4" },
     { name = "httpx-oauth", specifier = ">=0.16.1" },
     { name = "httpx-retries", specifier = ">=0.4.5" },

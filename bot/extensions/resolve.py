@@ -643,7 +643,6 @@ class ResolveMessageCommand(
                     required=False,
                     min_length=1,
                     max_length=constants.MAX_CONTENT_LENGTH,
-                    label="response",
                 ),
             ),
         ]

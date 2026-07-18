@@ -748,7 +748,6 @@ class SuggestionMenu:
                     required=True,
                     min_length=1,
                     max_length=constants.MAX_CONTENT_LENGTH,
-                    label="suggestion",
                 ),
             ),
         ]
