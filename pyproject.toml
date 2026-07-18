@@ -111,4 +111,4 @@ target-version = ["py312"]
 profile = "black"
 
 [tool.uv.sources]
-hikari = { git = "https://github.com/mplatypus/hikari.git", rev = "feature/interaction-rebuild" }
+hikari = { git = "https://github.com/mplatypus/hikari.git", rev = "feature/modals-v2" }
