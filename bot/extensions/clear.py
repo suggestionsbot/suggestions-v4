@@ -120,6 +120,9 @@ class ClearCmd(
             suggestion.state = QueuedSuggestionStateEnum.CLEARED
 
         await suggestion.save()
+        await shared.utils.delete_autocomplete_cache_sid(
+            suggestion.sID, guild_config.guild_id
+        )
         await ctx.respond(
             localisations.get_localized_string(
                 "commands.clear.responses.cleared",

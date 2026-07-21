@@ -3,6 +3,7 @@ from .autocomplete import (
     cache_sid_in_autocomplete,
     get_sid_autocomplete_for_guild,
     delete_autocomplete_cache,
+    delete_autocomplete_cache_sid,
 )
 from .redis import (
     get_accurate_guild_count,
@@ -17,6 +18,7 @@ __all__ = [
     "cache_sid_in_autocomplete",
     "configs",
     "delete_autocomplete_cache",
+    "delete_autocomplete_cache_sid",
     "get_accurate_guild_count",
     "get_cached_interaction_id",
     "get_guild_queue_info",

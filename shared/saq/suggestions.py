@@ -7,7 +7,12 @@ import hikari
 
 from bot import constants as b_constants
 from shared import utils
-from shared.tables import Suggestions, QueuedSuggestions, SuggestionStateEnum
+from shared.tables import (
+    Suggestions,
+    QueuedSuggestions,
+    SuggestionStateEnum,
+    QueuedSuggestionStateEnum,
+)
 from shared.utils.configs import ensure_guild_config
 from web import constants
 from web.constants import REDIS_CLIENT
@@ -75,7 +80,7 @@ async def edit_suggestion_message(
             )
 
 
-async def populate_sid_autocomplete(_):
+async def populate_sid_autocomplete(ctx):
     """Populates autocomplete of all queued and regular suggestion sids when called.
 
     We shouldn't need to do this often given they add themselves but it
@@ -99,7 +104,7 @@ async def populate_sid_autocomplete(_):
 
         return base_query
 
-    await utils.delete_autocomplete_cache()
+    await utils.delete_autocomplete_cache(ctx["job"])
     for table in [Suggestions, QueuedSuggestions]:
         next_cursor = None
         has_next_queued: bool = True
@@ -138,6 +143,10 @@ async def populate_sid_autocomplete(_):
                         index="shared_sid_autocomplete_index",
                     )
                 else:
+                    if row.state == QueuedSuggestionStateEnum.CLEARED:
+                        # Dont add cleared suggestions to autocomplete
+                        continue
+
                     await utils.cache_sid_in_autocomplete(
                         guild_id=row.guild_configuration.guild_id,
                         suggestion_id=row.sID,
