@@ -16,6 +16,7 @@ from shared.tables import (
     UserConfigs,
     Suggestions,
 )
+from shared.utils import configs
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +24,14 @@ logger = logging.getLogger(__name__)
 async def notify_user_of_change(
     *,
     ctx: lightbulb.Context,
-    user_config: UserConfigs,
     guild_config: GuildConfigs,
     suggestion: Suggestions,
     localisations: Localisation,
 ) -> None:
+    user_config = await configs.ensure_user_config(
+        suggestion.author_id, locale=ctx.interaction.locale
+    )
+
     if user_config.generic_dm_messages_disabled:
         logger.debug(
             "Not dm'ing %s for a note changed on "
@@ -211,7 +215,6 @@ class NotesAddCmd(
         await notify_user_of_change(
             ctx=ctx,
             suggestion=suggestion,
-            user_config=user_config,
             guild_config=guild_config,
             localisations=localisations,
         )
