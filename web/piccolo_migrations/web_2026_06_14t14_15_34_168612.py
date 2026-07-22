@@ -37,9 +37,7 @@ DESCRIPTION = ""
 
 
 async def forwards():
-    manager = MigrationManager(
-        migration_id=ID, app_name="web", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="web", description=DESCRIPTION)
 
     manager.add_table(
         class_name="MagicLinks",
@@ -48,9 +46,7 @@ async def forwards():
         columns=None,
     )
 
-    manager.add_table(
-        class_name="Users", tablename="users", schema=None, columns=None
-    )
+    manager.add_table(class_name="Users", tablename="users", schema=None, columns=None)
 
     manager.add_table(
         class_name="OAuthEntry",
@@ -77,9 +73,7 @@ async def forwards():
         columns=None,
     )
 
-    manager.add_table(
-        class_name="Alerts", tablename="alerts", schema=None, columns=None
-    )
+    manager.add_table(class_name="Alerts", tablename="alerts", schema=None, columns=None)
 
     manager.add_column(
         table_class_name="MagicLinks",
