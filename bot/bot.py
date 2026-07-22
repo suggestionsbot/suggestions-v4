@@ -326,7 +326,7 @@ async def create_bot(  # noqa: PLR0915, C901
 
             elif custom_id.startswith(("queue_approve", "queue_reject")):
                 # Legacy physical queue
-                if not custom_id.endswith("e"):
+                if not custom_id.endswith("e") or not custom_id.endswith("t"):
                     custom_id = custom_id[:-1]
 
                 component_key = custom_id.replace("_", " ")
