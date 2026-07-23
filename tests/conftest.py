@@ -1,18 +1,21 @@
+# ruff: noqa: ANN001, ANN002
 from __future__ import annotations
+from pydantic import BaseModel, ConfigDict
 
 import datetime
+from collections.abc import Sequence, AsyncIterator
 from pathlib import Path
-from typing import Sequence, TypeVar, Type, Any, Self, AsyncIterator, cast
+from typing import TypeVar, Any, Self, cast
 from unittest import mock
 from unittest.mock import AsyncMock, Mock
 
-import httpx
-import redis.asyncio as aioredis
 import fakeredis
 import hikari
+import httpx
 import lightbulb
 import orjson
 import pytest
+import redis.asyncio as aioredis
 from litestar import Litestar
 from litestar.testing import AsyncTestClient
 from piccolo.apps.tester.commands.run import set_env_var, refresh_db
@@ -23,9 +26,10 @@ from piccolo.utils.sync import run_sync
 
 from bot.localisation import Localisation
 from shared.saq.worker import SAQ_QUEUE
-from web.controllers import AuthController, oauth_controller
-from web.tables import APIToken, Users, OAuthEntry
 from web import constants as w_constants
+from web.controllers import AuthController, oauth_controller
+from web.tables import APIToken, Users, OAuthEntry, GuildTokens
+from web.util.table_mixins import utc_now
 
 T = TypeVar("T")
 
@@ -102,7 +106,7 @@ async def redis_client(monkeypatch) -> aioredis.Redis:
     redis_client = CustomFakedRedis()
     await redis_client.flushdb()
     monkeypatch.setattr(w_constants, "REDIS_CLIENT", redis_client)
-    return cast(aioredis.Redis, cast(object, redis_client))
+    return cast("aioredis.Redis", cast("object", redis_client))
 
 
 @pytest.fixture(scope="function")
@@ -127,7 +131,6 @@ class AsyncContextManagerMock:
 
     async def __aexit__(self, exc_type, exc, tb):
         """Exit async context manager."""
-        pass
 
     def request(self, *args, **kwargs):
         """Return mock to support chaining."""
@@ -156,7 +159,7 @@ async def test_client() -> AsyncIterator[AsyncTestClient[Litestar]]:
 
 
 async def prepare_command(
-    cls: Type[T],
+    cls: type[T],
     localisations: Localisation,
     options: Sequence[hikari.CommandInteractionOption] = None,
 ) -> (T, lightbulb.Context):
@@ -168,10 +171,19 @@ async def prepare_command(
         ctx.options = options
 
     cls_instance: T = cls()
-    cls_instance._set_context(ctx)  # noqa
+    cls_instance._set_context(ctx)
     await cls_instance._resolve_options()
 
     return cls_instance, ctx
+
+
+class GuildTokenT(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    subscription_id: str
+    used_for_guild: int | None = None
+    user: Users
+    expires_at: datetime.datetime = utc_now()
 
 
 class BaseGiven:
@@ -217,6 +229,17 @@ class BaseGiven:
             )
         else:
             self.data["user"] = Users.objects().get(Users.email == email).run_sync()
+        return self
+
+    def x_guild_tokens_exist(self, *ids: GuildTokenT) -> Self:
+        for gtt in ids:
+            gt = GuildTokens(
+                subscription_id=gtt.subscription_id,
+                user=gtt.user,
+                used_for_guild=gtt.used_for_guild,
+                expires_at=gtt.expires_at,
+            )
+            gt.save().run_sync()
         return self
 
     @property
@@ -268,7 +291,7 @@ class BaseWhen:
             data.json.return_value = self.data.get("users/@me/guilds", [])
             return data
 
-        elif url == "https://discord.com/api/users/@me":
+        if url == "https://discord.com/api/users/@me":
             data.status_code = 200
             data.json.return_value = self.data["users/@me"]
             return data
