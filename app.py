@@ -72,11 +72,13 @@ async def admin(scope: "Scope", receive: "Receive", send: "Send") -> None:
 
 
 async def configure_rest_client_start():
-    await constants.DISCORD_REST_CLIENT.start()
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        await constants.DISCORD_REST_CLIENT.start()
 
 
 async def configure_rest_client_close():
-    await constants.DISCORD_REST_CLIENT.close()
+    if "PYTEST_CURRENT_TEST" not in os.environ:
+        await constants.DISCORD_REST_CLIENT.close()
 
 
 async def open_database_connection_pool():
@@ -244,8 +246,8 @@ csrf_config = CSRFConfig(
     # Aptly named so it doesnt clash
     # with piccolo 'csrftoken' cookies
     cookie_name="csrf_token",
-    cookie_secure=True,
-    cookie_httponly=True,
+    cookie_secure=constants.IS_PRODUCTION,
+    cookie_httponly=constants.IS_PRODUCTION,
     # Exclude routes Piccolo handles itself
     exclude=[
         "/admin/",

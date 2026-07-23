@@ -4,8 +4,9 @@ from .html_template import html_template
 from .table_mixins import AuditMixin
 
 __all__ = (
+    "AuditMixin",
+    "alert",
     "get_csp",
     "html_template",
-    "alert",
-    "AuditMixin",
+    "payments"
 )
