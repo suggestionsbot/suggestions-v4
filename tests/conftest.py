@@ -1,5 +1,6 @@
 # ruff: noqa: ANN001, ANN002
 from __future__ import annotations
+from pydantic import BaseModel, ConfigDict
 
 import datetime
 from collections.abc import Sequence, AsyncIterator
@@ -27,7 +28,8 @@ from bot.localisation import Localisation
 from shared.saq.worker import SAQ_QUEUE
 from web import constants as w_constants
 from web.controllers import AuthController, oauth_controller
-from web.tables import APIToken, Users, OAuthEntry
+from web.tables import APIToken, Users, OAuthEntry, GuildTokens
+from web.util.table_mixins import utc_now
 
 T = TypeVar("T")
 
@@ -175,6 +177,15 @@ async def prepare_command(
     return cls_instance, ctx
 
 
+class GuildTokenT(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    subscription_id: str
+    used_for_guild: int | None = None
+    user: Users
+    expires_at: datetime.datetime = utc_now()
+
+
 class BaseGiven:
     data: dict[str, Any] = {}
 
@@ -218,6 +229,17 @@ class BaseGiven:
             )
         else:
             self.data["user"] = Users.objects().get(Users.email == email).run_sync()
+        return self
+
+    def x_guild_tokens_exist(self, *ids: GuildTokenT) -> Self:
+        for gtt in ids:
+            gt = GuildTokens(
+                subscription_id=gtt.subscription_id,
+                user=gtt.user,
+                used_for_guild=gtt.used_for_guild,
+                expires_at=gtt.expires_at,
+            )
+            gt.save().run_sync()
         return self
 
     @property
