@@ -3,6 +3,7 @@ import logging
 import time
 from datetime import timedelta
 
+import commons
 import hikari
 
 from bot import constants as b_constants
@@ -69,7 +70,8 @@ async def edit_suggestion_message(
             exclude_buttons=exclude_buttons,
             as_resolved=as_resolved,
         )
-        with contextlib.suppress(hikari.NotFoundError, hikari.ForbiddenError):
+
+        try:
             await client.edit_message(
                 suggestion.channel_id,
                 suggestion.message_id,
@@ -77,6 +79,19 @@ async def edit_suggestion_message(
                 # This must be set to None to clear old embeds
                 # to ensure we remain backwards compatible
                 embeds=None,
+            )
+        except hikari.NotFoundError:
+            log.error(
+                "Suggestion was not found when attempting to edit",
+                extra={"suggestion.id": suggestion_id},
+            )
+        except hikari.ForbiddenError as e:
+            log.error(
+                "Encountered ForbiddenError when attempting to edit suggestion",
+                extra={
+                    "suggestion.id": suggestion_id,
+                    "traceback": commons.exception_as_string(e),
+                },
             )
 
 
