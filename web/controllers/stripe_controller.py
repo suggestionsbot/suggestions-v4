@@ -67,16 +67,7 @@ class StripeController(Controller):
                 await payments.handle_customer_subscription_updated(event)
 
             elif event_type == "customer.subscription.deleted":
-                skus = await payments.extract_subscription_skus(event)
-                for sku in skus:
-                    if sku == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
-                        # Revoke guild premium tokens
-                        subscription_id: str = event["data"]["object"]["id"]
-                        all_objects = await GuildTokens.objects().where(
-                            GuildTokens.subscription_id == subscription_id
-                        )
-                        for gc in all_objects:
-                            await gc.invalidate()
+                await payments.handle_customer_subscription_deleted(event)
 
             elif event_type == "invoice.payment_failed":
                 # TODO Notify user they need to update their payment details

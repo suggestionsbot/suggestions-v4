@@ -16,7 +16,7 @@ PROVISION_STATUS_TYPES: Final = ("active", "trialing")
 async def extract_subscription_skus(event) -> list[str]:
     data = []
     for item in event["data"]["object"]["items"]["data"]:
-        data.append(item["price"]["id"])
+        data.append(item["price"]["id"])  # noqa: PERF401
     return data
 
 
@@ -172,3 +172,18 @@ async def handle_customer_subscription_updated(event) -> None:
                     # if stripe has a number that didnt get built in our db
                     break
                 await gc.delete().where(GuildTokens.id == gc.id)
+
+
+async def handle_customer_subscription_deleted(event) -> None:
+    """Handle the deletion of a subscription as it has ended."""
+    skus = await extract_subscription_skus(event)
+    for sku in skus:
+        if sku == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
+            # Revoke guild premium tokens
+            subscription_id: str = event["data"]["object"]["id"]
+            await GuildTokens.delete().where(
+                GuildTokens.subscription_id == subscription_id
+            )
+
+        else:
+            logger.debug("Unknown subscription sku: %s", sku)

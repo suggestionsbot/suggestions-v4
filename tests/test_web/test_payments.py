@@ -464,3 +464,91 @@ async def test_subscription_has_new_lower_quantity(
 
     gt_2 = await GuildTokens().count()
     assert gt_2 == QUANTITY_OF_ONE
+
+
+async def test_extract_subscription_skus() -> None:
+    event: EventT = deepcopy(empty_event)
+    subscription: SubscriptionT = deepcopy(empty_sub)
+    subscription["items"]["data"].append(guild_price_id)
+    subscription["items"]["data"].append(user_price_id)
+    event["data"]["object"] = subscription
+
+    r_1 = await payments.extract_subscription_skus(event)
+    assert r_1 is not None
+    assert r_1 == [STRIPE_PRICE_ID_GUILDS_MONTHLY, STRIPE_PRICE_ID_USERS_MONTHLY]
+
+
+# noinspection DuplicatedCode
+async def test_subscription_deleted_with_associated_guild_tokens(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    redis_client: aioredis.Redis,
+) -> None:
+    user = Given.user(BASE_CUSTOMER_EMAIL).object
+    Given.x_guild_tokens_exist(
+        GuildTokenT(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            user=user,
+            expires_at=EXPIRY_DATE.shift(days=5).datetime,
+        ),
+        GuildTokenT(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            user=user,
+            expires_at=EXPIRY_DATE.shift(days=5).datetime,
+        ),
+    )
+    event: EventT = deepcopy(empty_event)
+    subscription: SubscriptionT = deepcopy(empty_sub)
+    subscription["items"]["data"].append(guild_price_id)
+    subscription["items"]["data"].append(user_price_id)
+    event["data"]["object"] = subscription
+    When.stripe_subscription_is_patched_with_(monkeypatch, subscription)
+
+    gt_1 = await GuildTokens().count()
+    assert gt_1 == QUANTITY_OF_TWO
+
+    with caplog.at_level(logging.DEBUG):
+        await payments.handle_customer_subscription_deleted(event)
+
+    gt_2 = await GuildTokens().count()
+    assert gt_2 == 0
+
+
+async def test_subscription_deleted_with_no_associated_guild_tokens(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    redis_client: aioredis.Redis,
+) -> None:
+    event: EventT = deepcopy(empty_event)
+    subscription: SubscriptionT = deepcopy(empty_sub)
+    subscription["items"]["data"].append(guild_price_id)
+    subscription["items"]["data"].append(user_price_id)
+    event["data"]["object"] = subscription
+
+    gt_1 = await GuildTokens().count()
+    assert gt_1 == 0
+
+    with caplog.at_level(logging.DEBUG):
+        await payments.handle_customer_subscription_deleted(event)
+
+    gt_2 = await GuildTokens().count()
+    assert gt_2 == 0
+
+
+async def test_subscription_deleted_with_no_guild_sku(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    redis_client: aioredis.Redis,
+) -> None:
+    # Once we add other SKUs this will break
+    event: EventT = deepcopy(empty_event)
+    subscription: SubscriptionT = deepcopy(empty_sub)
+    subscription["items"]["data"].append(user_price_id)
+    event["data"]["object"] = subscription
+
+    with caplog.at_level(logging.DEBUG):
+        await payments.handle_customer_subscription_deleted(event)
+
+    assert caplog.messages == [
+        f"Unknown subscription sku: {STRIPE_PRICE_ID_USERS_MONTHLY}"
+    ]
