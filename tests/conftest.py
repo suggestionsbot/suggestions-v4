@@ -91,6 +91,9 @@ class CustomFakedRedis:
     async def get(self, name):
         return self._redis_client.get(name)
 
+    async def getdel(self, name):
+        return self._redis_client.getdel(name)
+
     async def set(self, name, value, ex=None):
         return self._redis_client.set(name, value, ex=ex)
 

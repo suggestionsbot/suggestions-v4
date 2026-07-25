@@ -39,7 +39,7 @@ async def fulfil_guild_purchase(subscription_id: str, *, user: Users) -> None:
         # Guild is a month so give them this for now and
         # invoice.paid will go update it anyway
         subscription = await stripe.Subscription.retrieve_async(subscription_id)
-        expires_at_redis = await constants.REDIS_CLIENT.getdel(
+        expires_at_redis = await constants.REDIS_CLIENT.getdel(  # TODO Remove entirely
             f"stripe:invoice_paid:{subscription_id}"
         )
         if expires_at_redis is None:
@@ -56,14 +56,40 @@ async def fulfil_guild_purchase(subscription_id: str, *, user: Users) -> None:
                 # cart that also contains other items which have been purchased
                 #
                 # equivalant methods should already have been called for say user tokens
+                logger.debug(
+                    "Observed price id '%s' not needing to be "
+                    "handled by fulfil_guild_purchase",
+                    item["price"]["id"],
+                    extra={
+                        "user.id": user.id,
+                        "user.email": user.email,
+                        "stripe.subscription.id": subscription_id,
+                    },
+                )
                 continue
 
+            sub_expires_at = arrow.get(item["current_period_end"]).shift(days=5)
             for _ in range(item["quantity"]):
                 # Make one token per entry
                 guild_token = GuildTokens(
                     subscription_id=subscription_id,
                     user=user,
                     used_for_guild=None,
-                    expires_at=expires_at,
+                    expires_at=sub_expires_at.datetime,
                 )
                 await guild_token.save()
+
+            logger.debug(
+                "Created %s GuildTokens for subscription '%s' and data "
+                "'%s' for user '%s (%s)'",
+                item["quantity"],
+                subscription_id,
+                item["id"],
+                user.id,
+                user.email,
+                extra={
+                    "user.id": user.id,
+                    "user.email": user.email,
+                    "stripe.subscription.id": subscription_id,
+                },
+            )
