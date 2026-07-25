@@ -60,18 +60,8 @@ class StripeController(Controller):
         # ):
         try:
             if event_type == "customer.subscription.created":
-                # Create new subscriptions
-                customer_id: str = event["data"]["object"]["customer"]
-                customer = await stripe.Customer.retrieve_async(customer_id)
-                user_from_session = await Users.objects().get(
-                    Users.email == customer["email"]
-                )
-                assert user_from_session is not None
-                subscription_id: str = event["data"]["object"]["id"]
-                await payments.fulfil_guild_purchase(
-                    subscription_id,
-                    user=user_from_session,
-                )
+                # New subscription was created that may or may not be paid for
+                await payments.handle_customer_subscription_created(event)
 
             elif event_type == "customer.subscription.updated":
                 # Two key cases are increase or decrease quantity
@@ -144,6 +134,10 @@ class StripeController(Controller):
                         for gc in all_objects:
                             await gc.invalidate()
 
+            elif event_type == "invoice.payment_failed":
+                # TODO Notify user they need to update their payment details
+                pass
+
             elif event_type == "invoice.paid":
                 for line_item in event["data"]["object"]["lines"]:
                     if (
@@ -207,7 +201,7 @@ class StripeController(Controller):
         checkout_session = await stripe.checkout.Session.retrieve_async(
             checkout_session_id
         )
-        await payments.fulfil_guild_purchase(
+        await payments.handle_customer_subscription_created(
             checkout_session["subscription"], user=request.user
         )
         alert(

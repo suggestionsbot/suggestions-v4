@@ -17,7 +17,13 @@ async def extract_subscription_skus(event) -> list[str]:
     return data
 
 
-async def fulfil_guild_purchase(subscription_id: str, *, user: Users) -> None:
+async def handle_customer_subscription_created(event) -> None:
+    customer_id: str = event["data"]["object"]["customer"]
+    customer = await stripe.Customer.retrieve_async(customer_id)
+    user = await Users.objects().get(Users.email == customer["email"])
+    assert user is not None
+    subscription_id: str = event["data"]["object"]["id"]
+
     # noinspection protected-member
     async with GuildTokens._meta.db.transaction():
         does_exist = await GuildTokens.exists().where(
@@ -36,20 +42,7 @@ async def fulfil_guild_purchase(subscription_id: str, *, user: Users) -> None:
             )
             return
 
-        # Guild is a month so give them this for now and
-        # invoice.paid will go update it anyway
         subscription = await stripe.Subscription.retrieve_async(subscription_id)
-        expires_at_redis = await constants.REDIS_CLIENT.getdel(  # TODO Remove entirely
-            f"stripe:invoice_paid:{subscription_id}"
-        )
-        if expires_at_redis is None:
-            # Invoice.paid event will handle
-            expires_at = utc_now()
-        else:
-            assert isinstance(expires_at_redis, bytes)
-            expires_at = arrow.get(expires_at_redis.decode("utf-8"))
-
-        # expires_at = arrow.get(utc_now()).shift(months=1, days=5).datetime
         for item in subscription["items"]["data"]:
             if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
                 # We expect each fulfil to be able to receive a checkout
@@ -68,7 +61,14 @@ async def fulfil_guild_purchase(subscription_id: str, *, user: Users) -> None:
                 )
                 continue
 
-            sub_expires_at = arrow.get(item["current_period_end"]).shift(days=5)
+            # invoice.paid will also update the expiry to be more correct as required
+            if subscription["status"] in ("active", "trialing"):
+                sub_expires_at = arrow.get(item["current_period_end"]).shift(days=5)
+            else:
+                # Create the entry but wait for invoice.paid
+                # to actually enable it
+                sub_expires_at = arrow.get(utc_now())
+
             for _ in range(item["quantity"]):
                 # Make one token per entry
                 guild_token = GuildTokens(
