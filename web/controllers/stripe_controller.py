@@ -11,6 +11,8 @@ from litestar.response import Template, Redirect
 from starlette.datastructures import State
 from starlette.responses import Response
 
+from bot.tables import InternalErrors
+from shared.utils.ntfy import notify_ethan_of_something
 from web import constants
 from web.controllers import AuthController
 from web.middleware import EnsureAuth, EnsureAdmin
@@ -56,129 +58,143 @@ class StripeController(Controller):
         #     "checkout.session.completed",
         #     "checkout.session.async_payment_succeeded",
         # ):
-        if event_type == "customer.subscription.created":
-            # Create new subscriptions
-            customer_id: str = event["data"]["object"]["customer"]
-            customer = await stripe.Customer.retrieve_async(customer_id)
-            user_from_session = await Users.objects().get(
-                Users.email == customer["email"]
-            )
-            assert user_from_session is not None
-            subscription_id: str = event["data"]["object"]["id"]
-            await payments.fulfil_guild_purchase(
-                subscription_id,
-                user=user_from_session,
-            )
-
-        elif event_type == "customer.subscription.updated":
-            # Two key cases are increase or decrease quantity
-            for item in event["data"]["object"]["items"]["data"]:
-                if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
-                    # We expect each fulfil to be able to receive a checkout
-                    # cart that also contains other items which have been purchased
-                    continue
-
-                subscription_id = item["subscription"]
-                stripe_total = item["quantity"]
-                current_total = await GuildTokens.count().where(
-                    GuildTokens.subscription_id == subscription_id
+        try:
+            if event_type == "customer.subscription.created":
+                # Create new subscriptions
+                customer_id: str = event["data"]["object"]["customer"]
+                customer = await stripe.Customer.retrieve_async(customer_id)
+                user_from_session = await Users.objects().get(
+                    Users.email == customer["email"]
                 )
-                if stripe_total == current_total:
-                    # Something else changed
-                    continue
+                assert user_from_session is not None
+                subscription_id: str = event["data"]["object"]["id"]
+                await payments.fulfil_guild_purchase(
+                    subscription_id,
+                    user=user_from_session,
+                )
 
-                elif stripe_total > current_total:
-                    # We need more
-                    log.debug(
-                        "User increased guilds on current subscription",
-                        extra={"stripe.subscription.id": subscription_id},
-                    )
-                    customer = await stripe.Customer.retrieve_async(
-                        event["data"]["object"]["customer"]
-                    )
-                    user_from_session = await Users.objects().get(
-                        Users.email == customer["email"]
-                    )
-                    expires_at = (
-                        arrow.get(item["current_period_end"]).shift(days=5).datetime
-                    )
-                    for _ in range(stripe_total - current_total):
-                        guild_token = GuildTokens(
-                            subscription_id=subscription_id,
-                            user=user_from_session,
-                            used_for_guild=None,
-                            expires_at=expires_at,
-                        )
-                        await guild_token.save()
-
-                elif stripe_total < current_total:
-                    # we need less
-                    log.debug(
-                        "User decreased guilds on current subscription",
-                        extra={"stripe.subscription.id": subscription_id},
-                    )
-                    all_gc = await GuildTokens.objects().where(
-                        GuildTokens.subscription_id == subscription_id
-                    )
-                    for i in range(current_total - stripe_total):
-                        try:
-                            gc = all_gc[i]
-                        except IndexError:
-                            # sometimes this gets out of sync
-                            # if stripe has a number that didnt get built in our db
-                            break
-                        await gc.delete().where(GuildTokens.id == gc.id)
-
-        elif event_type == "customer.subscription.deleted":
-            skus = await payments.extract_subscription_skus(event)
-            for sku in skus:
-                if sku == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
-                    # Revoke guild premium tokens
-                    subscription_id: str = event["data"]["object"]["id"]
-                    all_objects = await GuildTokens.objects().where(
-                        GuildTokens.subscription_id == subscription_id
-                    )
-                    for gc in all_objects:
-                        await gc.invalidate()
-
-        elif event_type == "invoice.paid":
-            for line_item in event["data"]["object"]["lines"]:
-                if (
-                    line_item["pricing"]["price_details"]["price"]
-                    == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
-                ):
-                    subscription_id = line_item["parent"]["subscription_item_details"][
-                        "subscription"
-                    ]
-                    subscription = await stripe.Subscription.retrieve_async(
-                        subscription_id
-                    )
-                    guild_items = [
-                        i
-                        for i in subscription["items"]
-                        if i["price"]["id"] == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
-                    ]
-                    if len(guild_items) == 0:
-                        log.critical("Expected at-least one guild sku, found none")
+            elif event_type == "customer.subscription.updated":
+                # Two key cases are increase or decrease quantity
+                for item in event["data"]["object"]["items"]["data"]:
+                    if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
+                        # We expect each fulfil to be able to receive a checkout
+                        # cart that also contains other items which have been purchased
                         continue
 
-                    expires_at = (
-                        arrow.get(guild_items[0]["current_period_end"])
-                        .shift(days=5)
-                        .datetime
-                    )
-                    # For if invoice event comes before subscription create
-                    await constants.REDIS_CLIENT.set(
-                        f"stripe:invoice_paid:{subscription_id}",
-                        expires_at.isoformat(),
-                        ex=datetime.timedelta(hours=1),
-                    )
-                    all_objects = await GuildTokens.objects().where(
+                    subscription_id = item["subscription"]
+                    stripe_total = item["quantity"]
+                    current_total = await GuildTokens.count().where(
                         GuildTokens.subscription_id == subscription_id
                     )
-                    for gc in all_objects:
-                        gc.expires_at = expires_at
-                        await gc.save()
+                    if stripe_total == current_total:
+                        # Something else changed
+                        continue
+
+                    elif stripe_total > current_total:
+                        # We need more
+                        log.debug(
+                            "User increased guilds on current subscription",
+                            extra={"stripe.subscription.id": subscription_id},
+                        )
+                        customer = await stripe.Customer.retrieve_async(
+                            event["data"]["object"]["customer"]
+                        )
+                        user_from_session = await Users.objects().get(
+                            Users.email == customer["email"]
+                        )
+                        expires_at = (
+                            arrow.get(item["current_period_end"]).shift(days=5).datetime
+                        )
+                        for _ in range(stripe_total - current_total):
+                            guild_token = GuildTokens(
+                                subscription_id=subscription_id,
+                                user=user_from_session,
+                                used_for_guild=None,
+                                expires_at=expires_at,
+                            )
+                            await guild_token.save()
+
+                    elif stripe_total < current_total:
+                        # we need less
+                        log.debug(
+                            "User decreased guilds on current subscription",
+                            extra={"stripe.subscription.id": subscription_id},
+                        )
+                        all_gc = await GuildTokens.objects().where(
+                            GuildTokens.subscription_id == subscription_id
+                        )
+                        for i in range(current_total - stripe_total):
+                            try:
+                                gc = all_gc[i]
+                            except IndexError:
+                                # sometimes this gets out of sync
+                                # if stripe has a number that didnt get built in our db
+                                break
+                            await gc.delete().where(GuildTokens.id == gc.id)
+
+            elif event_type == "customer.subscription.deleted":
+                skus = await payments.extract_subscription_skus(event)
+                for sku in skus:
+                    if sku == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
+                        # Revoke guild premium tokens
+                        subscription_id: str = event["data"]["object"]["id"]
+                        all_objects = await GuildTokens.objects().where(
+                            GuildTokens.subscription_id == subscription_id
+                        )
+                        for gc in all_objects:
+                            await gc.invalidate()
+
+            elif event_type == "invoice.paid":
+                for line_item in event["data"]["object"]["lines"]:
+                    if (
+                        line_item["pricing"]["price_details"]["price"]
+                        == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
+                    ):
+                        subscription_id = line_item["parent"][
+                            "subscription_item_details"
+                        ]["subscription"]
+                        subscription = await stripe.Subscription.retrieve_async(
+                            subscription_id
+                        )
+                        guild_items = [
+                            i
+                            for i in subscription["items"]
+                            if i["price"]["id"]
+                            == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
+                        ]
+                        if len(guild_items) == 0:
+                            log.critical("Expected at-least one guild sku, found none")
+                            continue
+
+                        expires_at = (
+                            arrow.get(guild_items[0]["current_period_end"])
+                            .shift(days=5)
+                            .datetime
+                        )
+                        # For if invoice event comes before subscription create
+                        await constants.REDIS_CLIENT.set(
+                            f"stripe:invoice_paid:{subscription_id}",
+                            expires_at.isoformat(),
+                            ex=datetime.timedelta(hours=1),
+                        )
+                        all_objects = await GuildTokens.objects().where(
+                            GuildTokens.subscription_id == subscription_id
+                        )
+                        for gc in all_objects:
+                            gc.expires_at = expires_at
+                            await gc.save()
+        except Exception as e:
+            internal_error: InternalErrors = await InternalErrors.persist_error(
+                e,
+                command_name="Stripe Webhook",
+                extra_info=f"{event_type=} event_id={event['id']}",
+            )
+            await notify_ethan_of_something(
+                title="Error in stripe webhook",
+                message=f"Observed {e.__class__.__name__} in the stripe webook",
+                internal_error_reference=internal_error,
+                tags="warning",
+            )
 
         print(event["type"])
 
