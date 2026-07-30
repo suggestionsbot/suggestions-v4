@@ -70,6 +70,6 @@ async def notify_guild_of_missing_suggestion_permissions(_, guild_id: int) -> No
         ex=timedelta(hours=6),
     )
     logger.debug(
-        "Send message to guild update channel about missing permissions",
+        "Queued telling a user about suggestion permission issues",
         extra={"guild.id": guild_id},
     )

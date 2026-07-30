@@ -246,6 +246,15 @@ class SuggestionMenu:
                     guild_config.primary_language,
                 )
             )
+            logger.debug(
+                "Telling user that there has been permissions issues recently",
+                extra={
+                    "interaction.user.id": ctx.user.id,
+                    "interaction.user.username": ctx.user.display_name,
+                    "interaction.guild.id": ctx.guild_id,
+                    "suggestion.id": suggestion.sID,
+                },
+            )
 
         if (
             ma := await MessageAddons.get_message(
