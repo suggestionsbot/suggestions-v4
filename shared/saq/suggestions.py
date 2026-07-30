@@ -1,3 +1,4 @@
+from shared.saq.worker import SAQ_QUEUE
 import contextlib
 import logging
 import time
@@ -92,6 +93,10 @@ async def edit_suggestion_message(
                     "suggestion.id": suggestion_id,
                     "traceback": commons.exception_as_string(e),
                 },
+            )
+            await SAQ_QUEUE.enqueue(
+                "notify_guild_of_missing_suggestion_permissions",
+                guild_id=guild_config.guild_id,
             )
 
 

@@ -32,6 +32,7 @@ from web import constants, guards
 from shared.saq import worker as saq_worker
 from shared.saq import suggestions as suggestions_worker
 from shared.saq import user_notifications as suggestions_user_notifications_worker
+from shared.saq import error_propagation as error_propagation_worker
 from web.admin_portal import configure_piccolo_admin
 from web.constants import IS_PRODUCTION
 from web.controllers import (
@@ -187,6 +188,7 @@ saq = SAQPlugin(
                     suggestions_user_notifications_worker.suggestion_resolved_notifications,
                     suggestions_user_notifications_worker.notify_users_of_new_suggestion,
                     suggestions_user_notifications_worker.queued_suggestion_resolved_notifications,
+                    error_propagation_worker.notify_guild_of_missing_suggestion_permissions,
                 ],
                 # https://crontab.guru
                 scheduled_tasks=[

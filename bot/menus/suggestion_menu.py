@@ -1,4 +1,5 @@
 from __future__ import annotations
+from web.constants import REDIS_CLIENT
 
 import contextlib
 import io
@@ -230,6 +231,31 @@ class SuggestionMenu:
         content.write(
             localisations.get_localized_string(key, user_config.primary_language)
         )
+
+        need_to_tell_user_about_perms_key: str = (
+            f"errors:missing_suggestion_perms:{guild_config.guild_id}"
+        )
+        need_to_tell_user_about_perms = await REDIS_CLIENT.getdel(
+            need_to_tell_user_about_perms_key
+        )
+        if need_to_tell_user_about_perms is not None:
+            content.write("\n\n")
+            content.write(
+                localisations.get_localized_string(
+                    "errors.missing_suggestion_edit_permissions.message",
+                    guild_config.primary_language,
+                )
+            )
+            logger.debug(
+                "Telling user that there has been permissions issues recently",
+                extra={
+                    "interaction.user.id": ctx.user.id,
+                    "interaction.user.username": ctx.user.display_name,
+                    "interaction.guild.id": ctx.guild_id,
+                    "suggestion.id": suggestion.sID,
+                },
+            )
+
         if (
             ma := await MessageAddons.get_message(
                 user_config,
