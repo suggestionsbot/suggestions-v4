@@ -243,8 +243,8 @@ class CustomGatewayLightbulbClient(lightbulb.GatewayEnabledClient):
                         "CallableOnCooldown",
                         extra={
                             "interaction.guild.id": interaction.guild_id,
-                            "interaction.author.id": interaction.user.id,
-                            "interaction.author.global_name": interaction.user.global_name,  # noqa: E501
+                            "interaction.user.id": interaction.user.id,
+                            "interaction.user.global_name": interaction.user.global_name,  # noqa: E501
                             "error.code": ErrorCode.COMMAND_ON_COOLDOWN.value,
                         },
                     )

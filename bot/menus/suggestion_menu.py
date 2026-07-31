@@ -118,8 +118,8 @@ class SuggestionMenu:
                 "SuggestionNotFound",
                 extra={
                     "interaction.guild.id": ctx.guild_id,
-                    "interaction.author.id": ctx.user.id,
-                    "interaction.author.global_name": ctx.user.global_name,
+                    "interaction.user.id": ctx.user.id,
+                    "interaction.user.global_name": ctx.user.global_name,
                 },
             )
             await ctx.respond(

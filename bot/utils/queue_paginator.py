@@ -123,8 +123,8 @@ class QueuedSuggestionsPaginator:
             log.warning(
                 "Hit QueueImbalance",
                 extra={
-                    "interaction.author.id": self.original_interaction.user.id,
-                    "interaction.author.global_name": self.original_interaction.user.global_name,  # noqa: E501
+                    "interaction.user.id": self.original_interaction.user.id,
+                    "interaction.user.global_name": self.original_interaction.user.global_name,  # noqa: E501
                     "interaction.guild.id": self.original_interaction.guild_id,
                 },
             )

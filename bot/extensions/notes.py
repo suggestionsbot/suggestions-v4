@@ -41,7 +41,7 @@ async def notify_user_of_change(
             extra={
                 "interaction.guild.id": ctx.guild_id,
                 "suggestion.id": suggestion.sID,
-                "interaction.author.id": suggestion.author_id,
+                "interaction.user.id": suggestion.author_id,
             },
         )
         return
@@ -176,8 +176,8 @@ class NotesAddCmd(
                 "SuggestionNotFound",
                 extra={
                     "interaction.guild.id": ctx.guild_id,
-                    "interaction.author.id": ctx.user.id,
-                    "interaction.author.global_name": ctx.user.global_name,
+                    "interaction.user.id": ctx.user.id,
+                    "interaction.user.global_name": ctx.user.global_name,
                 },
             )
             await ctx.respond(
@@ -261,8 +261,8 @@ class NotesRemoveCmd(
                 "SuggestionNotFound",
                 extra={
                     "interaction.guild.id": ctx.guild_id,
-                    "interaction.author.id": ctx.user.id,
-                    "interaction.author.global_name": ctx.user.global_name,
+                    "interaction.user.id": ctx.user.id,
+                    "interaction.user.global_name": ctx.user.global_name,
                 },
             )
             await ctx.respond(

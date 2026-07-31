@@ -79,8 +79,8 @@ class BlocklistAddCmd(
                     "SuggestionNotFound",
                     extra={
                         "interaction.guild.id": ctx.guild_id,
-                        "interaction.author.id": ctx.user.id,
-                        "interaction.author.global_name": ctx.user.global_name,
+                        "interaction.user.id": ctx.user.id,
+                        "interaction.user.global_name": ctx.user.global_name,
                     },
                 )
                 await ctx.respond(
@@ -124,8 +124,8 @@ class BlocklistAddCmd(
             author_to_block,
             ctx.guild_id,
             extra={
-                "interaction.author.id": ctx.interaction.user.id,
-                "interaction.author.global_name": (
+                "interaction.user.id": ctx.interaction.user.id,
+                "interaction.user.global_name": (
                     ctx.interaction.user.global_name or ""
                 ),
                 "interaction.guild.id": ctx.guild_id,
@@ -213,8 +213,8 @@ class BlocklistRemoveCmd(
                         "SuggestionNotFound",
                         extra={
                             "interaction.guild.id": ctx.guild_id,
-                            "interaction.author.id": ctx.user.id,
-                            "interaction.author.global_name": ctx.user.global_name,
+                            "interaction.user.id": ctx.user.id,
+                            "interaction.user.global_name": ctx.user.global_name,
                         },
                     )
                     await ctx.respond(
@@ -259,8 +259,8 @@ class BlocklistRemoveCmd(
             user_to_unblock,
             ctx.guild_id,
             extra={
-                "interaction.author.id": ctx.interaction.user.id,
-                "interaction.author.global_name": (
+                "interaction.user.id": ctx.interaction.user.id,
+                "interaction.user.global_name": (
                     ctx.interaction.user.global_name or ""
                 ),
                 "interaction.guild.id": ctx.guild_id,
