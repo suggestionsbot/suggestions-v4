@@ -56,7 +56,10 @@ class SuggestionMenu:
         guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         user_config = await configs.ensure_user_config(ctx.user.id)
         sent_setup_message = await guild_config.ensure_config_is_setup(
-            ctx=ctx, locale=user_config.primary_language
+            ctx=ctx,
+            locale=user_config.primary_language,
+            # Dont need logs in suggest
+            skip_log_channel_check=True,
         )
         if sent_setup_message:
             return
