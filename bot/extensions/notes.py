@@ -159,13 +159,18 @@ class NotesAddCmd(
         )
         response = io.StringIO()
         if self.anonymously and not guild_config.allow_anonymous_moderators:
-            response.write(
+            await ctx.respond(
                 localisations.get_localized_string(
                     "commands.note.responses.not_allowed_anonymous",
                     user_config.primary_language,
-                )
+                ),
+                ephemeral=True,
+                attachment=hikari.files.Bytes(
+                    io.StringIO(self.note),
+                    "note.txt",
+                ),
             )
-            self.anonymously = False
+            return
 
         note = self.note.replace("\\n", "\n")
         suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
