@@ -11,6 +11,7 @@ from bot.constants import NOTES_GROUP, EMBED_COLOR
 from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.tables import CommandTypes, CommandInvokes
+from bot.utils.users import fetch_user_dm_channel_id
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
@@ -88,10 +89,10 @@ async def notify_user_of_change(
         ),
     ]
     try:
-        dm_channel = await ctx.client.rest.create_dm_channel(
-            hikari.Snowflake(user_config.user_id)
+        dm_channel = await fetch_user_dm_channel_id(
+            user_config.user_id, rest=ctx.client.rest
         )
-        await dm_channel.send(components=result)
+        await ctx.client.rest.create_message(dm_channel, components=result)
     except hikari.ForbiddenError:
         # I'd consider it 'fine' if the bot can't send this message
         logger.debug(
@@ -296,7 +297,6 @@ class NotesRemoveCmd(
         await notify_user_of_change(
             ctx=ctx,
             suggestion=suggestion,
-            user_config=user_config,
             guild_config=guild_config,
             localisations=localisations,
         )

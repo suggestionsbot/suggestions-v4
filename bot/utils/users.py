@@ -32,3 +32,18 @@ async def fetch_user_avatar(user_id: int, *, rest) -> hikari.URL | None:
         )
 
     return hikari.URL(url)
+
+
+async def fetch_user_dm_channel_id(
+    user_id: int, *, rest: hikari.api.RESTClient
+) -> hikari.Snowflakeish:
+    from web.constants import REDIS_CLIENT
+
+    redis_key = f"dm_channel_id:{user_id}"
+    dm_channel_id = await REDIS_CLIENT.get(redis_key)
+    if dm_channel_id is not None:
+        return int(dm_channel_id)
+
+    dm_channel = await rest.create_dm_channel(user_id)
+    await REDIS_CLIENT.set(redis_key, dm_channel.id, ex=timedelta(hours=12))
+    return dm_channel.id
