@@ -62,6 +62,9 @@ class StatsController(Controller):
             update_collection_with_row(guild_locales, row.guild_locales)
 
         actions = sort_dict_by_value(actions)
+        action_types = sort_dict_by_value(action_types)
+        user_locales = sort_dict_by_value(user_locales)
+        guild_locales = sort_dict_by_value(guild_locales)
         return html_template(
             "stats/aggregate.jinja",
             context={
