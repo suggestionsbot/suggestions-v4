@@ -123,6 +123,31 @@ class SuggestionsQueueMenu:
                 ),
             )
 
+        if guild_config.threads_for_suggestions:
+            components.append(
+                hikari.impl.LabelComponentBuilder(
+                    label=localisations.get_localized_string(
+                        "components.suggestions.thread_name.name",
+                        user_config.primary_language,
+                    ).capitalize(),
+                    description=localisations.get_localized_string(
+                        "components.suggestions.thread_name.description",
+                        user_config.primary_language,
+                    ),
+                    component=hikari.impl.TextInputBuilder(
+                        custom_id="thread_name",
+                        style=hikari.TextInputStyle.SHORT,
+                        required=False,
+                        min_length=0,
+                        max_length=50,
+                        placeholder=localisations.get_localized_string(
+                            "components.suggestions.default_thread_name",
+                            guild_config.primary_language,
+                        ),
+                    ),
+                ),
+            )
+
         return components
 
     @classmethod
@@ -210,6 +235,7 @@ class SuggestionsQueueMenu:
         guild_config: GuildConfigs,
         event: hikari.ComponentInteractionCreateEvent,
         reason: str | None = None,
+        thread_name: str | None = None,
         anonymously: bool = False,
     ) -> None:
         await ctx.defer(ephemeral=True)
@@ -223,8 +249,7 @@ class SuggestionsQueueMenu:
                 QueuedSuggestions.guild_configuration,
             ).get(
                 # This is the PK here not sID
-                QueuedSuggestions.id
-                == int(queued_suggestion_id)
+                QueuedSuggestions.id == int(queued_suggestion_id)
             )
 
             await CommandInvokes.create(
@@ -267,6 +292,7 @@ class SuggestionsQueueMenu:
                     user_config=user_config,
                     resolved_note=reason,
                     is_anonymous=anonymously,
+                    thread_name=thread_name,
                 )
 
             message: io.StringIO = io.StringIO()
@@ -299,6 +325,7 @@ class SuggestionsQueueMenu:
         event: hikari.ComponentInteractionCreateEvent,
         resolved_note: str | None,
         is_anonymous: bool,
+        thread_name: str | None,
     ) -> None:
         queued_suggestion.state = QueuedSuggestionStateEnum.APPROVED
         queued_suggestion.resolved_at = utc_now()
@@ -317,6 +344,7 @@ class SuggestionsQueueMenu:
             user_config=queued_suggestion.user_configuration,
             localisations=localisations,
             send_final_response=False,
+            thread_name=thread_name,
         )
         if suggestion is None:
             # upstream errored in a handled way

@@ -286,6 +286,7 @@ class SuggestionMenu:
         image_urls: list[str] = []
         anonymously: bool = False
         has_bad_file: bool = False
+        thread_name = None
         for entry in response_fields:
             if entry.component.custom_id == "suggestion":
                 entry.component = cast(
@@ -293,6 +294,14 @@ class SuggestionMenu:
                     entry.component,
                 )
                 suggestion_content = entry.component.value
+
+            elif entry.component.custom_id == "thread_name":
+                entry.component = cast(
+                    "TextInputInteractionComponent",
+                    entry.component,
+                )
+                if entry.component.value:
+                    thread_name = entry.component.value
 
             elif entry.component.custom_id == "anonymously":
                 entry.component = cast(
@@ -410,6 +419,7 @@ class SuggestionMenu:
             guild_config=guild_config,
             user_config=user_config,
             localisations=localisations,
+            thread_name=thread_name,
         )
 
     @classmethod
@@ -424,6 +434,7 @@ class SuggestionMenu:
         user_config: UserConfigs,
         localisations: Localisation,
         send_final_response: bool = True,
+        thread_name: str | None = None,
     ) -> Suggestions | None:
         """Specific helper for handling suggestions."""
         bot = ctx.client.app
@@ -535,10 +546,18 @@ class SuggestionMenu:
 
         if guild_config.threads_for_suggestions:
             try:
+                if thread_name is None or not thread_name:
+                    thread_name = localisations.get_localized_string(
+                        "components.suggestions.default_thread_name",
+                        guild_config.primary_language,
+                    )
+
+                # Need to inject into both user supplied and localized so do here
+                thread_name = thread_name.replace("$SID", s.sID)
                 thread = await bot.rest.create_message_thread(
                     channel,
                     message,
-                    f"Thread for suggestion {s.sID}",
+                    thread_name,
                 )
                 s.thread_id = thread.id
                 await s.save()
@@ -834,6 +853,31 @@ class SuggestionMenu:
                         min_values=1,
                         max_values=1,
                         is_required=True,
+                    ),
+                ),
+            )
+
+        if guild_config.threads_for_suggestions:
+            components.append(
+                hikari.impl.LabelComponentBuilder(
+                    label=localisations.get_localized_string(
+                        "components.suggestions.thread_name.name",
+                        user_config.primary_language,
+                    ).capitalize(),
+                    description=localisations.get_localized_string(
+                        "components.suggestions.thread_name.description",
+                        user_config.primary_language,
+                    ),
+                    component=hikari.impl.TextInputBuilder(
+                        custom_id="thread_name",
+                        style=hikari.TextInputStyle.SHORT,
+                        required=False,
+                        min_length=0,
+                        max_length=50,
+                        placeholder=localisations.get_localized_string(
+                            "components.suggestions.default_thread_name",
+                            guild_config.primary_language,
+                        ),
                     ),
                 ),
             )

@@ -177,6 +177,7 @@ async def create_bot(  # noqa: PLR0915, C901
                     resolution_state_raw: str
                     response: str | None = None
                     anonymously: bool = False
+                    thread_name = None
                     for entry in event.interaction.components:
                         if entry.component.custom_id == "state":
                             entry.component = cast(
@@ -184,12 +185,21 @@ async def create_bot(  # noqa: PLR0915, C901
                                 entry.component,
                             )
                             resolution_state_raw: str = entry.component.values[0]
+
                         elif entry.component.custom_id == "response":
                             entry.component = cast(
                                 "TextInputInteractionComponent",
                                 entry.component,
                             )
                             response = entry.component.value
+
+                        elif entry.component.custom_id == "thread_name":
+                            entry.component = cast(
+                                "TextInputInteractionComponent",
+                                entry.component,
+                            )
+                            if entry.component.value:
+                                thread_name = entry.component.value
 
                         elif entry.component.custom_id == "anonymously":
                             entry.component = cast(
@@ -207,11 +217,13 @@ async def create_bot(  # noqa: PLR0915, C901
                         localisations=LOCALISATIONS,
                         event=event,
                         reason=response,
+                        thread_name=thread_name,
                     )
 
                 elif custom_id.startswith("resolve_modal"):
                     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-                        suggestion_id, guild_config.guild_id  # noqa
+                        suggestion_id,
+                        guild_config.guild_id,  # noqa
                     )
                     resolution_state_raw: str
                     response: str | None = None
