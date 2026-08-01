@@ -96,6 +96,7 @@
                 {{ dropdown_item('API Docs', '/docs') }}
                 {% if request.user.admin %}
                     {{ dropdown_item('SAQ Queues', '/saq/') }}
+                    {{ dropdown_item('Invoke Stats', url_for('view_invoke_stats')) }}
                 {% endif %}
                 {{ end_dropdown() }}
                 {% if not is_production %}

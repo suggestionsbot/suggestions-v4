@@ -66,7 +66,7 @@ async def after_process(ctx: Context):
         )
         await notify_ethan_of_something(
             title="SAQ Error",
-            message=f"Observed an error in the following saq function: `{ctx["job"].function!r}`",
+            message=f"Observed an error in the following saq function: `{ctx['job'].function!r}`",
             internal_error_reference=internal_error,
             tags="warning",
         )
@@ -79,6 +79,7 @@ async def startup(_):
     await SAQ_QUEUE.enqueue("log_current_valid_sessions")
     await SAQ_QUEUE.enqueue("log_current_api_tokens")
     await SAQ_QUEUE.enqueue("populate_sid_autocomplete")
+    await SAQ_QUEUE.enqueue("compute_aggregate_command_invokes")
 
 
 async def shutdown(_):

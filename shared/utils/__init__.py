@@ -24,6 +24,7 @@ __all__ = [
     "get_guild_queue_info",
     "get_sid_autocomplete_for_guild",
     "ntfy",
+    "query_helpers",
     "set_cached_interaction_id",
     "upload_file_to_r2",
 ]

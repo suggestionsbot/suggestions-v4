@@ -1,3 +1,5 @@
+from typing import cast
+
 from shared.saq.worker import SAQ_QUEUE
 import contextlib
 import logging
@@ -9,6 +11,7 @@ import hikari
 
 from bot import constants as b_constants
 from shared import utils
+from shared.utils import query_helpers
 from shared.tables import (
     Suggestions,
     QueuedSuggestions,
@@ -106,77 +109,43 @@ async def populate_sid_autocomplete(ctx):
     We shouldn't need to do this often given they add themselves but it
     will help ensure the consistency of data if I miss something
     """
-    page_size = 500
-
-    async def build_base_query(
-        *,
-        table_class,
-        prefetch_cols,
-        order_by,
-        cursor_col,
-        next_cursor_id: str | None,
-    ):
-        base_query = (
-            table_class.objects(*prefetch_cols).limit(page_size + 1).order_by(order_by)
-        )
-        if next_cursor_id is not None:
-            base_query = base_query.where(cursor_col >= next_cursor_id)
-
-        return base_query
-
     await utils.delete_autocomplete_cache(ctx["job"])
     for table in [Suggestions, QueuedSuggestions]:
-        next_cursor = None
-        has_next_queued: bool = True
-        while has_next_queued:
-            query = await build_base_query(
-                table_class=table,
-                prefetch_cols=[table.guild_configuration],
-                order_by=table.id,
-                cursor_col=table.id,
-                next_cursor_id=next_cursor,
-            )
+        async for row in query_helpers.iterate_over_table(
+            table,
+            [table.guild_configuration],
+        ):
+            # Won't duplicate entries if already present :)
+            if isinstance(row, Suggestions):
+                if row.state == SuggestionStateEnum.CLEARED:
+                    # Dont add cleared suggestions to autocomplete
+                    continue
 
-            rows: list = await query.run()
-            next_cursor = None
-            if len(rows) > page_size:
-                final_row = rows.pop(-1)
-                next_cursor = final_row.id
+                await utils.cache_sid_in_autocomplete(
+                    guild_id=row.guild_configuration.guild_id,
+                    suggestion_id=row.sID,
+                    index="suggestion_sid_autocomplete_index",
+                )
+                await utils.cache_sid_in_autocomplete(
+                    guild_id=row.guild_configuration.guild_id,
+                    suggestion_id=row.sID,
+                    index="shared_sid_autocomplete_index",
+                )
             else:
-                has_next_queued = False
+                if row.state == QueuedSuggestionStateEnum.CLEARED:
+                    # Dont add cleared suggestions to autocomplete
+                    continue
 
-            for row in rows:
-                # Won't duplicate entries if already present :)
-                if isinstance(row, Suggestions):
-                    if row.state == SuggestionStateEnum.CLEARED:
-                        # Dont add cleared suggestions to autocomplete
-                        continue
-
-                    await utils.cache_sid_in_autocomplete(
-                        guild_id=row.guild_configuration.guild_id,
-                        suggestion_id=row.sID,
-                        index="suggestion_sid_autocomplete_index",
-                    )
-                    await utils.cache_sid_in_autocomplete(
-                        guild_id=row.guild_configuration.guild_id,
-                        suggestion_id=row.sID,
-                        index="shared_sid_autocomplete_index",
-                    )
-                else:
-                    if row.state == QueuedSuggestionStateEnum.CLEARED:
-                        # Dont add cleared suggestions to autocomplete
-                        continue
-
-                    await utils.cache_sid_in_autocomplete(
-                        guild_id=row.guild_configuration.guild_id,
-                        suggestion_id=row.sID,
-                        index="queue_sid_autocomplete_index",
-                    )
-                    await utils.cache_sid_in_autocomplete(
-                        guild_id=row.guild_configuration.guild_id,
-                        suggestion_id=row.sID,
-                        index="shared_sid_autocomplete_index",
-                    )
+                await utils.cache_sid_in_autocomplete(
+                    guild_id=row.guild_configuration.guild_id,
+                    suggestion_id=row.sID,
+                    index="queue_sid_autocomplete_index",
+                )
+                await utils.cache_sid_in_autocomplete(
+                    guild_id=row.guild_configuration.guild_id,
+                    suggestion_id=row.sID,
+                    index="shared_sid_autocomplete_index",
+                )
 
 
 async def test_message_send(_):
