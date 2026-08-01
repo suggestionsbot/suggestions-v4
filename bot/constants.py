@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 load_dotenv()
 
-VERSION = "4.0"
+VERSION = "4.1"
 MAX_CONTENT_LENGTH = 2000
 ERROR_COLOR = Color.of((214, 48, 49))
 REJECTED_COLOR = Color.of((207, 0, 15))
