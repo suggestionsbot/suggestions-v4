@@ -12,7 +12,7 @@ from web.util import html_template, alert
 def update_collection_with_row(collection: dict, data: str) -> None:
     actions_loaded = orjson.loads(data)
     for k, v in actions_loaded.items():
-        collection[k] = v
+        collection[k] += v
 
 
 def sort_dict_by_value(data: dict) -> dict:
