@@ -229,6 +229,7 @@
   "menus.guild_configuration.base_menu.update_channel_id": "A channel the bot can send updates to about new features, permission issues, supported languages, etc",
   "menus.guild_configuration.log_menu.log_channel_id": "Select where you would like suggestion logs to be sent to.",
   "menus.guild_configuration.no": "No",
+  "menus.guild_configuration.view_docs": "View the bots documentation here",
   "menus.guild_configuration.queue_menu.overall_description": "Configure both of these settings to use a channel based suggestions queue.",
   "menus.guild_configuration.queue_menu.queued_suggestion_channel_id": "Select where you would like queued suggestions to be sent to.",
   "menus.guild_configuration.queue_menu.queued_suggestion_log_channel_id": "Select where you would like queued suggestions rejection logs to be sent to.",

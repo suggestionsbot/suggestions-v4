@@ -338,9 +338,7 @@ class GuildConfigurationMenus:
             cache_key = (
                 f"guilds:{ctx.guild_id}:channel_names:{getattr(guild_config, field)}"
             )
-            current_channel_placeholder = await t_constants.REDIS_CLIENT.get(
-                cache_key
-            )  # ty:ignore[invalid-assignment]
+            current_channel_placeholder = await t_constants.REDIS_CLIENT.get(cache_key)  # ty:ignore[invalid-assignment]
             if current_channel_placeholder is not None and isinstance(
                 current_channel_placeholder, bytes
             ):
@@ -689,7 +687,10 @@ class GuildConfigurationMenus:
                 components=[
                     hikari.impl.LinkButtonBuilder(
                         url="https://docs.suggestions.gg/docs/guild-configuration",
-                        label="View more documentation here",
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.view_docs",
+                            user_config.primary_language,
+                        ),
                     ),
                 ],
             ),
@@ -938,7 +939,10 @@ class GuildConfigurationMenus:
                 components=[
                     hikari.impl.LinkButtonBuilder(
                         url="https://docs.suggestions.gg/docs/guild-configuration",
-                        label="View the documentation here",
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.view_docs",
+                            user_config.primary_language,
+                        ),
                     ),
                 ],
             ),
@@ -1226,7 +1230,10 @@ class GuildConfigurationMenus:
                 components=[
                     hikari.impl.LinkButtonBuilder(
                         url="https://docs.suggestions.gg/docs/guild-configuration",
-                        label="View the documentation here",
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.view_docs",
+                            user_config.primary_language,
+                        ),
                     ),
                 ],
             ),

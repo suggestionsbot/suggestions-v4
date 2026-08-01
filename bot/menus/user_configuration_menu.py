@@ -208,7 +208,10 @@ class UserConfigurationMenus:
                 components=[
                     hikari.impl.LinkButtonBuilder(
                         url="https://docs.suggestions.gg/docs/user-configuration",
-                        label="View the documentation here",
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.view_docs",
+                            user_config.primary_language,
+                        ),
                     ),
                 ],
             ),
