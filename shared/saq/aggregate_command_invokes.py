@@ -156,6 +156,8 @@ def stringify_keys(data: dict) -> dict:
 async def compute_aggregate_command_invokes(
     ctx: Context, *, force_load_short_week: bool = False
 ) -> None:
+    from web.constants import REDIS_CLIENT
+
     min_datetime_str = await CommandInvokes.raw(
         "SELECT MIN(created_at) FROM command_invokes"
     )
@@ -190,6 +192,14 @@ async def compute_aggregate_command_invokes(
     else:
         # If no aggregate data, start from start
         current_week = min_week
+
+    # Expensive call, dont want to run duplicates and clog saq
+    key = "saq:compute_aggregate_command_invokes_is_running"
+    already_running = await REDIS_CLIENT.get(key)
+    if already_running:
+        return
+
+    await REDIS_CLIENT.set(key, 1, ex=datetime.timedelta(hours=6))
 
     raw_data_rows: list[RawComputedData] = []
     while not timing.is_in_the_past(current_week.datetime, max_week.datetime):
