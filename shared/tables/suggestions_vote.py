@@ -10,6 +10,7 @@ from piccolo.columns import (
     Varchar,
     LazyTableReference,
     Where,
+    Text,
 )
 from piccolo.columns.operators import Equal
 from piccolo.table import Table
@@ -41,6 +42,18 @@ class SuggestionVotes(Table, AuditMixin):
     user_id = BigInt(index=True, help_text="Who put this vote down")
     # Currently just up vote and down vote but this is future proofing
     vote_type = Varchar(length=8, choices=SuggestionsVoteTypeEnum)
+    voter_display_name_raw = Text(
+        help_text="How should we display the voter? Either name or <Anonymous>",
+        default=None,
+        null=True,
+    )
+
+    @property
+    def voter_display_name(self) -> str:
+        if self.voter_display_name_raw is not None:
+            return self.voter_display_name_raw
+
+        return f"<@{self.user_id}>"
 
     @property
     def vote_type_enum(self) -> SuggestionsVoteTypeEnum:

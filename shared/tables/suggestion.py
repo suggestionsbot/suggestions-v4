@@ -168,6 +168,12 @@ class Suggestions(Table, AuditMixin):
         )
 
     @property
+    def thread_jump_link(self) -> str | None:
+        if self.thread_id is None:
+            return None
+        return f"https://discord.com/channels/{self.guild_id}/{self.thread_id}"
+
+    @property
     def state(self) -> SuggestionStateEnum:
         return SuggestionStateEnum(self.state_raw)
 
@@ -441,6 +447,18 @@ class Suggestions(Table, AuditMixin):
                     )
                 )
             )
+            if as_resolved and self.thread_jump_link is not None:
+                components.append(
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "components.suggestions.thread_link",
+                            locale,
+                            extras={
+                                "JUMP_LINK": self.thread_jump_link,
+                            },
+                        )
+                    )
+                )
 
         extras = {
             "SID": self.footer_sid,

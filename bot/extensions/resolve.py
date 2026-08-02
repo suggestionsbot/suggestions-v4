@@ -75,14 +75,22 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
     )
     content = io.StringIO()
     if anonymously and not guild_config.allow_anonymous_moderators:
-        content.write(
+        extra = {}
+        if response is not None:
+            extra["attachment"] = hikari.files.Bytes(
+                io.StringIO(response),
+                "response.txt",
+            )
+
+        await ctx.respond(
             localisations.get_localized_string(
                 "commands.resolve.responses.not_allowed_anonymous",
                 user_config.primary_language,
-            )
+            ),
+            ephemeral=True,
+            **extra,  # ty:ignore[invalid-argument-type]
         )
-        content.write("\n\n")
-        anonymously = False
+        return
 
     suggestion.state = suggestion_state
     suggestion.resolved_at = utc_now()

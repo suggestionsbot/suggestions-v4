@@ -177,6 +177,7 @@ async def create_bot(  # noqa: PLR0915, C901
                     resolution_state_raw: str
                     response: str | None = None
                     anonymously: bool = False
+                    thread_name = None
                     for entry in event.interaction.components:
                         if entry.component.custom_id == "state":
                             entry.component = cast(
@@ -184,6 +185,7 @@ async def create_bot(  # noqa: PLR0915, C901
                                 entry.component,
                             )
                             resolution_state_raw: str = entry.component.values[0]
+
                         elif entry.component.custom_id == "response":
                             entry.component = cast(
                                 "TextInputInteractionComponent",
@@ -191,12 +193,24 @@ async def create_bot(  # noqa: PLR0915, C901
                             )
                             response = entry.component.value
 
+                        elif entry.component.custom_id == "thread_name":
+                            entry.component = cast(
+                                "TextInputInteractionComponent",
+                                entry.component,
+                            )
+                            if entry.component.value:
+                                thread_name = entry.component.value
+
                         elif entry.component.custom_id == "anonymously":
                             entry.component = cast(
                                 "TextSelectMenuInteractionComponent",
                                 entry.component,
                             )
-                            anonymously = commons.value_to_bool(entry.component.values[0])
+                            if entry.component.values:
+                                # anon by default unless you provide the value
+                                anonymously = commons.value_to_bool(
+                                    entry.component.values[0]
+                                )
 
                     await SuggestionsQueueMenu.handle_modal_interaction(
                         queued_suggestion_id=suggestion_id,
@@ -207,11 +221,13 @@ async def create_bot(  # noqa: PLR0915, C901
                         localisations=LOCALISATIONS,
                         event=event,
                         reason=response,
+                        thread_name=thread_name,
                     )
 
                 elif custom_id.startswith("resolve_modal"):
                     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
-                        suggestion_id, guild_config.guild_id  # noqa
+                        suggestion_id,
+                        guild_config.guild_id,  # noqa
                     )
                     resolution_state_raw: str
                     response: str | None = None
@@ -235,7 +251,11 @@ async def create_bot(  # noqa: PLR0915, C901
                                 "FileUploadInteractionComponent",
                                 entry.component,
                             )
-                            anonymously = commons.value_to_bool(entry.component.values[0])
+                            if entry.component.values:
+                                # anon by default unless you provide the value
+                                anonymously = commons.value_to_bool(
+                                    entry.component.values[0]
+                                )
 
                     # We know by here this is always true
                     suggestion: Suggestions = cast("Suggestions", suggestion)

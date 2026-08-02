@@ -1,6 +1,7 @@
 import os
 from urllib.parse import quote_plus
 
+import humanize
 import jinja2
 import litestar_saq
 from dotenv import load_dotenv
@@ -32,6 +33,8 @@ from web import constants, guards
 from shared.saq import worker as saq_worker
 from shared.saq import suggestions as suggestions_worker
 from shared.saq import user_notifications as suggestions_user_notifications_worker
+from shared.saq import error_propagation as error_propagation_worker
+from shared.saq import aggregate_command_invokes as aggregate_command_invokes_worker
 from web.admin_portal import configure_piccolo_admin
 from web.constants import IS_PRODUCTION
 from web.controllers import (
@@ -40,6 +43,7 @@ from web.controllers import (
     GuildController,
     StripeController,
     ErrorController,
+    StatsController,
 )
 from web.controllers import OAuthController
 from web.controllers.api import APIAlertController, APIAuthTokenController
@@ -187,6 +191,8 @@ saq = SAQPlugin(
                     suggestions_user_notifications_worker.suggestion_resolved_notifications,
                     suggestions_user_notifications_worker.notify_users_of_new_suggestion,
                     suggestions_user_notifications_worker.queued_suggestion_resolved_notifications,
+                    error_propagation_worker.notify_guild_of_missing_suggestion_permissions,
+                    aggregate_command_invokes_worker.compute_aggregate_command_invokes,
                 ],
                 # https://crontab.guru
                 scheduled_tasks=[
@@ -195,6 +201,12 @@ saq = SAQPlugin(
                     # Once per day, at the top of the day
                     CronJob(
                         saq_worker.tick,
+                        cron="0 0 * * */1",
+                        timeout=saq_worker.SAQ_TIMEOUT,
+                        retries=1,
+                    ),
+                    CronJob(
+                        aggregate_command_invokes_worker.compute_aggregate_command_invokes,
                         cron="0 0 * * */1",
                         timeout=saq_worker.SAQ_TIMEOUT,
                         retries=1,
@@ -278,6 +290,7 @@ ENVIRONMENT = jinja2.Environment(
 ENVIRONMENT.filters["quote_plus"] = lambda u: quote_plus(u)
 ENVIRONMENT.filters["fmt"] = format_datetime
 ENVIRONMENT.filters["precise_delta"] = precise_delta
+ENVIRONMENT.filters["intcomma"] = humanize.intcomma
 template_config = TemplateConfig(
     directory="web/templates",
     engine=JinjaTemplateEngine.from_environment(ENVIRONMENT),
@@ -304,6 +317,7 @@ routes = [
     GuildController,
     StripeController,
     ErrorController,
+    StatsController,
 ]
 if not constants.IS_PRODUCTION:
     routes.append(DebugController)

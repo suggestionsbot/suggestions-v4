@@ -1,4 +1,5 @@
 from __future__ import annotations
+from web.constants import REDIS_CLIENT
 
 import contextlib
 import io
@@ -55,7 +56,10 @@ class SuggestionMenu:
         guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         user_config = await configs.ensure_user_config(ctx.user.id)
         sent_setup_message = await guild_config.ensure_config_is_setup(
-            ctx=ctx, locale=user_config.primary_language
+            ctx=ctx,
+            locale=user_config.primary_language,
+            # Dont need logs in suggest
+            skip_log_channel_check=True,
         )
         if sent_setup_message:
             return
@@ -114,8 +118,8 @@ class SuggestionMenu:
                 "SuggestionNotFound",
                 extra={
                     "interaction.guild.id": ctx.guild_id,
-                    "interaction.author.id": ctx.user.id,
-                    "interaction.author.global_name": ctx.user.global_name,
+                    "interaction.user.id": ctx.user.id,
+                    "interaction.user.global_name": ctx.user.global_name,
                 },
             )
             await ctx.respond(
@@ -149,6 +153,12 @@ class SuggestionMenu:
                         suggestion=suggestion,
                         vote_type=vote,
                         user_id=ctx.user.id,
+                        voter_display_name_raw=utils.generate_author_text(
+                            ctx.user.display_name,
+                            ctx.user.id,
+                            # TODO Change later
+                            is_anonymous=False,
+                        ),
                     ),
                 )
                 .on_conflict(
@@ -169,6 +179,15 @@ class SuggestionMenu:
                     .where(SuggestionVotes.suggestion == suggestion)
                     .where(SuggestionVotes.user_id == ctx.user.id)
                 )
+
+                if vote_obj.voter_display_name_raw is None:
+                    vote_obj.voter_display_name_raw = utils.generate_author_text(
+                        ctx.user.display_name,
+                        ctx.user.id,
+                        # TODO Change later
+                        is_anonymous=False,
+                    )
+                    await vote_obj.save()
 
             if not was_created and vote_obj.vote_type == vote.value:
                 # Trying to vote again for the same item
@@ -230,6 +249,31 @@ class SuggestionMenu:
         content.write(
             localisations.get_localized_string(key, user_config.primary_language)
         )
+
+        need_to_tell_user_about_perms_key: str = (
+            f"errors:missing_suggestion_perms:{guild_config.guild_id}"
+        )
+        need_to_tell_user_about_perms = await REDIS_CLIENT.getdel(
+            need_to_tell_user_about_perms_key
+        )
+        if need_to_tell_user_about_perms is not None:
+            content.write("\n\n")
+            content.write(
+                localisations.get_localized_string(
+                    "errors.missing_suggestion_edit_permissions.message",
+                    guild_config.primary_language,
+                )
+            )
+            logger.debug(
+                "Telling user that there has been permissions issues recently",
+                extra={
+                    "interaction.user.id": ctx.user.id,
+                    "interaction.user.username": ctx.user.display_name,
+                    "interaction.guild.id": ctx.guild_id,
+                    "suggestion.id": suggestion.sID,
+                },
+            )
+
         if (
             ma := await MessageAddons.get_message(
                 user_config,
@@ -257,6 +301,7 @@ class SuggestionMenu:
         image_urls: list[str] = []
         anonymously: bool = False
         has_bad_file: bool = False
+        thread_name = None
         for entry in response_fields:
             if entry.component.custom_id == "suggestion":
                 entry.component = cast(
@@ -264,6 +309,14 @@ class SuggestionMenu:
                     entry.component,
                 )
                 suggestion_content = entry.component.value
+
+            elif entry.component.custom_id == "thread_name":
+                entry.component = cast(
+                    "TextInputInteractionComponent",
+                    entry.component,
+                )
+                if entry.component.value:
+                    thread_name = entry.component.value
 
             elif entry.component.custom_id == "anonymously":
                 entry.component = cast(
@@ -381,6 +434,7 @@ class SuggestionMenu:
             guild_config=guild_config,
             user_config=user_config,
             localisations=localisations,
+            thread_name=thread_name,
         )
 
     @classmethod
@@ -395,6 +449,7 @@ class SuggestionMenu:
         user_config: UserConfigs,
         localisations: Localisation,
         send_final_response: bool = True,
+        thread_name: str | None = None,
     ) -> Suggestions | None:
         """Specific helper for handling suggestions."""
         bot = ctx.client.app
@@ -506,10 +561,18 @@ class SuggestionMenu:
 
         if guild_config.threads_for_suggestions:
             try:
+                if thread_name is None or not thread_name:
+                    thread_name = localisations.get_localized_string(
+                        "components.suggestions.default_thread_name",
+                        guild_config.primary_language,
+                    )
+
+                # Need to inject into both user supplied and localized so do here
+                thread_name = thread_name.replace("$SID", s.sID)
                 thread = await bot.rest.create_message_thread(
                     channel,
                     message,
-                    f"Thread for suggestion {s.sID}",
+                    thread_name,
                 )
                 s.thread_id = thread.id
                 await s.save()
@@ -805,6 +868,31 @@ class SuggestionMenu:
                         min_values=1,
                         max_values=1,
                         is_required=True,
+                    ),
+                ),
+            )
+
+        if guild_config.threads_for_suggestions:
+            components.append(
+                hikari.impl.LabelComponentBuilder(
+                    label=localisations.get_localized_string(
+                        "components.suggestions.thread_name.name",
+                        user_config.primary_language,
+                    ).capitalize(),
+                    description=localisations.get_localized_string(
+                        "components.suggestions.thread_name.description",
+                        user_config.primary_language,
+                    ),
+                    component=hikari.impl.TextInputBuilder(
+                        custom_id="thread_name",
+                        style=hikari.TextInputStyle.SHORT,
+                        required=False,
+                        min_length=0,
+                        max_length=50,
+                        placeholder=localisations.get_localized_string(
+                            "components.suggestions.default_thread_name",
+                            guild_config.primary_language,
+                        ),
                     ),
                 ),
             )

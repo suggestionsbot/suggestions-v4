@@ -76,6 +76,10 @@ class InternalErrors(AuditMixin, Table):
             # Sometimes it dont got a trace??
             otel_ctx = None
 
+        traceback_for_col = traceback_for_col.replace("\x00", "")
+        if extra_info is not None:
+            extra_info = extra_info.replace("\x00", "")
+
         internal_error = cls(
             id=generate_id(),
             traceback=traceback_for_col,

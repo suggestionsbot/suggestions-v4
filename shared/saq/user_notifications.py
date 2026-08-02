@@ -5,6 +5,7 @@ import hikari
 
 from bot.constants import LOCALISATIONS
 from bot.utils import cv2, HandleClientHTTPResponse
+from bot.utils.users import fetch_user_dm_channel_id
 from shared.tables import Suggestions, QueuedSuggestions
 from shared.utils import configs
 from web import constants
@@ -14,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int):
     """Notifies users of when there queued suggestion has been resolved"""
-    suggestion: QueuedSuggestions | None = (
-        await QueuedSuggestions.fetch_queued_suggestion(suggestion_id, guild_id)
-    )
+    suggestion: (
+        QueuedSuggestions | None
+    ) = await QueuedSuggestions.fetch_queued_suggestion(suggestion_id, guild_id)
     if not suggestion:
         logger.error(
             "Queued Suggestion was none when notifying user of resolution",
@@ -29,21 +30,22 @@ async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
         try:
-            dm_channel = await client.create_dm_channel(
-                hikari.Snowflake(suggestion.author_id)
-            )
-            message_components, suggestion_components = (
-                await cv2.build_queued_user_resolution_notification(
-                    user_config=user_config, suggestion=suggestion, rest=client
-                )
+            dm_channel = await fetch_user_dm_channel_id(user_config.user_id, rest=client)
+            (
+                message_components,
+                suggestion_components,
+            ) = await cv2.build_queued_user_resolution_notification(
+                user_config=user_config, suggestion=suggestion, rest=client
             )
             async with HandleClientHTTPResponse(
                 inspect.currentframe().f_code.co_name,  # ty:ignore[unresolved-attribute],
                 f"queued_suggestion_id={suggestion.id}",
             ):
-                await dm_channel.send(components=message_components)
+                await client.create_message(dm_channel, components=message_components)
                 if suggestion_components is not None:
-                    await dm_channel.send(components=suggestion_components)
+                    await client.create_message(
+                        dm_channel, components=suggestion_components
+                    )
 
         except hikari.ForbiddenError:
             # I'd consider it 'fine' if the bot can't send this message
@@ -83,9 +85,7 @@ async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
         try:
-            dm_channel = await client.create_dm_channel(
-                hikari.Snowflake(suggestion.author_id)
-            )
+            dm_channel = await fetch_user_dm_channel_id(user_config.user_id, rest=client)
             message_components = await cv2.build_user_resolution_notification(
                 user_config=user_config, suggestion=suggestion
             )
@@ -93,7 +93,7 @@ async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int
                 inspect.currentframe().f_code.co_name,  # ty:ignore[unresolved-attribute],
                 f"suggestion_id={suggestion.id}",
             ):
-                await dm_channel.send(components=message_components)
+                await client.create_message(dm_channel, components=message_components)
 
         except (hikari.ForbiddenError,):
             # I'd consider it 'fine' if the bot can't send this message
@@ -132,9 +132,7 @@ async def notify_users_of_new_suggestion(_, suggestion_id: str, guild_id: int):
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
         try:
-            dm_channel = await client.create_dm_channel(
-                hikari.Snowflake(suggestion.author_id)
-            )
+            dm_channel = await fetch_user_dm_channel_id(user_config.user_id, rest=client)
             components = await cv2.build_new_suggestion_notification(
                 user_config=user_config, suggestion=suggestion
             )
@@ -149,8 +147,8 @@ async def notify_users_of_new_suggestion(_, suggestion_id: str, guild_id: int):
                 inspect.currentframe().f_code.co_name,  # ty:ignore[unresolved-attribute],
                 f"suggestion_id={suggestion.id}",
             ):
-                await dm_channel.send(components=components)
-                await dm_channel.send(components=suggestion_components)
+                await client.create_message(dm_channel, components=components)
+                await client.create_message(dm_channel, components=suggestion_components)
         except hikari.ForbiddenError:
             # I'd consider it 'fine' if the bot can't send this message
             logger.debug(

@@ -1,0 +1,188 @@
+{% extends "base.jinja" %}
+{% block title %}Aggregate Invoke Stats | Suggestions{% endblock %}
+{% block content %}
+    <div class="page">
+        <div class="container py-4">
+            <br>
+            {% include 'alerts.jinja' %}
+            <div class="justify-content-center">
+                <header class="hero pb-0">
+                    <div class="container">
+                        <h1 class="hero-title">Aggregate Command Invoke Data</h1>
+                        <div class="row g-xl-6">
+                            <div class="col-md-6 col-lg-4">
+                                <p class="hero-description mt-4">
+                                    A holistic view at how the bot over a given time period.
+                                    If you want per week breakdowns this is the wrong page.
+                                </p>
+                                <i>You are viewing the last {{ weeks }} weeks. {{ earliest|fmt('date') }}
+                                    to {{ latest|fmt('date') }}</i>
+                            </div>
+                            <div class="col-md-6 col-lg-8">
+                                <form method="GET" autocomplete="off" novalidate>
+                                    {% if csrftoken and csrf_cookie_name %}
+                                        <input type="hidden" name="{{ csrf_cookie_name }}" value="{{ csrftoken }}"/>
+                                    {% endif %}
+                                    <div class="row g-xl-6">
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label">Weeks To View</label>
+                                            <input name="weeks" type="number" class="form-control"
+                                                   value="{{ weeks }}"
+                                                   autocomplete="weeks">
+                                            <button type="submit" class="btn btn-outline btn-secondary w-100">Change
+                                                Query
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label">Offset by X weeks</label>
+                                            <input name="offset" type="number" class="form-control"
+                                                   value="{{ offset }}"
+                                                   autocomplete="offset">
+
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <br><br>
+                <section class="section section-light">
+                    <div class="container">
+                        <div class="row g-xl-6">
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Actions Undertaken</h3>
+                                    </div>
+                                    <table class="table card-table table-vcenter">
+                                        <thead>
+                                        <tr>
+                                            <th>Action</th>
+                                            <th colspan="2">Usages</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for k, v in actions.items() %}
+                                            <tr>
+                                                <td>{{ k }}</td>
+                                                <td>{{ v|intcomma }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Action Types Undertaken</h3>
+                                    </div>
+                                    <table class="table card-table table-vcenter">
+                                        <thead>
+                                        <tr>
+                                            <th>Action Type</th>
+                                            <th colspan="2">Usages</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for k, v in action_types.items() %}
+                                            <tr>
+                                                <td>{{ k }}</td>
+                                                <td>{{ v|intcomma }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Misc Statistics</h3>
+                                    </div>
+                                    <table class="table card-table table-vcenter">
+                                        <tbody>
+                                        <tr>
+                                            <td>Total Users</td>
+                                            <td>{{ total_users_seen|intcomma }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total Guilds</td>
+                                            <td>{{ total_guilds_seen|intcomma }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total Voters</td>
+                                            <td>{{ total_voters_seen|intcomma }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total Users Who Only Voted</td>
+                                            <td>{{ total_users_who_only_voted|intcomma }}</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                        <br>
+                        <div class="row g-xl-6">
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">User Locales</h3>
+                                    </div>
+                                    <table class="table card-table table-vcenter">
+                                        <thead>
+                                        <tr>
+                                            <th>Locale</th>
+                                            <th colspan="2">Usages</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for k, v in user_locales.items() %}
+                                            <tr>
+                                                <td>{{ k }}</td>
+                                                <td>{{ v|intcomma }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Guild Locales</h3>
+                                        <p><i>Note guild locales can only be set to values we already have translated so
+                                            these aren't truly representative. Use User Locales for a better view of
+                                            incoming locales as opposed to configured locales.</i></p>
+                                    </div>
+                                    <table class="table card-table table-vcenter">
+                                        <thead>
+                                        <tr>
+                                            <th>Locale</th>
+                                            <th colspan="2">Usages</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for k, v in guild_locales.items() %}
+                                            <tr>
+                                                <td>{{ k }}</td>
+                                                <td>{{ v|intcomma }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+
+        </div>
+    </div>
+{% endblock content %}
