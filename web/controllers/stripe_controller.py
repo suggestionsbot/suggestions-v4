@@ -70,8 +70,7 @@ class StripeController(Controller):
                 await payments.handle_customer_subscription_deleted(event)
 
             elif event_type == "invoice.payment_failed":
-                # TODO Notify user they need to update their payment details
-                pass
+                await payments.handle_invoice_payment_failed(event)
 
             elif event_type == "invoice.paid":
                 for line_item in event["data"]["object"]["lines"]:

@@ -187,3 +187,12 @@ async def handle_customer_subscription_deleted(event) -> None:
 
         else:
             logger.debug("Unknown subscription sku: %s", sku)
+
+
+async def handle_invoice_payment_failed(event) -> None:
+    """Handle payment failures.
+
+    I don't think we need to do more than this at this point?
+    Maybe in future we can notify the user but I think stripe does this.
+    """
+    await handle_customer_subscription_deleted(event)

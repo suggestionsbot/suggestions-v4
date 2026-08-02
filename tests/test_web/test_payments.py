@@ -514,6 +514,42 @@ async def test_subscription_deleted_with_associated_guild_tokens(
     assert gt_2 == 0
 
 
+# noinspection DuplicatedCode
+async def test_invoice_payment_failed_with_associated_guild_tokens(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    redis_client: aioredis.Redis,
+) -> None:
+    user = Given.user(BASE_CUSTOMER_EMAIL).object
+    Given.x_guild_tokens_exist(
+        GuildTokenT(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            user=user,
+            expires_at=EXPIRY_DATE.shift(days=5).datetime,
+        ),
+        GuildTokenT(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            user=user,
+            expires_at=EXPIRY_DATE.shift(days=5).datetime,
+        ),
+    )
+    event: EventT = deepcopy(empty_event)
+    subscription: SubscriptionT = deepcopy(empty_sub)
+    subscription["items"]["data"].append(guild_price_id)
+    subscription["items"]["data"].append(user_price_id)
+    event["data"]["object"] = subscription
+    When.stripe_subscription_is_patched_with_(monkeypatch, subscription)
+
+    gt_1 = await GuildTokens().count()
+    assert gt_1 == QUANTITY_OF_TWO
+
+    with caplog.at_level(logging.DEBUG):
+        await payments.handle_invoice_payment_failed(event)
+
+    gt_2 = await GuildTokens().count()
+    assert gt_2 == 0
+
+
 async def test_subscription_deleted_with_no_associated_guild_tokens(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
