@@ -206,7 +206,11 @@ async def create_bot(  # noqa: PLR0915, C901
                                 "TextSelectMenuInteractionComponent",
                                 entry.component,
                             )
-                            anonymously = commons.value_to_bool(entry.component.values[0])
+                            if entry.component.values:
+                                # anon by default unless you provide the value
+                                anonymously = commons.value_to_bool(
+                                    entry.component.values[0]
+                                )
 
                     await SuggestionsQueueMenu.handle_modal_interaction(
                         queued_suggestion_id=suggestion_id,
@@ -247,7 +251,11 @@ async def create_bot(  # noqa: PLR0915, C901
                                 "FileUploadInteractionComponent",
                                 entry.component,
                             )
-                            anonymously = commons.value_to_bool(entry.component.values[0])
+                            if entry.component.values:
+                                # anon by default unless you provide the value
+                                anonymously = commons.value_to_bool(
+                                    entry.component.values[0]
+                                )
 
                     # We know by here this is always true
                     suggestion: Suggestions = cast("Suggestions", suggestion)
