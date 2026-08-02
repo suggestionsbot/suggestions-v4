@@ -153,6 +153,12 @@ class SuggestionMenu:
                         suggestion=suggestion,
                         vote_type=vote,
                         user_id=ctx.user.id,
+                        voter_display_name_raw=utils.generate_author_text(
+                            ctx.user.display_name,
+                            ctx.user.id,
+                            # TODO Change later
+                            is_anonymous=False,
+                        ),
                     ),
                 )
                 .on_conflict(
@@ -173,6 +179,15 @@ class SuggestionMenu:
                     .where(SuggestionVotes.suggestion == suggestion)
                     .where(SuggestionVotes.user_id == ctx.user.id)
                 )
+
+                if vote_obj.voter_display_name_raw is None:
+                    vote_obj.voter_display_name_raw = utils.generate_author_text(
+                        ctx.user.display_name,
+                        ctx.user.id,
+                        # TODO Change later
+                        is_anonymous=False,
+                    )
+                    await vote_obj.save()
 
             if not was_created and vote_obj.vote_type == vote.value:
                 # Trying to vote again for the same item

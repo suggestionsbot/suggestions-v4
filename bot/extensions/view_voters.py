@@ -71,7 +71,7 @@ async def get_vote_data(
                 if item.vote_type_enum == SuggestionsVoteTypeEnum.UpVote
                 else DEFAULT_DOWN_VOTE
             )
-            text.write(f"{emoji} <@{item.user_id}>\n")
+            text.write(f"{emoji} {item.voter_display_name}\n")
 
         data.append(text.getvalue())
     return data
@@ -174,7 +174,9 @@ class ViewVotersCmd(
         vote_type = (
             SuggestionsVoteTypeEnum.UpVote
             if self.filter_raw == "Up"
-            else SuggestionsVoteTypeEnum.DownVote if self.filter_raw == "Down" else None
+            else SuggestionsVoteTypeEnum.DownVote
+            if self.filter_raw == "Down"
+            else None
         )
 
         data = await get_vote_data(
