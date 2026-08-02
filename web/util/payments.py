@@ -196,3 +196,47 @@ async def handle_invoice_payment_failed(event) -> None:
     Maybe in future we can notify the user but I think stripe does this.
     """
     await handle_customer_subscription_deleted(event)
+
+
+async def handle_invoice_paid(event) -> None:
+    """Handle paid invoices."""
+    if event["data"]["object"]["status"] != "paid":
+        # I think this is unreachable?
+        logger.critical("Invoice not marked as paid asked to handle pay method")
+        return
+
+    for line_item in event["data"]["object"]["lines"]["data"]:
+        if (
+            line_item["pricing"]["price_details"]["price"]
+            == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
+        ):
+            subscription_id = line_item["parent"]["subscription_item_details"][
+                "subscription"
+            ]
+            subscription = await stripe.Subscription.retrieve_async(subscription_id)
+            guild_items = [
+                i
+                for i in subscription["items"]["data"]
+                if i["price"]["id"] == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
+            ]
+            if len(guild_items) == 0:
+                logger.critical("Expected at-least one guild sku, found none")
+                continue
+
+            expires_at = (
+                arrow.get(guild_items[0]["current_period_end"]).shift(days=5).datetime
+            )
+            # Try update but if they dont exist then subscription create will set
+            # the correct value for us anyway
+            all_objects = await GuildTokens.objects().where(
+                GuildTokens.subscription_id == subscription_id
+            )
+            for gc in all_objects:
+                gc.expires_at = expires_at
+                await gc.save()
+
+            logger.debug(
+                "Updated %s GuildTokens within invoice.paid",
+                len(all_objects),
+                extra={"stripe.subscription.id": subscription_id},
+            )

@@ -28,6 +28,7 @@ FROZEN_DATE = arrow.get("2012-01-14")
 EXPIRY_DATE = arrow.get("2012-02-14")
 BASE_CUSTOMER_EMAIL = "tests@suggestions.gg"
 BASE_SUBSCRIPTION_EVENT_ID = "SubscriptionEventID"
+BASE_INVOICE_EVENT_ID = "InvoiceEventID"
 guild_price_id = {
     "price": {"id": STRIPE_PRICE_ID_GUILDS_MONTHLY},
     "id": "GuildOne",
@@ -72,8 +73,53 @@ empty_sub: SubscriptionT = {
 }
 
 
+class PriceDetailsT(TypedDict):
+    price: str  # Price ID
+    # product: str  # Associated product
+
+
+class PricingT(TypedDict):
+    price_details: PriceDetailsT
+
+
+class InvoiceSubT(TypedDict):
+    subscription: str | None  # Sub id
+
+
+class InvoiceParentT(TypedDict):
+    subscription_item_details: InvoiceSubT | None
+
+
+class InvoiceLineEntryT(TypedDict):
+    pricing: PricingT
+    parent: InvoiceParentT | None
+
+
+class InvoiceDataT(TypedDict):
+    data: list[InvoiceLineEntryT]
+
+
+class InvoiceT(TypedDict):
+    id: str
+    lines: InvoiceDataT
+    status: Literal["draft", "open", "paid", "uncollectible", "void"]
+    customer: str | None
+
+
+empty_invoice: InvoiceT = {
+    "lines": {"data": []},
+    "status": "paid",
+    "customer": BASE_CUSTOMER_EMAIL,
+    "id": BASE_INVOICE_EVENT_ID,
+}
+guild_invoice_data: InvoiceLineEntryT = {
+    "pricing": {"price_details": {"price": STRIPE_PRICE_ID_GUILDS_MONTHLY}},
+    "parent": {"subscription_item_details": {"subscription": BASE_SUBSCRIPTION_EVENT_ID}},
+}
+
+
 class EventObjectT(TypedDict):
-    object: SubscriptionT
+    object: SubscriptionT | InvoiceT
 
 
 class EventT(TypedDict):
@@ -101,6 +147,10 @@ class PaymentWhen(BaseWhen):
         mock = AsyncMock()
         mock.return_value = sub_object
         monkeypatch.setattr(stripe.Subscription, "retrieve_async", mock)
+        PaymentWhen.patch_sku_constants(monkeypatch)
+
+    @staticmethod
+    def patch_sku_constants(monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(
             constants, "STRIPE_PRICE_ID_GUILDS_MONTHLY", STRIPE_PRICE_ID_GUILDS_MONTHLY
         )
@@ -588,3 +638,76 @@ async def test_subscription_deleted_with_no_guild_sku(
     assert caplog.messages == [
         f"Unknown subscription sku: {STRIPE_PRICE_ID_USERS_MONTHLY}"
     ]
+
+
+async def test_invoice_paid_when_not_paid(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    Given.user(BASE_CUSTOMER_EMAIL)
+    test_invoice: InvoiceT = deepcopy(empty_invoice)
+    test_invoice["status"] = "open"
+    event: EventT = deepcopy(empty_event)
+    event["data"]["object"] = test_invoice
+    When.stripe_customer_is_patched_with_(monkeypatch, base_customer)
+
+    with caplog.at_level(logging.DEBUG):
+        await payments.handle_invoice_paid(event)
+
+    assert caplog.messages == ["Invoice not marked as paid asked to handle pay method"]
+
+
+async def test_invoice_paid_with_no_guild_items(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that it does nothing unless the guild price SKU is purchased."""
+    Given.user(BASE_CUSTOMER_EMAIL)
+    test_invoice: InvoiceT = deepcopy(empty_invoice)
+    test_invoice["lines"]["data"].append(guild_invoice_data)
+    event: EventT = deepcopy(empty_event)
+    event["data"]["object"] = test_invoice
+    When.stripe_customer_is_patched_with_(monkeypatch, base_customer)
+    When.patch_sku_constants(monkeypatch)
+    test_subscription: SubscriptionT = deepcopy(empty_sub)
+    test_subscription["items"]["data"].append(guild_price_id)
+    When.stripe_subscription_is_patched_with_(monkeypatch, test_subscription)
+
+    with caplog.at_level(logging.DEBUG):
+        await payments.handle_invoice_paid(event)
+
+    assert caplog.messages == ["Updated 0 GuildTokens within invoice.paid"]
+
+
+@freeze_time(FROZEN_DATE.datetime)
+async def test_invoice_paid_with_guild_items(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that it does nothing unless the guild price SKU is purchased."""
+    user = Given.user(BASE_CUSTOMER_EMAIL).object
+    Given.x_guild_tokens_exist(
+        GuildTokenT(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            user=user,
+            expires_at=FROZEN_DATE.shift(days=5).datetime,
+        )
+    )
+    test_invoice: InvoiceT = deepcopy(empty_invoice)
+    test_invoice["lines"]["data"].append(guild_invoice_data)
+    event: EventT = deepcopy(empty_event)
+    event["data"]["object"] = test_invoice
+    When.stripe_customer_is_patched_with_(monkeypatch, base_customer)
+    When.patch_sku_constants(monkeypatch)
+    test_subscription: SubscriptionT = deepcopy(empty_sub)
+    test_subscription["items"]["data"].append(guild_price_id)
+    When.stripe_subscription_is_patched_with_(monkeypatch, test_subscription)
+
+    with caplog.at_level(logging.DEBUG):
+        await payments.handle_invoice_paid(event)
+
+    assert caplog.messages == ["Updated 1 GuildTokens within invoice.paid"]
+    gc_1 = await GuildTokens.objects().first()
+    assert gc_1 is not None
+    assert timing.is_within_next_(
+        gc_1.expires_at,
+        EXPIRY_DATE.shift(days=5).datetime,
+        timedelta(days=7),
+    )

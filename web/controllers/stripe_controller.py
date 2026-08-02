@@ -54,10 +54,6 @@ class StripeController(Controller):
             return Response(status_code=400)
 
         event_type: str = event["type"]
-        # if event_type in (
-        #     "checkout.session.completed",
-        #     "checkout.session.async_payment_succeeded",
-        # ):
         try:
             if event_type == "customer.subscription.created":
                 # New subscription was created that may or may not be paid for
@@ -73,44 +69,8 @@ class StripeController(Controller):
                 await payments.handle_invoice_payment_failed(event)
 
             elif event_type == "invoice.paid":
-                for line_item in event["data"]["object"]["lines"]:
-                    if (
-                        line_item["pricing"]["price_details"]["price"]
-                        == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
-                    ):
-                        subscription_id = line_item["parent"][
-                            "subscription_item_details"
-                        ]["subscription"]
-                        subscription = await stripe.Subscription.retrieve_async(
-                            subscription_id
-                        )
-                        guild_items = [
-                            i
-                            for i in subscription["items"]
-                            if i["price"]["id"]
-                            == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY
-                        ]
-                        if len(guild_items) == 0:
-                            log.critical("Expected at-least one guild sku, found none")
-                            continue
+                await payments.handle_invoice_paid(event)
 
-                        expires_at = (
-                            arrow.get(guild_items[0]["current_period_end"])
-                            .shift(days=5)
-                            .datetime
-                        )
-                        # For if invoice event comes before subscription create
-                        await constants.REDIS_CLIENT.set(
-                            f"stripe:invoice_paid:{subscription_id}",
-                            expires_at.isoformat(),
-                            ex=datetime.timedelta(hours=1),
-                        )
-                        all_objects = await GuildTokens.objects().where(
-                            GuildTokens.subscription_id == subscription_id
-                        )
-                        for gc in all_objects:
-                            gc.expires_at = expires_at
-                            await gc.save()
         except Exception as e:
             internal_error: InternalErrors = await InternalErrors.persist_error(
                 e,
