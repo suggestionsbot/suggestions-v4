@@ -34,6 +34,15 @@ class GuildTokens(AuditMixin, Table):
         index_method=IndexMethod.hash,
         help_text="The Stripe id of the underlying subscription",
     )
+
+    subscription_item_id = Text(
+        required=True,
+        null=False,
+        index=True,
+        secret=True,
+        index_method=IndexMethod.hash,
+        help_text="The Stripe id of the underlying subscription item id from the invoice",
+    )
     used_for_guild = BigInt(
         index=True,
         default=None,

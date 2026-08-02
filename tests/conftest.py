@@ -184,6 +184,7 @@ class GuildTokenT(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     subscription_id: str
+    subscription_item_id: str
     used_for_guild: int | None = None
     user: Users
     expires_at: datetime.datetime = utc_now()
@@ -241,6 +242,7 @@ class BaseGiven:
                 user=gtt.user,
                 used_for_guild=gtt.used_for_guild,
                 expires_at=gtt.expires_at,
+                subscription_item_id=gtt.subscription_item_id,
             )
             gt.save().run_sync()
         return self

@@ -28,10 +28,12 @@ FROZEN_DATE = arrow.get("2012-01-14")
 EXPIRY_DATE = arrow.get("2012-02-14")
 BASE_CUSTOMER_EMAIL = "tests@suggestions.gg"
 BASE_SUBSCRIPTION_EVENT_ID = "SubscriptionEventID"
+BASE_SUBSCRIPTION_ITEM_ID = "GuildOne"
 BASE_INVOICE_EVENT_ID = "InvoiceEventID"
+BASE_CUSTOMER_ID = "CustomerId"
 guild_price_id = {
     "price": {"id": STRIPE_PRICE_ID_GUILDS_MONTHLY},
-    "id": "GuildOne",
+    "id": BASE_SUBSCRIPTION_ITEM_ID,
     "subscription": BASE_SUBSCRIPTION_EVENT_ID,
     "quantity": 1,
     "current_period_end": EXPIRY_DATE.timestamp(),
@@ -134,9 +136,14 @@ empty_event: EventT = {"data": {"object": empty_sub}}
 class CustomerT(TypedDict):
     email: str
     id: str
+    name: str
 
 
-base_customer: CustomerT = {"email": BASE_CUSTOMER_EMAIL, "id": "CustomerId"}
+base_customer: CustomerT = {
+    "email": BASE_CUSTOMER_EMAIL,
+    "id": BASE_CUSTOMER_ID,
+    "name": "TestName",
+}
 
 
 class PaymentWhen(BaseWhen):
@@ -177,12 +184,22 @@ async def test_existing_subscription(
     """Tests the handling of duplicate subscription calls."""
     user = Given.user(BASE_CUSTOMER_EMAIL).object
     Given.x_guild_tokens_exist(
-        GuildTokenT(subscription_id=BASE_SUBSCRIPTION_EVENT_ID, user=user)
+        GuildTokenT(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
+            user=user,
+        )
     )
+    test_subscription: SubscriptionT = deepcopy(empty_sub)
+    test_subscription["items"]["data"].append(guild_price_id)
+    When.stripe_subscription_is_patched_with_(monkeypatch, test_subscription)
     When.stripe_customer_is_patched_with_(monkeypatch, base_customer)
 
     with caplog.at_level(logging.DEBUG):
-        await payments.handle_customer_subscription_created(empty_event)
+        await payments.handle_customer_subscription_created(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            customer_id=BASE_CUSTOMER_ID,
+        )
 
     assert caplog.messages == [
         f"Got asked to fulfil guild purchase for '{BASE_SUBSCRIPTION_EVENT_ID}' "
@@ -201,7 +218,10 @@ async def test_with_no_guild_items(
     When.stripe_customer_is_patched_with_(monkeypatch, base_customer)
 
     with caplog.at_level(logging.DEBUG):
-        await payments.handle_customer_subscription_created(empty_event)
+        await payments.handle_customer_subscription_created(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            customer_id=BASE_CUSTOMER_ID,
+        )
 
     assert caplog.messages == [
         f"Observed price id '{STRIPE_PRICE_ID_USERS_MONTHLY}' not needing "
@@ -225,7 +245,10 @@ async def test_with_one_guild_item(
     When.no_guild_tokens_exist()
 
     with caplog.at_level(logging.DEBUG):
-        await payments.handle_customer_subscription_created(empty_event)
+        await payments.handle_customer_subscription_created(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            customer_id=BASE_CUSTOMER_ID,
+        )
 
     assert caplog.messages == [
         f"Created 1 GuildTokens for subscription '{BASE_SUBSCRIPTION_EVENT_ID}' "
@@ -250,7 +273,10 @@ async def test_payment_sets_expiry_date(
     When.no_guild_tokens_exist()
 
     with caplog.at_level(logging.DEBUG):
-        await payments.handle_customer_subscription_created(empty_event)
+        await payments.handle_customer_subscription_created(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            customer_id=BASE_CUSTOMER_ID,
+        )
 
     assert caplog.messages == [
         f"Created 1 GuildTokens for subscription '{BASE_SUBSCRIPTION_EVENT_ID}' "
@@ -284,7 +310,10 @@ async def test_payment_sets_expiry_date_when_not_paid(
     When.no_guild_tokens_exist()
 
     with caplog.at_level(logging.DEBUG):
-        await payments.handle_customer_subscription_created(empty_event)
+        await payments.handle_customer_subscription_created(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            customer_id=BASE_CUSTOMER_ID,
+        )
 
     assert caplog.messages == [
         f"Created 1 GuildTokens for subscription '{BASE_SUBSCRIPTION_EVENT_ID}' "
@@ -317,7 +346,10 @@ async def test_with_guild_item_quantity_two(
     When.no_guild_tokens_exist()
 
     with caplog.at_level(logging.DEBUG):
-        await payments.handle_customer_subscription_created(empty_event)
+        await payments.handle_customer_subscription_created(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            customer_id=BASE_CUSTOMER_ID,
+        )
 
     assert caplog.messages == [
         f"Created 2 GuildTokens for subscription '{BASE_SUBSCRIPTION_EVENT_ID}' "
@@ -344,7 +376,10 @@ async def test_with_two_guild_items(
     When.no_guild_tokens_exist()
 
     with caplog.at_level(logging.DEBUG):
-        await payments.handle_customer_subscription_created(empty_event)
+        await payments.handle_customer_subscription_created(
+            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
+            customer_id=BASE_CUSTOMER_ID,
+        )
 
     assert caplog.messages == [
         f"Created 1 GuildTokens for subscription '{BASE_SUBSCRIPTION_EVENT_ID}' "
@@ -372,6 +407,7 @@ async def test_when_subscription_is_modified_be_inactive(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=EXPIRY_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         )
     )
     event: EventT = deepcopy(empty_event)
@@ -415,6 +451,7 @@ async def test_when_subscription_has_no_cared_modifications(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=EXPIRY_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         )
     )
     event: EventT = deepcopy(empty_event)
@@ -456,6 +493,7 @@ async def test_subscription_has_new_higher_quantity(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=EXPIRY_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         )
     )
     event: EventT = deepcopy(empty_event)
@@ -490,11 +528,13 @@ async def test_subscription_has_new_lower_quantity(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=EXPIRY_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         ),
         GuildTokenT(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=EXPIRY_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         ),
     )
     event: EventT = deepcopy(empty_event)
@@ -540,11 +580,13 @@ async def test_subscription_deleted_with_associated_guild_tokens(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=EXPIRY_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         ),
         GuildTokenT(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=EXPIRY_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         ),
     )
     event: EventT = deepcopy(empty_event)
@@ -576,11 +618,13 @@ async def test_invoice_payment_failed_with_associated_guild_tokens(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=EXPIRY_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         ),
         GuildTokenT(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=EXPIRY_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         ),
     )
     event: EventT = deepcopy(empty_event)
@@ -688,6 +732,7 @@ async def test_invoice_paid_with_guild_items(
             subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
             user=user,
             expires_at=FROZEN_DATE.shift(days=5).datetime,
+            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
         )
     )
     test_invoice: InvoiceT = deepcopy(empty_invoice)

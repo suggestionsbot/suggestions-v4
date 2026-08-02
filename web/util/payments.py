@@ -1,3 +1,4 @@
+import secrets
 from typing import Final
 import datetime
 import logging
@@ -20,31 +21,24 @@ async def extract_subscription_skus(event) -> list[str]:
     return data
 
 
-async def handle_customer_subscription_created(event) -> None:
-    customer_id: str = event["data"]["object"]["customer"]
+async def handle_customer_subscription_created(
+    *, subscription_id: str, customer_id: str
+) -> None:
     customer = await stripe.Customer.retrieve_async(customer_id)
     user = await Users.objects().get(Users.email == customer["email"])
-    assert user is not None
-    subscription_id: str = event["data"]["object"]["id"]
+    if user is None:
+        user = Users(
+            username=customer["email"],
+            name=customer["name"],
+            email=customer["email"],
+            password=secrets.token_hex(64),
+            active=True,
+            auths_without_password=True,
+        )
+        await user.save()
 
     # noinspection protected-member
     async with GuildTokens._meta.db.transaction():
-        does_exist = await GuildTokens.exists().where(
-            GuildTokens.subscription_id == subscription_id
-        )
-        if does_exist:
-            # Already handled way in the past
-            logger.debug(
-                "Got asked to fulfil guild purchase for '%s' but was already handled",
-                subscription_id,
-                extra={
-                    "user.id": user.id,
-                    "user.email": user.email,
-                    "stripe.subscription.id": subscription_id,
-                },
-            )
-            return
-
         subscription = await stripe.Subscription.retrieve_async(subscription_id)
         for item in subscription["items"]["data"]:
             if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
@@ -61,6 +55,26 @@ async def handle_customer_subscription_created(event) -> None:
                 )
                 continue
 
+            subscription_item_id = item["id"]
+            does_exist = (
+                await GuildTokens.exists()
+                .where(GuildTokens.subscription_id == subscription_id)
+                .where(GuildTokens.subscription_item_id == subscription_item_id)
+            )
+            if does_exist:
+                # Already handled way in the past
+                logger.debug(
+                    "Got asked to fulfil guild purchase for '%s' but was already handled",
+                    subscription_id,
+                    extra={
+                        "user.id": user.id,
+                        "user.email": user.email,
+                        "stripe.subscription.id": subscription_id,
+                        "stripe.subscription.item.id": subscription_item_id,
+                    },
+                )
+                return
+
             # invoice.paid will also update the expiry to be more correct as required
             if subscription["status"] in PROVISION_STATUS_TYPES:
                 sub_expires_at = arrow.get(item["current_period_end"]).shift(days=5)
@@ -76,6 +90,7 @@ async def handle_customer_subscription_created(event) -> None:
                     user=user,
                     used_for_guild=None,
                     expires_at=sub_expires_at.datetime,
+                    subscription_item_id=subscription_item_id,
                 )
                 await guild_token.save()
 
@@ -108,16 +123,21 @@ async def update_guild_tokens_expiry_from_subscription(
 async def handle_customer_subscription_updated(event) -> None:
     """Handle changes to a subscription."""
     # Two key cases are increase or decrease quantity
+    seen_item_ids: set[str] = set()
     subscription = event["data"]["object"]
+    subscription_id = subscription["id"]
     for item in subscription["items"]["data"]:
         if item["price"]["id"] != constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
             # TODO Handle other stripe purchases when implemented
             continue
 
-        subscription_id = item["subscription"]
+        subscription_item_id = item["id"]
+        seen_item_ids.add(subscription_item_id)
         stripe_total = item["quantity"]
-        current_total = await GuildTokens.count().where(
-            GuildTokens.subscription_id == subscription_id
+        current_total = (
+            await GuildTokens.count()
+            .where(GuildTokens.subscription_id == subscription_id)
+            .where(GuildTokens.subscription_item_id == subscription_item_id)
         )
 
         expires_at = (
@@ -152,6 +172,7 @@ async def handle_customer_subscription_updated(event) -> None:
                     user=user_from_session,
                     used_for_guild=None,
                     expires_at=expires_at,
+                    subscription_item_id=subscription_item_id,
                 )
                 await guild_token.save()
 
@@ -161,8 +182,10 @@ async def handle_customer_subscription_updated(event) -> None:
                 "User decreased guilds on current subscription",
                 extra={"stripe.subscription.id": subscription_id},
             )
-            all_gc = await GuildTokens.objects().where(
-                GuildTokens.subscription_id == subscription_id
+            all_gc = (
+                await GuildTokens.objects()
+                .where(GuildTokens.subscription_id == subscription_id)
+                .where(GuildTokens.subscription_item_id == subscription_item_id)
             )
             for i in range(current_total - stripe_total):
                 try:
@@ -172,6 +195,21 @@ async def handle_customer_subscription_updated(event) -> None:
                     # if stripe has a number that didnt get built in our db
                     break
                 await gc.delete().where(GuildTokens.id == gc.id)
+
+    all_item_ids = await GuildTokens.select(GuildTokens.subscription_item_id).where(
+        GuildTokens.subscription_id == subscription_id
+    )
+    all_item_ids_set = {i["subscription_item_id"] for i in all_item_ids}
+    removed_items = all_item_ids_set.difference(seen_item_ids)
+    if removed_items:
+        # Something got removed and rather then do the reasonable thing
+        # and look at stripe objects we can just do this
+        for removed_item_id in removed_items:
+            await (
+                GuildTokens.delete()
+                .where(GuildTokens.subscription_id == subscription_id)
+                .where(GuildTokens.subscription_item_id == removed_item_id)
+            )
 
 
 async def handle_customer_subscription_deleted(event) -> None:

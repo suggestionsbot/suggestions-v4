@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 class StripeController(Controller):
     path = "/stripe"
     include_in_schema = False
-    middleware = [EnsureAdmin]  # TODO Change when live  # noqa: RUF012
+    # middleware = [EnsureAdmin]  # TODO Change when live  # noqa: RUF012
 
     @get("/customer-portal", name="stripe_customer_portal", middleware=[EnsureAuth])
     async def redirect_to_customer_portal(
@@ -55,9 +55,14 @@ class StripeController(Controller):
 
         event_type: str = event["type"]
         try:
+            log.debug("Observed %s", event["type"])
             if event_type == "customer.subscription.created":
                 # New subscription was created that may or may not be paid for
-                await payments.handle_customer_subscription_created(event)
+                customer_id: str = event["data"]["object"]["customer"]
+                subscription_id: str = event["data"]["object"]["id"]
+                await payments.handle_customer_subscription_created(
+                    subscription_id=subscription_id, customer_id=customer_id
+                )
 
             elif event_type == "customer.subscription.updated":
                 await payments.handle_customer_subscription_updated(event)
@@ -72,6 +77,7 @@ class StripeController(Controller):
                 await payments.handle_invoice_paid(event)
 
         except Exception as e:
+            raise e
             internal_error: InternalErrors = await InternalErrors.persist_error(
                 e,
                 command_name="Stripe Webhook",
@@ -83,8 +89,7 @@ class StripeController(Controller):
                 internal_error_reference=internal_error,
                 tags="warning",
             )
-
-        print(event["type"])
+            return Response(status_code=500)
 
         return Response(status_code=200)
 
@@ -95,8 +100,12 @@ class StripeController(Controller):
         checkout_session = await stripe.checkout.Session.retrieve_async(
             checkout_session_id
         )
+        subscription = await stripe.Subscription.retrieve_async(
+            checkout_session["subscription"]
+        )
         await payments.handle_customer_subscription_created(
-            checkout_session["subscription"], user=request.user
+            subscription_id=checkout_session["subscription"],
+            customer_id=subscription["customer"],
         )
         alert(
             request,
