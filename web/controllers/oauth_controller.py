@@ -145,7 +145,9 @@ class DiscordOAuth(DiscordOAuth2):
                 raise GetProfileError(response=response)
 
             data = response.json()
-            data: list[dict[str, Any]] = sorted(data, key=lambda k: k["name"])
+            data: list[dict[str, Any]] = sorted(
+                data, key=lambda k: k["name"].capitalize()
+            )
             await self.cache_set(cache_key, data)
             return data
 
