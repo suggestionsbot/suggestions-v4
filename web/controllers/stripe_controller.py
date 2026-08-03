@@ -252,6 +252,14 @@ class StripeController(Controller):
                 "I have removed that guilds premium.",
                 level="success",
             )
+
+        elif int(radio_result) == guild_token.used_for_guild:
+            alert(
+                request,
+                "You have already assigned premium for that guild.",
+                level="info",
+            )
+
         else:
             already_used = await GuildTokens.exists().where(
                 GuildTokens.used_for_guild == int(radio_result)

@@ -23,8 +23,9 @@
                         <tr>
                             <th>Purchased At</th>
                             <th>Renews</th>
-                            <th style="width:70%">Assigned Guild</th>
-                            <th class="w-1"> Edit Assigned Guild</th>
+                            <th class="w-50">Assigned Guild</th>
+                            <th class="w-1"> Assign Premium</th>
+                            <th class="w-1"> Remove Assigned</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -37,11 +38,28 @@
                                 {% endif %}
                                 </td>
                                 <td>
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    <button type="button" class="btn btn-animate-icon btn-animate-icon-rotate"
+                                            data-bs-toggle="modal"
                                             data-bs-target="#gt_modal-{{ token.id }}">
-                                        Edit
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                             stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
+                                            <path d="M12 5l0 14"></path>
+                                            <path d="M5 12l14 0"></path>
+                                        </svg>
+                                        {% if token.used_for_guild %}Change Guild{% else %}Assign Guild{% endif %}
                                     </button>
                                     {% include "stripe/gt_form.jinja" %}
+                                </td>
+                                <td>
+                                    {% if token.used_for_guild %}
+                                        <button type="button" class="btn btn-danger btn-outline" data-bs-toggle="modal"
+                                                data-bs-target="#gt_modal_remove-{{ token.id }}">
+                                            Remove
+                                        </button>
+                                        {% include "stripe/gt_form_remove.jinja" %}
+                                    {% endif %}
+
                                 </td>
                             </tr>
                         {% endfor %}

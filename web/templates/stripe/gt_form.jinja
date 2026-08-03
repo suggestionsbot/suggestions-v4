@@ -10,12 +10,14 @@
                 <input type="hidden" name="row" value="{{ token.id }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <div class="form-label">Select the guild you wish to use this token in.</div>
+                        <div class="form-label">
+                            <p>Select the guild you wish to give premium to.</p>
+                        </div>
                         <div>
                             {% for guild in guilds %}
                                 <label class="form-check">
                                     <input class="form-check-input" type="radio" name="radios" value="{{ guild.id }}"
-                                           {% if token.used_for_guild == guild.id %}checked=""{% endif %}>
+                                           {% if token.used_for_guild == guild.id|int %}checked=""{% endif %}>
                                     <span class="form-check-label">{{ guild.name }}</span>
                                 </label>
                             {% endfor %}
@@ -24,7 +26,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn me-auto" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Assign to Guild</button>
+                    <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Submit</button>
                 </div>
             </form>
         </div>
