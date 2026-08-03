@@ -15,8 +15,9 @@ from bot.tables import InternalErrors
 from shared.utils.ntfy import notify_ethan_of_something
 from web import constants
 from web.controllers import AuthController
+from web.controllers.oauth_controller import DISCORD_OAUTH
 from web.middleware import EnsureAuth, EnsureAdmin
-from web.tables import Users, GuildTokens
+from web.tables import Users, GuildTokens, OAuthEntry
 from web.util import html_template, alert, payments
 from web.util.table_mixins import utc_now
 
@@ -146,8 +147,9 @@ class StripeController(Controller):
             quantity = 1
 
         if quantity <= 0:
-            msg = "quantity must be a positive integer."
-            raise ValueError(msg)
+            msg = "Quantity must be a positive number."
+            alert(request, msg, level="error")
+            return Redirect(request.url_for("stripe_guild_checkout"))
 
         addons = {}
         if allow_promo_code:
@@ -189,3 +191,84 @@ class StripeController(Controller):
                 samesite="lax",
             )
         return response
+
+    @get("/guilds/tokens", name="manage_guild_tokens", middleware=[EnsureAuth])
+    async def manage_guild_tokens(self, request: Request) -> Template:
+        guild_tokens = (
+            await GuildTokens.objects()
+            .where(GuildTokens.user == request.user)
+            .order_by(GuildTokens.id)
+        )
+        oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
+        guilds = await DISCORD_OAUTH.get_user_guilds(
+            oauth_entry.access_token, user_id=oauth_entry.oauth_id
+        )
+        guild_names = {int(i["id"]): i["name"] for i in guilds}
+        return html_template(
+            "stripe/guild_tokens.jinja",
+            {"tokens": guild_tokens, "guilds": guilds, "guild_names": guild_names},
+        )
+
+    @post("/guilds/tokens", middleware=[EnsureAuth])
+    async def manage_guild_tokens_post(self, request: Request) -> Redirect:
+        form = await request.form()
+        row: str | None = form.get("row", None)
+        redirect_url = Redirect(request.url_for("manage_guild_tokens"))
+        if row is None or (row is not None and not row.isdigit()):
+            alert(
+                request,
+                "Missing row information, please reload the page and try again.",
+                level="error",
+            )
+            return redirect_url
+
+        guild_token = (
+            await GuildTokens.objects()
+            .where(GuildTokens.user == request.user)
+            .where(GuildTokens.id == int(row))
+            .first()
+        )
+        if guild_token is None:
+            alert(
+                request,
+                "Missing row, please reload the page and try again.",
+                level="error",
+            )
+            return redirect_url
+
+        radio_result = form.get("radios", None)
+        if radio_result is not None and not radio_result.isdigit():
+            alert(
+                request,
+                "Missing guild information, please reload the page and try again.",
+                level="error",
+            )
+            return redirect_url
+
+        if radio_result is None:
+            guild_token.used_for_guild = None
+            alert(
+                request,
+                "I have removed that guilds premium.",
+                level="success",
+            )
+        else:
+            already_used = await GuildTokens.exists().where(
+                GuildTokens.used_for_guild == int(radio_result)
+            )
+            if already_used:
+                alert(
+                    request,
+                    "That guild already has premium so I didn't let you also provide it.",
+                    level="warning",
+                )
+                return redirect_url
+
+            guild_token.used_for_guild = int(radio_result)
+            alert(
+                request,
+                "I have added premium for that guild.",
+                level="success",
+            )
+        await guild_token.save()
+        return redirect_url

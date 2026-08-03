@@ -1,0 +1,58 @@
+{% extends "base.jinja" %}
+{% block title %}Manage Guild Tokens | Suggestions{% endblock %}
+{% block content %}
+    <div class="page">
+        <div class="container py-4">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <h2 class="page-title">
+                                Manage your Guild Tokens
+                            </h2><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+                    <p>Manage how your current guild tokens are used here.</p>
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                        <tr>
+                            <th>Purchased At</th>
+                            <th>Renews</th>
+                            <th style="width:70%">Assigned Guild</th>
+                            <th class="w-1"> Edit Assigned Guild</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for token in tokens %}
+                            <tr>
+                                <td>{{ token.created_at|fmt('date') }}</td>
+                                <td>{{ token.expires_at|fmt('date') }}</td>
+                                <td class="text-secondary">{% if token.used_for_guild %}<a
+                                        href="{{ token.guild_view_url }}">{{ guild_names[token.used_for_guild] }}</a>
+                                {% endif %}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                            data-bs-target="#gt_modal-{{ token.id }}">
+                                        Edit
+                                    </button>
+                                    {% include "stripe/gt_form.jinja" %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <br>
+                    <p>Looking for more Guild Tokens? Click <a href="{{ url_for("stripe_guild_checkout") }}">this link
+                        to get more.</a></p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock content %}

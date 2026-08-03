@@ -5,7 +5,7 @@
     <div class="container-xl py-4">
         <div class="page page-center">
             <div class="container container-tight py-4">
-                 {% include 'alerts.jinja' %}
+                {% include 'alerts.jinja' %}
                 <div class="card card-md">
                     <div class="ribbon ribbon-top bg-pink">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -28,11 +28,12 @@
                         Instructions for usage
                         <p class="text-secondary">
                             Guild Premium:<br>
-                            1. Navigate to the guild of your choice<br>
-                            2. Select "Manage" under Premium Status<br>
-                            3. Activate your premium
+                            1. Navigate to the link below<br>
+                            2. Select "Edit" under the "Edit Assigned Guild" column<br>
+                            3. Activate your premium in your guild of choice
                         </p>
-                        <a href="{{ url_for('view_all_guilds') }}" class="btn btn-animate-icon">Navigate to Guilds
+                        <a href="{{ url_for('manage_guild_tokens') }}" class="btn btn-animate-icon">Manage My Guild
+                            Tokens
                             <!-- Download SVG icon from http://tabler.io/icons/icon/arrow-right -->
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"

@@ -1,0 +1,32 @@
+<div class="modal fade" id="gt_modal-{{ token.id }}" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-3 modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Assigned Guild</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form class="card card-md" method="POST" autocomplete="off">
+                {{ csrf_input | safe }}
+                <input type="hidden" name="row" value="{{ token.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="form-label">Select the guild you wish to use this token in.</div>
+                        <div>
+                            {% for guild in guilds %}
+                                <label class="form-check">
+                                    <input class="form-check-input" type="radio" name="radios" value="{{ guild.id }}"
+                                           {% if token.used_for_guild == guild.id %}checked=""{% endif %}>
+                                    <span class="form-check-label">{{ guild.name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn me-auto" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" data-bs-dismiss="modal">Assign to Guild</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

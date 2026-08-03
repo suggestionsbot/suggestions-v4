@@ -60,6 +60,13 @@ class GuildTokens(AuditMixin, Table):
         help_text="When this token expires according to the underlying subscription.",
     )
 
+    @property
+    def guild_view_url(self) -> str | None:
+        if self.used_for_guild:
+            return f"/guilds/{self.used_for_guild}"
+
+        return None
+
     @classmethod
     async def does_guild_have_premium(cls, guild_id: int):
         return (
