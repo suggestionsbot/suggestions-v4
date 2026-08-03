@@ -261,8 +261,10 @@ class StripeController(Controller):
             )
 
         else:
-            already_used = await GuildTokens.exists().where(
-                GuildTokens.used_for_guild == int(radio_result)
+            already_used = (
+                await GuildTokens.exists()
+                .where(GuildTokens.used_for_guild == int(radio_result))
+                .where(utc_now() < GuildTokens.expires_at)
             )
             if already_used:
                 alert(
