@@ -5,6 +5,7 @@ from enum import Enum
 
 import hikari
 import lightbulb
+from hikari.api import TextDisplayComponentBuilder
 from hikari.impl import ContainerComponentBuilder, MessageActionRowBuilder
 from piccolo.columns import (
     Serial,
@@ -274,7 +275,10 @@ class QueuedSuggestions(Table, AuditMixin):
         include_buttons: bool = True,
         paginator_id: str | None = None,
         link_id: str | None = None,
-    ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
+        prefix: str | None = None,
+    ) -> list[
+        ContainerComponentBuilder | MessageActionRowBuilder | TextDisplayComponentBuilder
+    ]:
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
@@ -282,7 +286,7 @@ class QueuedSuggestions(Table, AuditMixin):
                     locale,
                     extras={"SUGGESTION": self.suggestion},
                 )
-            ),
+            )
         ]
         if self.image_urls:
             items = []
@@ -365,12 +369,18 @@ class QueuedSuggestions(Table, AuditMixin):
             )
         )
 
-        data: list = [
+        data = []
+        if prefix is not None:
+            data.append(
+                hikari.impl.TextDisplayComponentBuilder(content=prefix),
+            )
+
+        data.append(
             hikari.impl.ContainerComponentBuilder(
                 accent_color=self.color,
                 components=components,
-            ),
-        ]
+            )
+        )
         if include_buttons:
             if paginator_id:
                 approved = f"v4_queue:approve:{paginator_id}:{self.sID}:{link_id}"

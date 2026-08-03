@@ -1,3 +1,4 @@
+from hikari.api import TextDisplayComponentBuilder
 import io
 import time
 import typing
@@ -309,7 +310,10 @@ class Suggestions(Table, AuditMixin):
         exclude_buttons: bool = False,
         exclude_votes: bool = False,
         guild_config: GuildConfigs | None = None,
-    ) -> list[ContainerComponentBuilder | MessageActionRowBuilder]:
+        prefix: str | None = None,
+    ) -> list[
+        ContainerComponentBuilder | MessageActionRowBuilder | TextDisplayComponentBuilder
+    ]:
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
@@ -318,7 +322,7 @@ class Suggestions(Table, AuditMixin):
                     extras={"SUGGESTION": self.suggestion},
                     guild_config=guild_config,
                 )
-            ),
+            )
         ]
         if self.image_urls:
             items: list[hikari.api.special_endpoints.MediaGalleryItemBuilder] = [
@@ -482,12 +486,16 @@ class Suggestions(Table, AuditMixin):
             )
         )
 
-        result: list = [
+        result = []
+        if prefix is not None:
+            result.append(hikari.impl.TextDisplayComponentBuilder(content=prefix))
+
+        result.append(
             hikari.impl.ContainerComponentBuilder(
                 accent_color=self.color,
                 components=components,
-            ),
-        ]
+            )
+        )
         if not exclude_buttons:
             result.append(
                 hikari.impl.MessageActionRowBuilder(

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import hikari
 
 import typing
 from typing import TYPE_CHECKING, Self
@@ -68,7 +69,7 @@ class GuildTokens(AuditMixin, Table):
         return None
 
     @classmethod
-    async def does_guild_have_premium(cls, guild_id: int):
+    async def does_guild_have_premium(cls, guild_id: hikari.Snowflake | int):
         return (
             await GuildTokens.exists()
             .where(GuildTokens.used_for_guild == guild_id)

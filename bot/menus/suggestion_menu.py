@@ -508,19 +508,20 @@ class SuggestionMenu:
 
         prefix = (
             guild_config.premium.suggestions_prefix
-            if await guild_config.premium_is_enabled(ctx)
-            and guild_config.premium.queued_suggestions_prefix is not None
-            else ""
+            if await guild_config.premium_is_enabled()
+            and guild_config.premium.suggestions_prefix is not None
+            else None
         )
         try:
             message: hikari.Message = await channel.send(
-                content=prefix,
                 components=await s.as_components(
                     rest=bot.rest,
                     locale=guild_config.primary_language,
                     localisations=localisations,
                     guild_config=guild_config,
+                    prefix=prefix,
                 ),
+                role_mentions=True,
             )
         except hikari.ForbiddenError as e:
             internal_error: InternalErrors = await InternalErrors.persist_error(
@@ -712,17 +713,19 @@ class SuggestionMenu:
 
             prefix = (
                 guild_config.premium.queued_suggestions_prefix
-                if await guild_config.premium_is_enabled(ctx)
-                else hikari.undefined.UNDEFINED
+                if await guild_config.premium_is_enabled()
+                and guild_config.premium.queued_suggestions_prefix is not None
+                else None
             )
             try:
                 message: hikari.Message = await channel.send(
-                    content=prefix,
                     components=await qs.as_components(
                         rest=bot.rest,
                         locale=guild_config.primary_language,
                         localisations=localisations,
+                        prefix=prefix,
                     ),
+                    role_mentions=True,
                 )
             except hikari.ForbiddenError as e:
                 internal_error: InternalErrors = await InternalErrors.persist_error(

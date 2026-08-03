@@ -149,24 +149,8 @@ class GuildConfigs(AuditMixin, Table):
         )
         return True
 
-    async def premium_is_enabled(
-        self, ctx: lightbulb.Context | lightbulb.components.MenuContext
-    ) -> bool:
-        """Returns true if this guild is considered to have active premium"""
-        # TODO Needs reworking now stripe exists
-        # TODO If true this should also ensure the premium foreignkey exists
-        return False
-        now = utc_now()
-        for entitlement in ctx.interaction.entitlements:
-            if entitlement.is_deleted is True:
-                continue
+    async def premium_is_enabled(self) -> bool:
+        """Returns true if this guild is considered to have active premium."""
+        from web.tables import GuildTokens
 
-            if entitlement.starts_at is not None and now < entitlement.starts_at:
-                continue
-
-            if entitlement.ends_at is not None and now >= entitlement.ends_at:
-                continue
-
-            return True
-
-        return False
+        return await GuildTokens.does_guild_have_premium(self.guild_id)

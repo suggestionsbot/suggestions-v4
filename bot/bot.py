@@ -291,6 +291,9 @@ async def create_bot(  # noqa: PLR0915, C901
                         ephemeral=True,
                     )
         except Exception as e:
+            if not t_constants.IS_PRODUCTION:
+                raise
+
             async with utils.start_error_span(
                 e, "modal error handler", command_name=component_key
             ) as internal_error:

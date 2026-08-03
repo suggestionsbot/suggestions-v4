@@ -40,7 +40,11 @@ async def ensure_guild_config(guild_id: int) -> GuildConfigs:
         obj._exists_in_db = True
         return obj
 
-    return await GuildConfigs.objects().first().where(GuildConfigs.guild_id == guild_id)
+    return (
+        await GuildConfigs.objects(GuildConfigs.premium)
+        .first()
+        .where(GuildConfigs.guild_id == guild_id)
+    )
 
 
 async def ensure_user_config(
