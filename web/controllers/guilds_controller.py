@@ -88,14 +88,14 @@ class GuildController(Controller):
         name="view_guild",
         guards=[ensure_user_is_in_guild],
     )
-    async def view_guild(self, request: Request, guild_id: int) -> Template:
+    async def view_guild(self, request: Request, guild_id: int) -> Template | Redirect:
         oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
         guild_name = await DISCORD_OAUTH.get_guild_name(
             oauth_entry.access_token,
             user_id=oauth_entry.oauth_id,
             guild_id=guild_id,
         )
-        if constants.IS_PRODUCTION:  # Save time locally
+        if constants.IS_PRODUCTION or 1 == 1:  # Save time locally
             is_bot_in_guild = await DISCORD_OAUTH.is_bot_in_guild(guild_id)
             if not is_bot_in_guild:
                 return html_template(
@@ -105,6 +105,15 @@ class GuildController(Controller):
                         "guild_id": guild_id,
                     },
                 )
+
+            # TODO Disable later
+            alert(
+                request,
+                "Viewing a guild is currently not supported within the dashboard. "
+                "Please come back later.",
+                level="warning",
+            )
+            return Redirect("/")
 
         oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
         profile = await DISCORD_OAUTH.get_profile(
