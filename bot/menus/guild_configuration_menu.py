@@ -16,6 +16,7 @@ from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs, get_cached_interaction_id
 from shared.utils.locales import language_as_word
 from web import constants as t_constants
+from bot.menus.guild_premium import GuildPremiumMenu
 import contextlib
 
 log = logging.getLogger(__name__)
@@ -32,11 +33,6 @@ class GuildConfigurationMenus:
         event: hikari.ComponentInteractionCreateEvent,
         link_id: str,
     ) -> None:
-        await ctx.defer(ephemeral=True)
-        user_config = await configs.ensure_user_config(
-            cast("int", ctx.user.id), locale=ctx.interaction.locale
-        )
-        guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
         event_values: Sequence[str] = event.interaction.values
         log.debug(
             "Processing GCM component %s",
@@ -47,6 +43,24 @@ class GuildConfigurationMenus:
                 ),
             },
         )
+
+        user_config = await configs.ensure_user_config(
+            cast("int", ctx.user.id), locale=ctx.interaction.locale
+        )
+        guild_config = await configs.ensure_guild_config(cast("int", ctx.guild_id))
+        if id_data.startswith("premium_"):
+            await GuildPremiumMenu.handle_interaction(
+                id_data,
+                ctx=ctx,
+                localisations=localisations,
+                event=event,
+                link_id=link_id,
+                user_config=user_config,
+                guild_config=guild_config,
+            )
+            return
+
+        await ctx.defer(ephemeral=True)
         if id_data in (
             "suggestions_channel_id",
             "log_channel_id",
@@ -213,6 +227,38 @@ class GuildConfigurationMenus:
                 await ctx.respond(
                     localisations.get_localized_string(
                         "menus.guild_configuration.responses.sent_suggestions_button",
+                        user_config.primary_language,
+                    ),
+                    ephemeral=True,
+                )
+            return
+
+        if id_data == "view_premium":
+            original_id = await get_cached_interaction_id(link_id)
+            if original_id is None:
+                await ctx.respond(
+                    components=await GuildPremiumMenu.build_premium_components(
+                        ctx=ctx,
+                        localisations=localisations,
+                        guild_config=guild_config,
+                        link_id=link_id,
+                        user_config=user_config,
+                    ),
+                )
+            else:
+                await ctx.edit_response(
+                    original_id,
+                    components=await GuildPremiumMenu.build_premium_components(
+                        ctx=ctx,
+                        localisations=localisations,
+                        guild_config=guild_config,
+                        link_id=link_id,
+                        user_config=user_config,
+                    ),
+                )
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.responses.changed_page_inline",
                         user_config.primary_language,
                     ),
                     ephemeral=True,
@@ -933,6 +979,14 @@ class GuildConfigurationMenus:
                         ),
                         custom_id=f"gcm:{link_id}:view_page_2",
                     ),
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.PRIMARY,
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.view_premium",
+                            user_config.primary_language,
+                        ),
+                        custom_id=f"gcm:{link_id}:view_premium",
+                    ),
                 ],
             ),
             hikari.impl.MessageActionRowBuilder(
@@ -1219,6 +1273,14 @@ class GuildConfigurationMenus:
                             user_config.primary_language,
                         ),
                         custom_id=f"gcm:{link_id}:view_page_1",
+                    ),
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.PRIMARY,
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.view_premium",
+                            user_config.primary_language,
+                        ),
+                        custom_id=f"gcm:{link_id}:view_premium",
                     ),
                 ],
             ),
