@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Sequence
+from typing import cast
 
 import hikari
 import lightbulb
@@ -7,6 +8,7 @@ from hikari.api import special_endpoints
 from hikari.interactions.interaction_components import (
     TextInputInteractionComponent,
     TextSelectMenuInteractionComponent,
+    FileUploadInteractionComponent,
 )
 
 from bot import utils
@@ -19,17 +21,34 @@ log = logging.getLogger(__name__)
 
 class GuildPremiumMenu:
     @staticmethod
-    def extract_value(event: hikari.ModalInteractionCreateEvent, value_name: str):
+    def extract_value(
+        event: hikari.ModalInteractionCreateEvent,
+        value_name: str,
+        *,
+        item_return_count: int | None = None,
+    ):
+        data = None
+
         for entry in event.interaction.components:
             if entry.component.custom_id == value_name:
-                return (
+                data = (
                     entry.component.value
                     if isinstance(entry.component, TextInputInteractionComponent)
-                    else entry.component.values[0]
-                    if isinstance(entry.component, TextSelectMenuInteractionComponent)
+                    else entry.component.values
+                    if isinstance(
+                        entry.component,
+                        (
+                            TextSelectMenuInteractionComponent,
+                            FileUploadInteractionComponent,
+                        ),
+                    )
                     else None
                 )
-        return None
+
+        if isinstance(data, list) and item_return_count is not None:
+            data = [data.pop(0) for _ in range(item_return_count)]
+
+        return data
 
     @classmethod
     async def handle_modal_interaction(  # noqa: PLR0912, PLR0911, PLR0915, C901
@@ -64,6 +83,29 @@ class GuildPremiumMenu:
                     "menus.guild_configuration.premium_menu.responses.changed_name",
                     user_config.primary_language,
                 )
+            )
+
+        if id_data == "custom_avatar":
+            item = None
+            item_id = cls.extract_value(event, "avatar")
+            if item_id:
+                assert event.interaction.resolved is not None
+                assert isinstance(item_id, list)
+                assert len(item_id) == 1
+                item_id: int = item_id[0]
+                item: hikari.messages.Attachment | None = (
+                    event.interaction.resolved.attachments.get(
+                        cast("hikari.Snowflake", item_id)
+                    )
+                )
+
+            await ctx.client.rest.edit_my_member(guild_config.guild_id, avatar=item)
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.responses.changed_avatar",
+                    user_config.primary_language,
+                ),
+                ephemeral=True,
             )
 
     @classmethod
@@ -114,6 +156,16 @@ class GuildPremiumMenu:
                 components=await cls.build_name_modal(localisations, user_config),
             )
 
+        elif id_data == "premium_modal_custom_avatar":
+            await ctx.respond_with_modal(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_avatar.modal_title",
+                    user_config.primary_language,
+                ),
+                f"guild_premium_modal:{link_id}:custom_avatar",
+                components=await cls.build_avatar_modal(localisations, user_config),
+            )
+
         await ctx.defer(ephemeral=True)
 
     @classmethod
@@ -136,6 +188,29 @@ class GuildPremiumMenu:
                     required=False,
                     min_length=1,
                     max_length=32,
+                ),
+            ),
+        ]
+
+    @classmethod
+    async def build_avatar_modal(
+        cls, localisations: Localisation, user_config: UserConfigs
+    ):
+        return [
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_avatar.title",
+                    user_config.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_avatar.description",
+                    user_config.primary_language,
+                ),
+                component=hikari.impl.FileUploadComponentBuilder(
+                    custom_id="avatar",
+                    min_values=0,
+                    max_values=1,
+                    is_required=False,
                 ),
             ),
         ]
