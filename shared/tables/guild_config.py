@@ -1,5 +1,5 @@
 from bot import utils
-from bot.constants import LOCALISATIONS, ErrorCode
+from bot.constants import LOCALISATIONS, ErrorCode, ENABLE_FREE_GUILD_PREMIUM
 import hikari
 import lightbulb
 from piccolo.columns import (
@@ -152,5 +152,8 @@ class GuildConfigs(AuditMixin, Table):
     async def premium_is_enabled(self) -> bool:
         """Returns true if this guild is considered to have active premium."""
         from web.tables import GuildTokens
+
+        if ENABLE_FREE_GUILD_PREMIUM:
+            return True
 
         return await GuildTokens.does_guild_have_premium(self.guild_id)

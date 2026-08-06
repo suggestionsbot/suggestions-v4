@@ -10,6 +10,7 @@ from hikari.interactions.interaction_components import (
 )
 
 from bot import utils
+from bot.constants import ENABLE_CUSTOM_NAME_AND_AVATARS
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs, UserConfigs
 
@@ -42,6 +43,18 @@ class GuildPremiumMenu:
         user_config: UserConfigs,
     ) -> None:
         await ctx.defer(ephemeral=True)
+        if not ENABLE_CUSTOM_NAME_AND_AVATARS and id_data in (
+            "custom_name",
+            "custom_avatar",
+        ):
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.responses.only_custom_instances",
+                    user_config.primary_language,
+                )
+            )
+            return
+
         if id_data == "custom_name":
             await ctx.client.rest.edit_my_member(
                 guild_config.guild_id, nickname=cls.extract_value(event, "name")

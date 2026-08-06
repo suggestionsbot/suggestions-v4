@@ -240,6 +240,7 @@
   "menus.guild_configuration.premium_menu.responses.premium_required": "Sorry this configuration requires premium to change.",
   "menus.guild_configuration.premium_menu.responses.premium_required.link": "Purchase Premium",
   "menus.guild_configuration.premium_menu.responses.changed_name": "I have edited the bots name for you, enjoy!",
+  "menus.guild_configuration.premium_menu.responses.only_custom_instances": "Sorry but changing the bots name and avatar are only available on custom instances. Please reach out to us via our support guild at <https://suggestions.gg/contact> to receive this feature.",
   "menus.guild_configuration.no": "No",
   "menus.guild_configuration.view_docs": "View the bots documentation here",
   "menus.guild_configuration.view_premium": "View premium options",

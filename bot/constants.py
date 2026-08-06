@@ -128,6 +128,17 @@ SYNC_APPLICATION_COMMANDS: bool = commons.value_to_bool(
     os.environ.get("SYNC_APPLICATION_COMMANDS", "1")
 )
 
+# Premium overrides that can be set for testing or custom instance
+ENABLE_FREE_USER_PREMIUM: bool = commons.value_to_bool(
+    os.environ.get("ENABLE_FREE_USER_PREMIUM", "0")
+)
+ENABLE_FREE_GUILD_PREMIUM: bool = commons.value_to_bool(
+    os.environ.get("ENABLE_FREE_GUILD_PREMIUM", "0")
+)
+ENABLE_CUSTOM_NAME_AND_AVATARS: bool = commons.value_to_bool(
+    os.environ.get("ENABLE_CUSTOM_NAME_AND_AVATARS", "0")
+)
+
 
 class ErrorCode(IntEnum):
     SUGGESTION_MESSAGE_DELETED = 1
