@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Sequence
-from typing import cast
+from typing import cast, Literal
 
 import hikari
 import lightbulb
@@ -12,7 +12,7 @@ from hikari.interactions.interaction_components import (
 )
 
 from bot import utils
-from bot.constants import ENABLE_CUSTOM_NAME_AND_AVATARS
+from bot.constants import ENABLE_CUSTOM_NAME_AND_AVATARS, IS_CUSTOM_BOT
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs, UserConfigs
 
@@ -35,14 +35,6 @@ class GuildPremiumMenu:
                     entry.component.value
                     if isinstance(entry.component, TextInputInteractionComponent)
                     else entry.component.values
-                    if isinstance(
-                        entry.component,
-                        (
-                            TextSelectMenuInteractionComponent,
-                            FileUploadInteractionComponent,
-                        ),
-                    )
-                    else None
                 )
 
         if isinstance(data, list) and item_return_count is not None:
@@ -85,7 +77,7 @@ class GuildPremiumMenu:
                 )
             )
 
-        if id_data == "custom_avatar":
+        elif id_data == "custom_avatar":
             item = None
             item_id = cls.extract_value(event, "avatar")
             if item_id:
@@ -106,6 +98,43 @@ class GuildPremiumMenu:
                     user_config.primary_language,
                 ),
                 ephemeral=True,
+            )
+
+        elif id_data in ("custom_suggestion_prefix", "custom_queued_suggestion_prefix"):
+            prefix: str | None = cast("str | None", cls.extract_value(event, "prefix"))
+            if (
+                prefix is not None
+                and not IS_CUSTOM_BOT
+                and ("@everyone" in prefix or "@here" in prefix)
+            ):
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.premium_menu.responses.no_everyone",
+                        user_config.primary_language,
+                    )
+                )
+                return
+
+            roles: list[str] = cast("list[str]", cls.extract_value(event, "roles"))
+            roles_text: str = " ".join(f"<@&{role_id}>" for role_id in roles)
+            if roles:
+                if prefix:
+                    prefix += "\n\n"
+                    prefix += roles_text
+                else:
+                    prefix = roles_text
+
+            prefix = prefix or None
+            if id_data == "custom_queued_suggestion_prefix":
+                guild_config.premium.queued_suggestions_prefix = prefix
+            else:
+                guild_config.premium.suggestions_prefix = prefix
+            await guild_config.premium.save()
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.responses.changed_suggestions_prefix",
+                    user_config.primary_language,
+                )
             )
 
     @classmethod
@@ -166,7 +195,76 @@ class GuildPremiumMenu:
                 components=await cls.build_avatar_modal(localisations, user_config),
             )
 
+        elif id_data == "premium_modal_suggestions_prefix":
+            await ctx.respond_with_modal(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_suggestion_prefix.modal_title",
+                    user_config.primary_language,
+                ),
+                f"guild_premium_modal:{link_id}:custom_suggestion_prefix",
+                components=await cls.build_prefix_modal(
+                    localisations, user_config, "suggestion"
+                ),
+            )
+
+        elif id_data == "premium_modal_queued_suggestion_prefix":
+            await ctx.respond_with_modal(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_queued_suggestion_prefix.modal_title",
+                    user_config.primary_language,
+                ),
+                f"guild_premium_modal:{link_id}:custom_queued_suggestion_prefix",
+                components=await cls.build_prefix_modal(
+                    localisations, user_config, "queued_suggestion"
+                ),
+            )
+
         await ctx.defer(ephemeral=True)
+
+    @classmethod
+    async def build_prefix_modal(
+        cls,
+        localisations: Localisation,
+        user_config: UserConfigs,
+        prefix: Literal["suggestion", "queued_suggestion"],
+    ):
+        key = f"custom_{prefix}_prefix"
+        return [
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    f"menus.guild_configuration.premium_menu.{key}.title",
+                    user_config.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    f"menus.guild_configuration.premium_menu.{key}.description",
+                    user_config.primary_language,
+                ),
+                component=hikari.impl.TextInputBuilder(
+                    custom_id="prefix",
+                    style=hikari.TextInputStyle.SHORT,
+                    required=False,
+                    min_length=1,
+                    max_length=150,
+                ),
+            ),
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_prefix_roles.title",
+                    user_config.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_prefix_roles.description",
+                    user_config.primary_language,
+                ),
+                component=hikari.impl.SelectMenuBuilder(
+                    type=hikari.ComponentType.ROLE_SELECT_MENU,
+                    custom_id="roles",
+                    min_values=1,
+                    max_values=15,
+                    is_required=False,
+                ),
+            ),
+        ]
 
     @classmethod
     async def build_name_modal(
@@ -268,7 +366,7 @@ class GuildPremiumMenu:
                             hikari.impl.InteractiveButtonBuilder(
                                 style=hikari.ButtonStyle.SECONDARY,
                                 label="Edit Suggestion Message",
-                                custom_id=f"gcm:{link_id}:premium_modal_suggestion_prefix",
+                                custom_id=f"gcm:{link_id}:premium_modal_suggestions_prefix",
                             ),
                             hikari.impl.InteractiveButtonBuilder(
                                 style=hikari.ButtonStyle.SECONDARY,

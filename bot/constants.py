@@ -138,6 +138,7 @@ ENABLE_FREE_GUILD_PREMIUM: bool = commons.value_to_bool(
 ENABLE_CUSTOM_NAME_AND_AVATARS: bool = commons.value_to_bool(
     os.environ.get("ENABLE_CUSTOM_NAME_AND_AVATARS", "0")
 )
+IS_CUSTOM_BOT: bool = commons.value_to_bool(os.environ.get("IS_CUSTOM_BOT", "0"))
 
 
 class ErrorCode(IntEnum):

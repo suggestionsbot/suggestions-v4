@@ -36,9 +36,6 @@ async def ensure_guild_config(guild_id: int) -> GuildConfigs:
     if try_insert:
         # New object
         logger.debug("Created new GuildConfigs for %s", guild_id)
-        obj = GuildConfigs(**try_insert[0])
-        obj._exists_in_db = True
-        return obj
 
     return (
         await GuildConfigs.objects(GuildConfigs.premium)

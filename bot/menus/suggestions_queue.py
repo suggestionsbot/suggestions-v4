@@ -247,6 +247,7 @@ class SuggestionsQueueMenu:
             queued_suggestion = await QueuedSuggestions.objects(
                 QueuedSuggestions.user_configuration,
                 QueuedSuggestions.guild_configuration,
+                QueuedSuggestions.guild_configuration.premium,  # ty:ignore[invalid-argument-type]
             ).get(
                 # This is the PK here not sID
                 QueuedSuggestions.id == int(queued_suggestion_id)
