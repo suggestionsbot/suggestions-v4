@@ -198,6 +198,7 @@ class GuildConfigs(AuditMixin, Table):
             # No custom cooldown to do
             return False
 
+        return_value = False
         redis_key = f"premium:custom_cooldown:{self.guild_id}"
         redis_state = await REDIS_CLIENT.get(redis_key)
         from shared.tables.premium_guild_config import CooldownPeriod
@@ -258,7 +259,7 @@ class GuildConfigs(AuditMixin, Table):
                     ),
                     ephemeral=True,
                 )
-                return True
+                return_value = True
 
         await REDIS_CLIENT.set(
             redis_key,
@@ -268,4 +269,4 @@ class GuildConfigs(AuditMixin, Table):
             ex=int(datetime.timedelta(days=60).total_seconds()),
         )
         del cooldown
-        return False
+        return return_value
