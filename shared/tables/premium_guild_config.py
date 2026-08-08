@@ -57,6 +57,7 @@ class PremiumGuildConfigs(AuditMixin, Table):
         help_text="Cooldown period for custom /suggest cooldown",
     )
     cooldown_amount = Integer(
-        default=int((60 // 3) + 2),  # Mimic standard cooldown by default
+        default=None,
+        null=True,
         help_text="How many times during the period can /suggest be used?",
     )

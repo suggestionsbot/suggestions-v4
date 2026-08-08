@@ -15,6 +15,7 @@ from bot import utils
 from bot.constants import ENABLE_CUSTOM_NAME_AND_AVATARS, IS_CUSTOM_BOT
 from bot.localisation import Localisation
 from shared.tables import GuildConfigs, UserConfigs
+from shared.tables.premium_guild_config import CooldownPeriod
 
 log = logging.getLogger(__name__)
 
@@ -137,6 +138,31 @@ class GuildPremiumMenu:
                 )
             )
 
+        elif id_data == "custom_cooldowns":
+            amount: str = cast("str", cls.extract_value(event, "amount"))
+            if not amount.isdigit():
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.premium_menu.responses.must_be_numeric",
+                        user_config.primary_language,
+                    )
+                )
+                return
+
+            period: list[str] = cast("list[str] ", cls.extract_value(event, "period"))
+            period_enum = CooldownPeriod(period[0])
+
+            guild_config.premium.cooldown_period = period_enum
+            guild_config.premium.cooldown_amount = int(amount)
+            await guild_config.premium.save()
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.responses.set_custom_cooldown",
+                    user_config.primary_language,
+                    extras={"AMOUNT": amount, "PERIOD": period_enum.value},
+                )
+            )
+
     @classmethod
     async def handle_interaction(  # noqa: PLR0912, PLR0911, PLR0915, C901
         cls,
@@ -218,8 +244,30 @@ class GuildPremiumMenu:
                     localisations, user_config, "queued_suggestion"
                 ),
             )
+        elif id_data == "premium_modal_cooldowns":
+            await ctx.respond_with_modal(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_cooldown.modal_title",
+                    user_config.primary_language,
+                ),
+                f"guild_premium_modal:{link_id}:custom_cooldowns",
+                components=await cls.build_cooldown_modal(
+                    localisations,
+                    user_config,
+                ),
+            )
 
         await ctx.defer(ephemeral=True)
+
+        if id_data == "premium_remove_custom_cooldowns":
+            guild_config.premium.cooldown_amount = None
+            await guild_config.premium.save()
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.responses.reset_custom_cooldown",
+                    user_config.primary_language,
+                )
+            )
 
     @classmethod
     async def build_prefix_modal(
@@ -262,6 +310,84 @@ class GuildPremiumMenu:
                     min_values=1,
                     max_values=15,
                     is_required=False,
+                ),
+            ),
+        ]
+
+    @classmethod
+    async def build_cooldown_modal(
+        cls, localisations: Localisation, user_config: UserConfigs
+    ):
+        return [
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_cooldown.amount.title",
+                    user_config.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_cooldown.amount.description",
+                    user_config.primary_language,
+                ),
+                component=hikari.impl.TextInputBuilder(
+                    custom_id="amount",
+                    style=hikari.TextInputStyle.SHORT,
+                    required=True,
+                    min_length=1,
+                    max_length=10,
+                ),
+            ),
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_cooldown.period.title",
+                    user_config.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_cooldown.period.description",
+                    user_config.primary_language,
+                ),
+                component=hikari.impl.TextSelectMenuBuilder(
+                    custom_id="period",
+                    min_values=1,
+                    max_values=1,
+                    is_required=True,
+                    options=[
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "menus.guild_configuration.premium_menu.custom_cooldown.amount.options.hour",
+                                user_config.primary_language,
+                            ),
+                            value="Hour",
+                            is_default=True,
+                        ),
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "menus.guild_configuration.premium_menu.custom_cooldown.amount.options.day",
+                                user_config.primary_language,
+                            ),
+                            value="Day",
+                        ),
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "menus.guild_configuration.premium_menu.custom_cooldown.amount.options.week",
+                                user_config.primary_language,
+                            ),
+                            value="Week",
+                        ),
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "menus.guild_configuration.premium_menu.custom_cooldown.amount.options.fortnight",
+                                user_config.primary_language,
+                            ),
+                            value="Fortnight",
+                        ),
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "menus.guild_configuration.premium_menu.custom_cooldown.amount.options.month",
+                                user_config.primary_language,
+                            ),
+                            value="Month",
+                        ),
+                    ],
                 ),
             ),
         ]
@@ -345,12 +471,18 @@ class GuildPremiumMenu:
                         components=[
                             hikari.impl.InteractiveButtonBuilder(
                                 style=hikari.ButtonStyle.SECONDARY,
-                                label="Edit Name",
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.custom_details.name",
+                                    user_config.primary_language,
+                                ),
                                 custom_id=f"gcm:{link_id}:premium_modal_custom_name",
                             ),
                             hikari.impl.InteractiveButtonBuilder(
                                 style=hikari.ButtonStyle.SECONDARY,
-                                label="Edit Avatar",
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.custom_details.avatar",
+                                    user_config.primary_language,
+                                ),
                                 custom_id=f"gcm:{link_id}:premium_modal_custom_avatar",
                             ),
                         ],
@@ -365,13 +497,45 @@ class GuildPremiumMenu:
                         components=[
                             hikari.impl.InteractiveButtonBuilder(
                                 style=hikari.ButtonStyle.SECONDARY,
-                                label="Edit Suggestion Message",
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.suggestion_prefix.suggestion",
+                                    user_config.primary_language,
+                                ),
                                 custom_id=f"gcm:{link_id}:premium_modal_suggestions_prefix",
                             ),
                             hikari.impl.InteractiveButtonBuilder(
                                 style=hikari.ButtonStyle.SECONDARY,
-                                label="Edit Queued Suggestion Message",
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.suggestion_prefix.queued_suggestion",
+                                    user_config.primary_language,
+                                ),
                                 custom_id=f"gcm:{link_id}:premium_modal_queued_suggestion_prefix",
+                            ),
+                        ],
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.premium_menu.custom_cooldowns",
+                            user_config.primary_language,
+                        ),
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.custom_cooldowns.add",
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:premium_modal_cooldowns",
+                            ),
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.custom_cooldowns.remove",
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:premium_remove_custom_cooldowns",
                             ),
                         ],
                     ),
