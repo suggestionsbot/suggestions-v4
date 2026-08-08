@@ -1,5 +1,13 @@
-from bot import utils
-from bot.constants import LOCALISATIONS, ErrorCode, ENABLE_FREE_GUILD_PREMIUM
+from __future__ import annotations
+import logging
+from typing import TYPE_CHECKING, cast
+
+import datetime
+
+import humanize
+import orjson
+from cooldowns import Cooldown, CallableOnCooldown
+
 import hikari
 import lightbulb
 from piccolo.columns import (
@@ -15,6 +23,20 @@ from piccolo.table import Table
 
 from shared.tables.mixins import AuditMixin
 from shared.tables.mixins.audit import utc_now
+from web.constants import REDIS_CLIENT
+from bot import utils
+from bot.constants import (
+    LOCALISATIONS,
+    ErrorCode,
+    ENABLE_FREE_GUILD_PREMIUM,
+    user_cooldown_bucket,
+    OTEL_TRACER,
+)
+
+if TYPE_CHECKING:
+    from shared.tables import UserConfigs
+
+logger = logging.getLogger(__name__)
 
 
 class GuildConfigs(AuditMixin, Table):
@@ -157,3 +179,93 @@ class GuildConfigs(AuditMixin, Table):
             return True
 
         return await GuildTokens.does_guild_have_premium(self.guild_id)
+
+    async def run_custom_suggestion_cooldown_check(
+        self,
+        ctx: lightbulb.Context | lightbulb.components.MenuContext,
+        user_config: UserConfigs,
+    ) -> bool:
+        """Handles a custom suggestion.
+
+        Returns
+        -------
+        bool
+            True if the user is on cooldown and has been told as such
+
+        """
+        assert self.premium is not None
+        if self.premium.cooldown_amount is None:
+            # No custom cooldown to do
+            return False
+
+        redis_key = f"premium:custom_cooldown:{self.guild_id}"
+        redis_state = await REDIS_CLIENT.get(redis_key)
+        from shared.tables.premium_guild_config import CooldownPeriod
+
+        cooldown = Cooldown(
+            self.premium.cooldown_amount,
+            CooldownPeriod(self.premium.cooldown_period).as_timedelta(),
+            bucket=user_cooldown_bucket,
+        )
+        if redis_state is not None and redis_state:
+            cooldown.load_from_state(orjson.loads(redis_state))
+
+        try:
+            await cooldown.increment(ctx.interaction)
+        except CallableOnCooldown as exception:
+            link_id = await utils.otel.generate_trace_link_state()
+            otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+
+            with OTEL_TRACER.start_as_current_span(
+                "premium cooldown handler",
+                otel_ctx,
+            ) as error_span:
+                from bot.tables import InternalErrors
+
+                internal_error: InternalErrors = await InternalErrors.persist_error(
+                    exception,
+                    command_name="Suggestion Creation",
+                    guild_id=cast("int", ctx.interaction.guild_id),
+                    user_id=ctx.interaction.user.id,
+                    extra_info="Premium cooldown hit",
+                )
+                error_span.set_attribute("error.id", internal_error.id)
+                error_span.set_attribute("error.name", internal_error.error_name)
+                error_span.set_attribute("error.handled", value=True)
+                logger.debug(
+                    "CallableOnCooldown for premium cooldown",
+                    extra={
+                        "interaction.guild.id": ctx.interaction.guild_id,
+                        "interaction.user.id": ctx.interaction.user.id,
+                        "interaction.user.global_name": ctx.interaction.user.global_name,  # noqa: E501
+                        "error.code": ErrorCode.COMMAND_ON_COOLDOWN.value,
+                    },
+                )
+                natural_time = humanize.naturaldelta(exception.retry_after)
+
+                await ctx.respond(
+                    embed=utils.error_embed(
+                        LOCALISATIONS.get_localized_string(
+                            "errors.on_premium_cooldown.title",
+                            user_config.primary_language,
+                        ),
+                        LOCALISATIONS.get_localized_string(
+                            "errors.on_premium_cooldown.description",
+                            user_config.primary_language,
+                            extras={"TIME": natural_time},
+                        ),
+                        internal_error_reference=internal_error,
+                    ),
+                    ephemeral=True,
+                )
+                return True
+
+        await REDIS_CLIENT.set(
+            redis_key,
+            orjson.dumps(cooldown.get_state()),
+            # Expire after two months as we support up to
+            # a month so this will keep it clean
+            ex=int(datetime.timedelta(days=60).total_seconds()),
+        )
+        del cooldown
+        return False

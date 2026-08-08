@@ -1,3 +1,4 @@
+from web.constants import REDIS_CLIENT
 import logging
 from collections.abc import Sequence
 from typing import cast, Literal
@@ -262,6 +263,9 @@ class GuildPremiumMenu:
         if id_data == "premium_remove_custom_cooldowns":
             guild_config.premium.cooldown_amount = None
             await guild_config.premium.save()
+
+            # Delete this so it also resets peoples cooldowns
+            await REDIS_CLIENT.delete(f"premium:custom_cooldown:{guild_config.guild_id}")
             await ctx.respond(
                 localisations.get_localized_string(
                     "menus.guild_configuration.premium_menu.responses.reset_custom_cooldown",
