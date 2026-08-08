@@ -456,6 +456,10 @@ class SuggestionMenu:
         from shared.tables import SuggestionStateEnum
         from shared.tables import Suggestions
 
+        if await guild_config.run_custom_suggestion_cooldown_check(ctx, user_config):
+            # User is on a premium cooldown
+            return None
+
         s: Suggestions = Suggestions(
             guild_configuration=guild_config,
             user_configuration=user_config,

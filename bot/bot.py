@@ -17,6 +17,7 @@ from bot.menus import (
     SuggestionsQueueMenu,
     SuggestionsQueueViewerMenu,
     UserConfigurationMenus,
+    GuildPremiumMenu,
 )
 from bot.tables import InternalErrors
 from shared.tables import (
@@ -133,9 +134,14 @@ async def create_bot(  # noqa: PLR0915, C901
                 component_key = "suggestion modal"
                 link_id = custom_id.split(":", maxsplit=1)[1]
                 if link_id is not None and link_id:
-                    otel_ctx = await utils.otel.get_context_from_link_state(
-                        custom_id.split(":", maxsplit=1)[1],
-                    )
+                    otel_ctx = await utils.otel.get_context_from_link_state(link_id)
+
+            elif custom_id.startswith("guild_premium_modal"):
+                _, link_id, modal_type = custom_id.split(":", maxsplit=2)
+                modal_type = modal_type.replace("_", " ")
+                component_key = f"guild premium {modal_type} modal"
+                if link_id is not None and link_id:
+                    otel_ctx = await utils.otel.get_context_from_link_state(link_id)
 
             elif custom_id.startswith("resolve_modal"):
                 component_key = "resolve modal"
@@ -166,6 +172,17 @@ async def create_bot(  # noqa: PLR0915, C901
                 if custom_id.startswith("suggest_modal"):
                     await SuggestionMenu.handle_interaction(
                         event.interaction.components,
+                        ctx=ctx,
+                        localisations=constants.LOCALISATIONS,
+                        event=event,
+                        guild_config=guild_config,
+                        user_config=user_config,
+                    )
+
+                elif custom_id.startswith("guild_premium_modal"):
+                    _, link_id, modal_type = custom_id.split(":", maxsplit=2)
+                    await GuildPremiumMenu.handle_modal_interaction(
+                        modal_type,
                         ctx=ctx,
                         localisations=constants.LOCALISATIONS,
                         event=event,
