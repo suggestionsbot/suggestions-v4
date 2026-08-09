@@ -203,6 +203,7 @@ class ViewVoterMessageCommand(
     name="message_commands.view_voters.name",
     localize=True,
     hooks=[early_ephemeral_defer],
+    contexts=[hikari.ApplicationContextType.GUILD],
 ):
     @lightbulb.invoke
     async def invoke(
@@ -258,6 +259,7 @@ class ViewUpVoterMessageCommand(
     name="message_commands.view_up_voters.name",
     localize=True,
     hooks=[early_ephemeral_defer],
+    contexts=[hikari.ApplicationContextType.GUILD],
 ):
     @lightbulb.invoke
     async def invoke(
@@ -313,6 +315,7 @@ class ViewDownVoterMessageCommand(
     name="message_commands.view_down_voters.name",
     localize=True,
     hooks=[early_ephemeral_defer],
+    contexts=[hikari.ApplicationContextType.GUILD],
 ):
     @lightbulb.invoke
     async def invoke(
