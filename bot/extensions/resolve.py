@@ -579,6 +579,8 @@ class ResolveMessageCommand(
     lightbulb.MessageCommand,
     name="message_commands.resolve.name",
     localize=True,
+    contexts=[hikari.ApplicationContextType.GUILD],
+    default_member_permissions=hikari.Permissions.MANAGE_GUILD,
 ):
     @classmethod
     async def build_resolve_modal(
