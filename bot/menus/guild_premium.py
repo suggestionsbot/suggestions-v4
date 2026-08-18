@@ -560,9 +560,9 @@ class GuildPremiumMenu:
             hikari.impl.MessageActionRowBuilder(
                 components=[
                     hikari.impl.LinkButtonBuilder(
-                        url="https://docs.suggestions.gg/docs/guild-configuration",
+                        url="https://docs.suggestions.gg/docs/premium",
                         label=localisations.get_localized_string(
-                            "menus.guild_configuration.view_docs",
+                            "menus.guild_configuration.view_premium_docs",
                             user_config.primary_language,
                         ),
                     ),
