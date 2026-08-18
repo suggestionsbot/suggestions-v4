@@ -78,7 +78,6 @@ class StripeController(Controller):
                 await payments.handle_invoice_paid(event)
 
         except Exception as e:
-            raise e
             internal_error: InternalErrors = await InternalErrors.persist_error(
                 e,
                 command_name="Stripe Webhook",
