@@ -99,6 +99,7 @@
                 {% if request.user.admin %}
                     {{ dropdown_item('SAQ Queues', '/saq/') }}
                     {{ dropdown_item('Invoke Stats', url_for('view_invoke_stats')) }}
+                    {{ dropdown_item('Gift Guild Premium', url_for('create_gift')) }}
                 {% endif %}
                 {{ end_dropdown() }}
                 {% if not is_production %}

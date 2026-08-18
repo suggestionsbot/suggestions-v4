@@ -44,6 +44,7 @@ from web.controllers import (
     StripeController,
     ErrorController,
     StatsController,
+    GiftController,
 )
 from web.controllers import OAuthController
 from web.controllers.api import APIAlertController, APIAuthTokenController
@@ -318,6 +319,7 @@ routes = [
     StripeController,
     ErrorController,
     StatsController,
+    GiftController,
 ]
 if not constants.IS_PRODUCTION:
     routes.append(DebugController)

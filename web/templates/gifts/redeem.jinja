@@ -1,0 +1,23 @@
+{% extends 'base.jinja' %}
+{% block title %}Redeem Gift{% endblock %}
+{% block content %}
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            {% include 'alerts.jinja' %}
+            <form class="card card-md" method="POST" autocomplete="off" novalidate>
+                {{ csrf_input | safe }}
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Redeem Premium Gift</h2>
+                    <p>
+                        Hi {{ request.user.name }},<br>
+                        We are gifting you premium for use in {{ amount }} guilds.
+                    </p>
+                    <div class="form-footer">
+                        <small>This premium will be valid for {{ weeks }} weeks from when you click accept.</small>
+                        <button type="submit" class="btn btn-outline btn-success w-100">Accept Gift</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.jinja' %}
+{% block title %}Gift Guild Premium{% endblock %}
+{% block content %}
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            {% include 'alerts.jinja' %}
+            {% if gift_url %}
+                <div class="card card-md">
+                    <div class="card-body">
+                        <p>The following link will provide premium when clicked:</p>
+                        <p><a href="{{ gift_url }}">{{ gift_url }}</a></p>
+                        <p><small>This is valid for eight weeks from now.</small></p>
+                    </div>
+                </div>
+            {% else %}
+                <form class="card card-md" method="POST" autocomplete="off" novalidate>
+                    {{ csrf_input | safe }}
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Gift Guild Premium</h2>
+                        <p>Create a link that provides premium when clicked.</p>
+                        <div class="mb-3">
+                            <label class="form-label" for="quantity">Amount of guilds to gift:</label>
+                            <input id="quantity" name="quantity" class="form-control"
+                                   type="number" min="1" max="100" value="1"
+                            >
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="weeks">Amount of weeks the free premium should last:</label>
+                            <input id="weeks" name="weeks" class="form-control"
+                                   type="number" min="1" max="100" value="4"
+                            >
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="user_id">User ID of gift recipient:</label>
+                            <input id="user_id" name="user_id" class="form-control"
+                                   type="text"
+                            >
+                            <small>Optional: Restricts who can redeem the URL</small>
+                        </div>
+                        <div>
+
+                        </div>
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-indigo w-100">Create Gift URL</button>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
