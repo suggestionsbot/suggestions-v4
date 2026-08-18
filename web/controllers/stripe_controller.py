@@ -206,7 +206,11 @@ class StripeController(Controller):
         guild_names = {int(i["id"]): i["name"] for i in guilds}
         return html_template(
             "stripe/guild_tokens.jinja",
-            {"tokens": guild_tokens, "guilds": guilds, "guild_names": guild_names},
+            {
+                "tokens": guild_tokens,
+                "guilds": guilds,
+                "guild_names": guild_names,
+            },
         )
 
     @post("/guilds/tokens", middleware=[EnsureAuth])

@@ -66,8 +66,15 @@
                         </tbody>
                     </table>
                     <br>
-                    <p>Looking for more Guild Tokens? Click <a href="{{ url_for("stripe_guild_checkout") }}">this link
-                        to get more.</a></p>
+                    {% if not tokens %}
+                        <p>Looking for Guild Tokens? Click <a href="{{ url_for("stripe_guild_checkout") }}">this link
+                            to get more.</a></p>
+                    {% else %}
+                        <p>Looking for more Guild Tokens? <br>As you already have a subscription, increasing the amount
+                            on your existing subscription will save you over 30% per new guild! Click <a
+                                    href="{{ url_for("stripe_customer_portal") }}">this link
+                                to get more.</a></p>
+                    {% endif %}
                 </div>
 
             </div>
