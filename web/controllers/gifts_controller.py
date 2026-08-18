@@ -93,6 +93,7 @@ class GiftController(Controller):
             return redirect
         assert code_data is not None
 
+        await REDIS_CLIENT.delete(f"gifts:{code}")
         creator_id = code_data["created_by_user_id"]
         for i in range(code_data["amount"]):
             gt = GuildTokens(
