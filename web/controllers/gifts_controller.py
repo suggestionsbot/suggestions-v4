@@ -32,10 +32,10 @@ class GiftController(Controller):
     async def create_gift_post(self, request: Request) -> Template:
         form = await request.form()
         amount = int(form.get("quantity", 1))
-        user = form.get("user_id") or None
+        user = int(form.get("user_id")) if form.get("user_id", "").isnumeric() else None
         weeks = form.get("weeks") or 4
         weeks = int(weeks)
-        code = secrets.token_hex(32)
+        code = secrets.token_hex(32) if user is None else secrets.token_hex(16)
         gift_data = {
             "code": code,
             "amount": amount,
