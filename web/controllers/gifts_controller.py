@@ -44,11 +44,10 @@ class GiftController(Controller):
         }
         await REDIS_CLIENT.set(f"gifts:{code}", orjson.dumps(gift_data), ex=self.GIFT_EX)
         gift_url = request.url_for("redeem_gift") + f"?code={code}"
+        count = await REDIS_CLIENT.keys("gifts:*")
         return html_template(
             "gifts/create.jinja",
-            context={
-                "gift_url": gift_url,
-            },
+            context={"gift_url": gift_url, "count": len(count)},
         )
 
     @classmethod
