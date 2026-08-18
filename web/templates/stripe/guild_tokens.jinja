@@ -66,7 +66,7 @@
                         </tbody>
                     </table>
                     <br>
-                    {% if not tokens %}
+                    {% if not has_tokens %}
                         <p>Looking for Guild Tokens? Click <a href="{{ url_for("stripe_guild_checkout") }}">this link
                             to get more.</a></p>
                     {% else %}

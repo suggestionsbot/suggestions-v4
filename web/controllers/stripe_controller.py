@@ -198,6 +198,12 @@ class StripeController(Controller):
             .where(GuildTokens.user == request.user)
             .order_by(GuildTokens.id)
         )
+        # Only show upgrade existing sub when gifts aren't present
+        has_tokens = False
+        for gt in guild_tokens:
+            if "gift" not in gt.subscription_id:
+                has_tokens = True
+
         oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
         guilds = await DISCORD_OAUTH.get_user_guilds(
             oauth_entry.access_token, user_id=oauth_entry.oauth_id
@@ -207,6 +213,7 @@ class StripeController(Controller):
             "stripe/guild_tokens.jinja",
             {
                 "tokens": guild_tokens,
+                "has_tokens": has_tokens,
                 "guilds": guilds,
                 "guild_names": guild_names,
             },
