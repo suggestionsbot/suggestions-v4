@@ -14,18 +14,17 @@ from web.util import html_template, alert
 
 
 class GiftController(Controller):
-    middleware = [EnsureAuth]
+    middleware = [EnsureAuth]  # noqa: RUF012
     include_in_schema = False
     path = "/gifts"
     GIFT_EX = timedelta(weeks=8)
 
     @get(path="/", name="create_gift", middleware=[EnsureAdmin])
-    async def create_gift(self, request: Request) -> Template:
+    async def create_gift(self) -> Template:
+        count = await REDIS_CLIENT.keys("gifts:*")
         return html_template(
             "gifts/create.jinja",
-            context={
-                "gift_url": None,
-            },
+            context={"gift_url": None, "count": len(count)},
         )
 
     @post(path="/", middleware=[EnsureAdmin])
