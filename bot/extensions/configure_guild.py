@@ -7,6 +7,7 @@ from bot import utils
 from bot.constants import CONFIGURE_GROUP
 from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
+from bot.menus import GuildPremiumMenu
 from bot.menus.guild_configuration_menu import GuildConfigurationMenus
 from bot.tables import CommandInvokes, CommandTypes
 from shared.tables import GuildConfigs, UserConfigs
@@ -44,6 +45,11 @@ class ConfigureGuildCmd(
                 "queue_settings",
                 localize=True,
             ),
+            lightbulb.Choice(
+                "commands.configure.guild.options.menu.choices.4.name",
+                "configure_premium",
+                localize=True,
+            ),
         ],
     )
 
@@ -75,6 +81,14 @@ class ConfigureGuildCmd(
                 ctx=ctx,
                 guild_config=guild_config,
                 localisations=localisations,
+                link_id=link_id,
+                user_config=user_config,
+            )
+        elif self.menu == "configure_premium":
+            components = await GuildPremiumMenu.build_premium_components(
+                ctx=ctx,
+                localisations=localisations,
+                guild_config=guild_config,
                 link_id=link_id,
                 user_config=user_config,
             )
