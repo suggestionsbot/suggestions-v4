@@ -7,9 +7,11 @@ from litestar.exceptions import (
     PermissionDeniedException,
 )
 from litestar.response import Redirect, Response
+from opentelemetry.trace import StatusCode, Status
 from pydantic import BaseModel, Field
 from starlette.requests import Request
 
+from bot.constants import OTEL_TRACER
 from web.util import html_template
 
 logger = logging.getLogger(__name__)
@@ -63,20 +65,24 @@ def redirect_for_auth(
 
 
 def handle_500(request: Request, exc: InternalServerException) -> Response:
-    logger.error(
-        "Internal Server Error",
-        extra={"traceback": commons.exception_as_string(exc)},
-    )
-    if is_api_route(request):
-        return Response(
-            APIErrorModel(
-                status_code=500, detail="Internal Server Error", extra={}
-            ).model_dump_json(),
-            status_code=500,
+    with OTEL_TRACER.start_as_current_span("500 status code handler") as child:
+        child.set_attribute("error.name", exc.__class__.__name__)
+        child.set_status(Status(StatusCode.ERROR))
+        child.record_exception(exc)
+        logger.error(
+            "Internal Server Error",
+            extra={"traceback": commons.exception_as_string(exc)},
         )
+        if is_api_route(request):
+            return Response(
+                APIErrorModel(
+                    status_code=500, detail="Internal Server Error", extra={}
+                ).model_dump_json(),
+                status_code=500,
+            )
 
-    if "user" not in request.scope:
-        request.scope["user"] = None  # Needs something
+        if "user" not in request.scope:
+            request.scope["user"] = None  # Needs something
 
     return html_template("codes/500.jinja", status_code=500)
 
