@@ -355,6 +355,7 @@ app = Litestar(
     debug=not IS_PRODUCTION,
     openapi_config=OpenAPIConfig(
         title=constants.SITE_NAME.rstrip() + " API",
+        description="API access to the suggestions bot and related content.",
         version="0.0.0",
         render_plugins=[
             ScalarRenderPlugin(

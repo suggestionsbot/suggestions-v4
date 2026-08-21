@@ -1,7 +1,10 @@
+from copy import deepcopy
 import datetime
 
 from litestar import Controller, post, Request, Response, delete
 from litestar.di import Provide
+from litestar.openapi import ResponseSpec
+from litestar.openapi.spec import Example
 from pydantic import BaseModel, Field
 
 from web.crud.controller import CRUD_BASE_OPENAPI_RESPONSES
@@ -24,6 +27,22 @@ class TokenOutModel(BaseModel):
     max_expiry_date: datetime.datetime = Field(
         description="The maximum time that this token validity can be extended until"
     )
+
+
+CRUD_OPENAPI_RESPONSES = dict(deepcopy(CRUD_BASE_OPENAPI_RESPONSES))
+CRUD_OPENAPI_RESPONSES[200] = ResponseSpec(
+    data_container=TokenOutModel,
+    description="You are not authenticated",
+    examples=[
+        Example(
+            value=TokenOutModel(
+                token="1234abcd",  # noqa: S106
+                expiry_date=datetime.datetime(2020, 1, 1),  # noqa: DTZ001
+                max_expiry_date=datetime.datetime(2020, 1, 14),  # noqa: DTZ001
+            ).model_dump_json(),
+        )
+    ],
+)
 
 
 class APIAuthTokenController(Controller):
@@ -57,7 +76,7 @@ class APIAuthTokenController(Controller):
         guards=[ensure_api_token],
         dependencies={"token": Provide(retrieve_api_key)},
         security=[{"apiKey": []}],
-        responses=CRUD_BASE_OPENAPI_RESPONSES,
+        responses=CRUD_OPENAPI_RESPONSES,
         description="Create a new API token using an existing API Key",
     )
     async def post_fresh_token(
