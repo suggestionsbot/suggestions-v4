@@ -1,5 +1,9 @@
 from shared.tables import UserConfigs, GuildConfigs, PremiumGuildConfigs
-from bot.tables import InternalErrors, MessageAddons, CommandInvokes
+from bot.tables import (
+    InternalErrors,
+    MessageAddons,
+    CommandInvokes,
+)
 from piccolo_admin import create_admin
 from piccolo_admin.endpoints import TableConfig
 from piccolo_admin.example.tables import AuthenticatorSecret
@@ -9,7 +13,6 @@ from piccolo_api.crud.hooks import HookType, Hook
 from web import constants
 from web.tables import (
     MagicLinks,
-    AuthenticationAttempts,
     OAuthEntry,
     Users,
     Alerts,
@@ -54,13 +57,6 @@ def configure_piccolo_admin():
         ],
     )
     oauth_entry_tc = TableConfig(OAuthEntry, menu_group="User Management")
-    auth_attempt_tc = TableConfig(
-        AuthenticationAttempts,
-        menu_group="Auditing",
-        order_by=[
-            OrderBy(AuthenticationAttempts.id, ascending=False),
-        ],
-    )
     magic_links_tc = TableConfig(
         MagicLinks,
         menu_group="User Management",
@@ -89,6 +85,13 @@ def configure_piccolo_admin():
         menu_group="Stripe",
         order_by=[
             OrderBy(GuildTokens.id, ascending=False),
+        ],
+        visible_columns=[
+            GuildTokens.id,
+            GuildTokens.user,
+            GuildTokens.created_at,
+            GuildTokens.used_for_guild,
+            GuildTokens.expires_at,
         ],
     )
     internal_errors_tc = TableConfig(
@@ -148,7 +151,6 @@ def configure_piccolo_admin():
             oauth_entry_tc,
             magic_links_tc,
             alert_tc,
-            auth_attempt_tc,
             guild_tokens_tc,
             internal_errors_tc,
             message_addons_tc,
@@ -156,6 +158,7 @@ def configure_piccolo_admin():
             gc_tc,
             invoke_tc,
             pgc_tc,
+            aggregate_invoke_tc,
         ],
         production=constants.IS_PRODUCTION,
         allowed_hosts=constants.SERVING_DOMAIN,

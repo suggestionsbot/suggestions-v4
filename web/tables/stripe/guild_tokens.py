@@ -31,7 +31,6 @@ class GuildTokens(AuditMixin, Table):
         required=True,
         null=False,
         index=True,
-        secret=True,
         index_method=IndexMethod.hash,
         help_text="The Stripe id of the underlying subscription",
     )
@@ -40,7 +39,6 @@ class GuildTokens(AuditMixin, Table):
         required=True,
         null=False,
         index=True,
-        secret=True,
         index_method=IndexMethod.hash,
         help_text="The Stripe id of the underlying subscription item id from the invoice",
     )
