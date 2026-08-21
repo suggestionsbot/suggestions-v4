@@ -471,6 +471,43 @@ class SuggestionMenu:
         )
         await s.save()  # This is needed for components
 
+        if thread_name is None or not thread_name:
+            thread_name = localisations.get_localized_string(
+                "components.suggestions.default_thread_name",
+                guild_config.primary_language,
+            )
+
+        # Need to inject into both user supplied and localized so do here
+        thread_name = thread_name.replace("$SID", s.sID)
+        max_thread_length = 100
+        if len(thread_name) >= max_thread_length:
+            internal_error: InternalErrors = await InternalErrors.persist_error(
+                "Thread name too long",
+                command_name="suggest",
+                guild_id=cast("int", ctx.guild_id),
+                user_id=ctx.user.id,
+            )
+            await ctx.respond(
+                embed=utils.error_embed(
+                    title=localisations.get_localized_string(
+                        "errors.suggest.responses.thread_name_too_long.title",
+                        user_config.primary_language,
+                    ),
+                    description=localisations.get_localized_string(
+                        "errors.suggest.responses.thread_name_too_long.description",
+                        user_config.primary_language,
+                    ),
+                    internal_error_reference=internal_error,
+                ),
+                attachment=hikari.files.Bytes(
+                    io.StringIO(s.suggestion),
+                    "content.txt",
+                ),
+                ephemeral=True,
+            )
+            await s.delete().where(Suggestions.id == s.id)
+            return None
+
         if guild_config.suggestions_channel_id is None:
             await ctx.respond(
                 embed=utils.error_embed(
@@ -566,43 +603,6 @@ class SuggestionMenu:
 
         if guild_config.threads_for_suggestions:
             try:
-                if thread_name is None or not thread_name:
-                    thread_name = localisations.get_localized_string(
-                        "components.suggestions.default_thread_name",
-                        guild_config.primary_language,
-                    )
-
-                # Need to inject into both user supplied and localized so do here
-                thread_name = thread_name.replace("$SID", s.sID)
-                max_thread_length = 100
-                if len(thread_name) >= max_thread_length:
-                    internal_error: InternalErrors = await InternalErrors.persist_error(
-                        "Thread name too long",
-                        command_name="suggest",
-                        guild_id=cast("int", ctx.guild_id),
-                        user_id=ctx.user.id,
-                    )
-                    await ctx.respond(
-                        embed=utils.error_embed(
-                            title=localisations.get_localized_string(
-                                "errors.suggest.responses.thread_name_too_long.title",
-                                user_config.primary_language,
-                            ),
-                            description=localisations.get_localized_string(
-                                "errors.suggest.responses.thread_name_too_long.description",
-                                user_config.primary_language,
-                            ),
-                            internal_error_reference=internal_error,
-                        ),
-                        attachment=hikari.files.Bytes(
-                            io.StringIO(s.suggestion),
-                            "content.txt",
-                        ),
-                        ephemeral=True,
-                    )
-                    await s.delete().where(Suggestions.id == s.id)
-                    return None
-
                 thread = await bot.rest.create_message_thread(
                     channel,
                     message,
