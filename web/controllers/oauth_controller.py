@@ -433,7 +433,7 @@ class OAuthController(Controller):
             oauth_id = str(oauth_id)
             user, redirect, oauth_entry = await self.get_user_from_oauth(
                 request,
-                "github",
+                "discord",
                 oauth_id,
                 email,
                 name=profile["global_name"],
