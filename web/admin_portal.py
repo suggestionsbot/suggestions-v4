@@ -57,7 +57,17 @@ def configure_piccolo_admin():
             Hook(hook_type=HookType.pre_patch, callable=patch_validate_password_changes),
         ],
     )
-    oauth_entry_tc = TableConfig(OAuthEntry, menu_group="User Management")
+    oauth_entry_tc = TableConfig(
+        OAuthEntry,
+        menu_group="User Management",
+        visible_columns=[
+            OAuthEntry.id,
+            OAuthEntry.oauth_email,
+            OAuthEntry.user,
+            OAuthEntry.last_login,
+            OAuthEntry.provider,
+        ],
+    )
     magic_links_tc = TableConfig(
         MagicLinks,
         menu_group="User Management",
