@@ -486,6 +486,7 @@ class SuggestionMenu:
                 command_name="suggest",
                 guild_id=cast("int", ctx.guild_id),
                 user_id=ctx.user.id,
+                error_name="User Error",
             )
             await ctx.respond(
                 embed=utils.error_embed(

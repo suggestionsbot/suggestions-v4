@@ -60,6 +60,7 @@ class InternalErrors(AuditMixin, Table):
         exception: Exception | str,
         *,
         command_name: str,
+        error_name: str | None = None,
         user_id: int | None = None,
         guild_id: int | None = None,
         extra_info: str | None = None,
@@ -80,10 +81,11 @@ class InternalErrors(AuditMixin, Table):
         if extra_info is not None:
             extra_info = extra_info.replace("\x00", "")
 
+        error_name = error_name or exception.__class__.__name__
         internal_error = cls(
             id=generate_id(),
             traceback=traceback_for_col,
-            error_name=exception.__class__.__name__,
+            error_name=error_name,
             command_name=command_name,
             guild_id=guild_id,
             user_id=user_id,
