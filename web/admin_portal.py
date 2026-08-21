@@ -3,6 +3,7 @@ from bot.tables import (
     InternalErrors,
     MessageAddons,
     CommandInvokes,
+    AggregateCommandInvokes,
 )
 from piccolo_admin import create_admin
 from piccolo_admin.endpoints import TableConfig
@@ -89,8 +90,8 @@ def configure_piccolo_admin():
         visible_columns=[
             GuildTokens.id,
             GuildTokens.user,
-            GuildTokens.created_at,
             GuildTokens.used_for_guild,
+            GuildTokens.created_at,
             GuildTokens.expires_at,
         ],
     )
@@ -121,12 +122,19 @@ def configure_piccolo_admin():
         order_by=[
             OrderBy(UserConfigs.id, ascending=False),
         ],
+        exclude_visible_columns=[UserConfigs.created_at, UserConfigs.last_modified_at],
     )
     gc_tc = TableConfig(
         GuildConfigs,
         menu_group="Configurations",
         order_by=[
             OrderBy(GuildConfigs.id, ascending=False),
+        ],
+        visible_columns=[
+            GuildConfigs.id,
+            GuildConfigs.guild_id,
+            GuildConfigs.primary_language_raw,
+            GuildConfigs.premium,
         ],
     )
     pgc_tc = TableConfig(
@@ -135,12 +143,29 @@ def configure_piccolo_admin():
         order_by=[
             OrderBy(PremiumGuildConfigs.id, ascending=False),
         ],
+        exclude_visible_columns=[
+            PremiumGuildConfigs.created_at,
+            PremiumGuildConfigs.last_modified_at,
+        ],
     )
     invoke_tc = TableConfig(
         CommandInvokes,
         menu_group="Bot",
         order_by=[
             OrderBy(CommandInvokes.id, ascending=False),
+        ],
+    )
+    aggregate_invoke_tc = TableConfig(
+        AggregateCommandInvokes,
+        menu_group="Bot",
+        order_by=[
+            OrderBy(AggregateCommandInvokes.id, ascending=False),
+        ],
+        visible_columns=[
+            AggregateCommandInvokes.id,
+            AggregateCommandInvokes.data_for_week_starting,
+            AggregateCommandInvokes.total_guilds_seen,
+            AggregateCommandInvokes.total_users_seen,
         ],
     )
 
