@@ -132,7 +132,7 @@ class APIAuth:
 
 
 async def main() -> None:
-    website_session = "fhuu1ytDrFpird4SfTQajhE5wwtSGiWfXyI9V6CiDtk"
+    website_session = "y6eskF9Q8cuWgQCpjQEZhWRb1nNYdlTwBSujzlvmHNQ"
 
     base_url = "http://127.0.0.1:2300"
     # TODO Change to this in production
@@ -141,8 +141,9 @@ async def main() -> None:
         api_auth = APIAuth(client=client)
         await api_auth.create_initial_token(website_session)
         await api_auth.renew_token()
+        print(api_auth.token)
         me = await api_auth.fetch_me()
-        await api_auth.invalidate_token()
+        # await api_auth.invalidate_token()
         print(me)
 
 

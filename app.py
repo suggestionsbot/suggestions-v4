@@ -47,7 +47,11 @@ from web.controllers import (
     GiftController,
 )
 from web.controllers import OAuthController
-from web.controllers.api import APIAlertController, APIAuthTokenController
+from web.controllers.api import (
+    APIAlertController,
+    APIAuthTokenController,
+    APISuggestionController,
+)
 from web.endpoints import (
     home,
 )
@@ -333,6 +337,7 @@ routes = [
     ErrorController,
     StatsController,
     GiftController,
+    APISuggestionController,
 ]
 if not constants.IS_PRODUCTION:
     routes.append(DebugController)
