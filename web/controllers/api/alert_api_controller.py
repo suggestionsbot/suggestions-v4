@@ -46,7 +46,9 @@ class AlertOutModel(NewAlertModel):
 
 
 class AlertPatchModel(BaseModel):
-    has_been_shown: bool = Field(default=None, description="Has the user seen this yet?")
+    has_been_shown: bool | None = Field(
+        default=None, description="Has the user seen this yet?"
+    )
     was_shown_at: datetime.datetime | None = Field(
         default=None, description="The time the user was shown the alert"
     )
@@ -94,17 +96,17 @@ crud_meta = CRUDMeta(
 
 
 rate_limit_config = RateLimitConfig(
-    rate_limit=("second", 5),  # noqa
+    rate_limit=("second", 5),
     identifier_for_request=get_user_ratelimit_key,
 )
 
 
 class APIAlertController[AlertOutModel](CRUDController):
     path = "/api/alerts"
-    tags = ["Alerts"]
+    tags = ["Alerts"]  # noqa: RUF012
     META = crud_meta
     middleware = [UserFromAPIKey, rate_limit_config.middleware]
-    security = [{"apiKey": []}]
+    security = [{"apiKey": []}]  # noqa: RUF012
 
     async def add_custom_where(
         self, request: Request[Users, APIToken, State], query: QueryT
@@ -114,7 +116,7 @@ class APIAlertController[AlertOutModel](CRUDController):
             return query
 
         # noinspection PyTypeChecker
-        return query.where(Alerts.target == request.user)
+        return query.where(Alerts.target == request.user)  # ty:ignore[invalid-argument-type]
 
     @get(
         "/",
@@ -156,11 +158,12 @@ class APIAlertController[AlertOutModel](CRUDController):
     @delete(
         "/{primary_key:str}",
         responses=CRUD_BASE_OPENAPI_RESPONSES,
+        exclude_from_csrf=True,
     )
     async def delete_object(
         self,
         request: Request,
-        primary_key: Annotated[
+        primary_key: Annotated[  # noqa: ANN401
             Any,
             Parameter(
                 title="Object ID",
@@ -181,6 +184,7 @@ class APIAlertController[AlertOutModel](CRUDController):
         "/",
         responses=CRUD_BASE_OPENAPI_RESPONSES,
         status_code=201,
+        exclude_from_csrf=True,
     )
     async def create_object(
         self, request: Request[Users, APIToken, State], data: NewAlertModel
@@ -194,11 +198,12 @@ class APIAlertController[AlertOutModel](CRUDController):
     @patch(
         "/{primary_key:str}",
         responses=CRUD_BASE_OPENAPI_RESPONSES,
+        exclude_from_csrf=True,
     )
     async def patch_object(
         self,
         request: Request,
-        primary_key: Annotated[
+        primary_key: Annotated[  # noqa: ANN401
             Any,
             Parameter(
                 title="Object ID",
@@ -218,7 +223,12 @@ class APIAlertController[AlertOutModel](CRUDController):
     async def get_available_search_filters(self, request: Request) -> SearchRequestModel:
         return await super().get_available_search_filters(request)
 
-    @post("/search", responses=CRUD_BASE_OPENAPI_RESPONSES, status_code=200)
+    @post(
+        "/search",
+        responses=CRUD_BASE_OPENAPI_RESPONSES,
+        status_code=200,
+        exclude_from_csrf=True,
+    )
     async def run_search(
         self,
         request: Request,

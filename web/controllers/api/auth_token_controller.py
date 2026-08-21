@@ -1,7 +1,7 @@
 from copy import deepcopy
 import datetime
 
-from litestar import Controller, post, Request, Response, delete
+from litestar import Controller, post, Request, Response, delete, get
 from litestar.di import Provide
 from litestar.openapi import ResponseSpec
 from litestar.openapi.spec import Example
@@ -29,6 +29,12 @@ class TokenOutModel(BaseModel):
     )
 
 
+class UserOutModel(BaseModel):
+    user_id: int = Field(description="Your user ID for API requests.")
+    email: str = Field(description="The email used to authenticate")
+    last_login: datetime.datetime = Field(description="When you last authenticated")
+
+
 CRUD_OPENAPI_RESPONSES = dict(deepcopy(CRUD_BASE_OPENAPI_RESPONSES))
 CRUD_OPENAPI_RESPONSES[200] = ResponseSpec(
     data_container=TokenOutModel,
@@ -50,6 +56,25 @@ class APIAuthTokenController(Controller):
     token_expiry = datetime.timedelta(hours=2)
     max_token_expiry = datetime.timedelta(days=3)
     tags = ["Authentication"]
+
+    @get(
+        "/me",
+        exclude_from_csrf=True,
+        status_code=200,
+        guards=[ensure_api_token],
+        dependencies={"token": Provide(retrieve_api_key)},
+        security=[{"apiKey": []}],
+        responses=CRUD_BASE_OPENAPI_RESPONSES,
+        description="Fetch the user associated with your API token.",
+    )
+    async def get_current_user(self, token: str) -> UserOutModel:
+        api_token = await APIToken.get_instance_from_token(token)
+        assert api_token is not None
+        return UserOutModel(
+            user_id=api_token.user.id,
+            email=api_token.user.email,
+            last_login=api_token.user.last_login,
+        )
 
     @post(
         "/initial",
