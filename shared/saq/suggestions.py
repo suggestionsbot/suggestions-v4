@@ -62,6 +62,17 @@ async def edit_suggestion_message(
         )
         return
 
+    if suggestion.channel_id is None or suggestion.message_id is None:
+        log.error(
+            "Suggestion channel or message id was none when attempting to edit",
+            extra={
+                "suggestion.id": suggestion_id,
+                "suggestion.channel.id": suggestion.channel_id,
+                "suggestion.message.id": suggestion.message_id,
+            },
+        )
+        return
+
     async with constants.DISCORD_REST_CLIENT.acquire(
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
