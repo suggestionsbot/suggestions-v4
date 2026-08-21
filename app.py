@@ -58,7 +58,7 @@ from web.exception_handlers import (
     handle_404,
     handle_403,
 )
-from web.filters import format_datetime, precise_delta
+from web.filters import format_datetime, precise_delta, safe_get_flashes
 from web.middleware import EnsureAuth, EnsureAdmin
 from web.tables import (
     APIToken,
@@ -280,6 +280,8 @@ rate_limit_config = RateLimitConfig(
         "/api",
     ],
 )
+
+
 ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(
         searchpath=[
@@ -288,13 +290,24 @@ ENVIRONMENT = jinja2.Environment(
     ),
     autoescape=True,
 )
+
 ENVIRONMENT.filters["quote_plus"] = lambda u: quote_plus(u)
 ENVIRONMENT.filters["fmt"] = format_datetime
 ENVIRONMENT.filters["precise_delta"] = precise_delta
 ENVIRONMENT.filters["intcomma"] = humanize.intcomma
+
+
+def register_template_callables(engine: JinjaTemplateEngine) -> None:
+    engine.register_template_callable(
+        key="safe_get_flashes",
+        template_callable=safe_get_flashes,
+    )
+
+
 template_config = TemplateConfig(
     directory="web/templates",
     engine=JinjaTemplateEngine.from_environment(ENVIRONMENT),
+    engine_callback=register_template_callables,
 )
 flash_plugin = FlashPlugin(
     config=FlashConfig(template_config=template_config),

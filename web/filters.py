@@ -1,6 +1,10 @@
+from collections.abc import Mapping
 import datetime
+from typing import Any
 
 from humanize import precisedelta
+from litestar.exceptions import ImproperlyConfiguredException
+from litestar.plugins.flash import get_flashes as _get_flashes
 
 
 def format_datetime(
@@ -20,3 +24,10 @@ def format_datetime(
 
 def precise_delta(timedelta: datetime.timedelta):
     return precisedelta(timedelta)
+
+
+def safe_get_flashes(context: Mapping[str, Any]) -> Any:  # noqa: ANN401
+    try:
+        return _get_flashes(context)
+    except ImproperlyConfiguredException:
+        return []
