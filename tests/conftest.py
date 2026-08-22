@@ -59,6 +59,16 @@ async def configure_testing():
 
         # Set up DB
         await create_db_tables(*tables)
+        # `create_db_tables` builds from the table classes, so constraints only
+        # added by raw migrations are missing. Mirror them here, otherwise any
+        # `on_conflict` relying on them blows up.
+        # See shared/piccolo_migrations/shared_2026_06_14t15_10_03_742933.py
+        from shared.tables import SuggestionVotes
+
+        await SuggestionVotes.raw(
+            "alter table suggestion_votes "
+            "add constraint unique_votes UNIQUE (user_id, suggestion)"
+        )
 
 
 @pytest.fixture
@@ -94,8 +104,8 @@ class CustomFakedRedis:
     async def getdel(self, name):
         return self._redis_client.getdel(name)
 
-    async def set(self, name, value, ex=None):
-        return self._redis_client.set(name, value, ex=ex)
+    async def set(self, name, value, ex=None, nx=False):
+        return self._redis_client.set(name, value, ex=ex, nx=nx)
 
     async def delete(self, *names):
         return self._redis_client.delete(*names)
