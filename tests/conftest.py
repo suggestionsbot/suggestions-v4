@@ -123,7 +123,7 @@ async def redis_client(monkeypatch) -> aioredis.Redis:
 
 
 @pytest.fixture(scope="function")
-def patch_saq(monkeypatch) -> AsyncMock:
+def patch_saq(monkeypatch, redis_client) -> AsyncMock:  # noqa: ARG001
     saq_enqueue = AsyncMock()
     monkeypatch.setattr(SAQ_QUEUE, "enqueue", saq_enqueue)
     return saq_enqueue
