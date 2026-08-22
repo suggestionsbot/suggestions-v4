@@ -1,5 +1,5 @@
 from __future__ import annotations
-from web.constants import REDIS_CLIENT
+from web import constants as w_constants
 
 import contextlib
 import io
@@ -253,7 +253,7 @@ class SuggestionMenu:
         need_to_tell_user_about_perms_key: str = (
             f"errors:missing_suggestion_perms:{guild_config.guild_id}"
         )
-        need_to_tell_user_about_perms = await REDIS_CLIENT.getdel(
+        need_to_tell_user_about_perms = await w_constants.REDIS_CLIENT.getdel(
             need_to_tell_user_about_perms_key
         )
         if need_to_tell_user_about_perms is not None:

@@ -20,7 +20,6 @@ from shared.tables import (
 )
 from shared.utils.configs import ensure_guild_config
 from web import constants
-from web.constants import REDIS_CLIENT
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ async def queue_suggestion_edit(
     as_resolved: bool = False,
 ) -> None:
     redis_key = f"saq:queue_suggestion_edit:{suggestion_id}"
-    result = await REDIS_CLIENT.set(
+    result = await constants.REDIS_CLIENT.set(
         redis_key, suggestion_id, nx=True, ex=timedelta(seconds=9)
     )
     if result is None:
