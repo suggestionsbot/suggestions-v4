@@ -178,24 +178,30 @@ class GuildConfigurationMenus:
 
         if id_data == "send_suggestions_button":
             channel = int(event_values[0])
+            message: str | None = guild_config.premium.suggestion_button_message_prefix
+            button_message: str | None = guild_config.premium.suggestion_button_message
+            if message is None:
+                message = localisations.get_localized_string(
+                    "menus.guild_configuration.responses.sent_suggestions_button.description",
+                    guild_config.primary_language,
+                )
+
+            if button_message is None:
+                button_message = localisations.get_localized_string(
+                    "menus.guild_configuration.responses.sent_suggestions_button.button",
+                    guild_config.primary_language,
+                )
+
             try:
                 await ctx.client.rest.create_message(
                     channel,
                     components=[
-                        hikari.impl.TextDisplayComponentBuilder(
-                            content=localisations.get_localized_string(
-                                "menus.guild_configuration.responses.sent_suggestions_button.description",
-                                guild_config.primary_language,
-                            ),
-                        ),
+                        hikari.impl.TextDisplayComponentBuilder(content=message),
                         hikari.impl.MessageActionRowBuilder(
                             components=[
                                 hikari.impl.InteractiveButtonBuilder(
                                     style=hikari.ButtonStyle.PRIMARY,
-                                    label=localisations.get_localized_string(
-                                        "menus.guild_configuration.responses.sent_suggestions_button.button",
-                                        guild_config.primary_language,
-                                    ),
+                                    label=button_message,
                                     custom_id="v4_suggest_button",
                                 ),
                             ],
@@ -964,6 +970,18 @@ class GuildConfigurationMenus:
                                 channel_types=[hikari.channels.ChannelType.GUILD_TEXT],
                                 min_values=1,
                                 max_values=1,
+                            ),
+                        ],
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.suggestion_button_message.button_name",
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:premium_modal_suggest_button",
                             ),
                         ],
                     ),

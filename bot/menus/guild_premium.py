@@ -1,3 +1,4 @@
+import bot.constants
 from web.constants import REDIS_CLIENT
 import logging
 from collections.abc import Sequence
@@ -164,6 +165,21 @@ class GuildPremiumMenu:
                 )
             )
 
+        elif id_data == "suggest_button_message":
+            message: str | None = cast("str|None", cls.extract_value(event, "message"))
+            button_message: str | None = cast(
+                "str|None", cls.extract_value(event, "button")
+            )
+            guild_config.premium.suggestion_button_message_prefix = message or None
+            guild_config.premium.suggestion_button_message = button_message or None
+            await guild_config.premium.save()
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.responses.configured_physical_button_messages",
+                    user_config.primary_language,
+                )
+            )
+
     @classmethod
     async def handle_interaction(  # noqa: PLR0912, PLR0911, PLR0915, C901
         cls,
@@ -253,6 +269,18 @@ class GuildPremiumMenu:
                 ),
                 f"guild_premium_modal:{link_id}:custom_cooldowns",
                 components=await cls.build_cooldown_modal(
+                    localisations,
+                    user_config,
+                ),
+            )
+        elif id_data == "premium_modal_suggest_button":
+            await ctx.respond_with_modal(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.suggestion_button_message.modal_title",
+                    user_config.primary_language,
+                ),
+                f"guild_premium_modal:{link_id}:suggest_button_message",
+                components=await cls.build_suggest_button_modal(
                     localisations,
                     user_config,
                 ),
@@ -392,6 +420,47 @@ class GuildPremiumMenu:
                             value="Month",
                         ),
                     ],
+                ),
+            ),
+        ]
+
+    @classmethod
+    async def build_suggest_button_modal(
+        cls, localisations: Localisation, user_config: UserConfigs
+    ):
+        return [
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.suggestion_button_message.title",
+                    user_config.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.suggestion_button_message.description",
+                    user_config.primary_language,
+                ),
+                component=hikari.impl.TextInputBuilder(
+                    custom_id="message",
+                    style=hikari.TextInputStyle.PARAGRAPH,
+                    required=False,
+                    min_length=1,
+                    max_length=bot.constants.MAX_CONTENT_LENGTH,
+                ),
+            ),
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.suggestion_button.title",
+                    user_config.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.suggestion_button.description",
+                    user_config.primary_language,
+                ),
+                component=hikari.impl.TextInputBuilder(
+                    custom_id="button",
+                    style=hikari.TextInputStyle.SHORT,
+                    required=False,
+                    min_length=1,
+                    max_length=100,
                 ),
             ),
         ]
