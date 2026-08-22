@@ -5,7 +5,7 @@ from litestar import Controller, post, Request, Response, delete, get
 from litestar.di import Provide
 from litestar.openapi import ResponseSpec
 from litestar.openapi.spec import Example
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from web.crud.controller import CRUD_BASE_OPENAPI_RESPONSES
 from web.di import retrieve_api_key
@@ -33,6 +33,7 @@ class UserOutModel(BaseModel):
     user_id: int = Field(description="Your user ID for API requests.")
     email: str = Field(description="The email used to authenticate")
     last_login: datetime.datetime = Field(description="When you last authenticated")
+    is_admin: bool = Field(description="Are you a site admin?")
 
 
 CRUD_OPENAPI_RESPONSES = dict(deepcopy(CRUD_BASE_OPENAPI_RESPONSES))
@@ -74,6 +75,7 @@ class APIAuthTokenController(Controller):
             user_id=api_token.user.id,
             email=api_token.user.email,
             last_login=api_token.user.last_login,
+            is_admin=api_token.user.admin,
         )
 
     @post(
