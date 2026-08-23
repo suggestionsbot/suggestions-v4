@@ -48,7 +48,7 @@ async def queue_suggestion_edit(
         exclude_buttons=exclude_buttons,
         as_resolved=as_resolved,
         scheduled=time.time() + 10,
-        timeout=SAQ_TIMEOUT,
+        # timeout=SAQ_TIMEOUT,
     )
 
 
