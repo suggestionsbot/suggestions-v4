@@ -1,7 +1,4 @@
-from typing import cast
-
-from shared.saq.worker import SAQ_QUEUE, SAQ_TIMEOUT
-import contextlib
+from shared.saq.worker import SAQ_QUEUE
 import logging
 import time
 from datetime import timedelta
@@ -48,7 +45,6 @@ async def queue_suggestion_edit(
         exclude_buttons=exclude_buttons,
         as_resolved=as_resolved,
         scheduled=time.time() + 10,
-        # timeout=SAQ_TIMEOUT,
     )
 
 
@@ -78,11 +74,6 @@ async def edit_suggestion_message(
         )
         return
 
-    log.debug(
-        "SAQ edit_suggestion_message for %s has timeout %s",
-        suggestion_id,
-        ctx["job"].timeout,
-    )
     async with constants.DISCORD_REST_CLIENT.acquire(
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
