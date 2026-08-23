@@ -1,6 +1,6 @@
 from typing import cast
 
-from shared.saq.worker import SAQ_QUEUE
+from shared.saq.worker import SAQ_QUEUE, SAQ_TIMEOUT
 import contextlib
 import logging
 import time
@@ -48,11 +48,16 @@ async def queue_suggestion_edit(
         exclude_buttons=exclude_buttons,
         as_resolved=as_resolved,
         scheduled=time.time() + 10,
+        timeout=SAQ_TIMEOUT,
     )
 
 
 async def edit_suggestion_message(
-    _, suggestion_id: str, guild_id: int, exclude_buttons: bool, as_resolved: bool
+    ctx,
+    suggestion_id: str,
+    guild_id: int,
+    exclude_buttons: bool,
+    as_resolved: bool,
 ) -> None:
     suggestion = await Suggestions.fetch_suggestion(suggestion_id, guild_id)
     if suggestion is None:
@@ -73,9 +78,15 @@ async def edit_suggestion_message(
         )
         return
 
+    log.debug(
+        "SAQ edit_suggestion_message for %s has timeout %s",
+        suggestion_id,
+        ctx["job"].timeout,
+    )
     async with constants.DISCORD_REST_CLIENT.acquire(
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
+        await ctx["job"].update()
         guild_config = await ensure_guild_config(suggestion.guild_id)
         components = await suggestion.as_components(
             guild_config=guild_config,
