@@ -51,6 +51,7 @@ async def before_process(ctx):
     job: saq.Job = ctx["job"]
     job.retries = 0
     job.timeout = SAQ_TIMEOUT
+    await job.update(timeout=SAQ_TIMEOUT)
 
 
 async def after_process(ctx: Context):
