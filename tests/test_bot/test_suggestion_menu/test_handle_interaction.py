@@ -152,7 +152,7 @@ async def test_delegates_to_handle_suggestion(
     patch_handle_suggestion: AsyncMock,
 ) -> None:
     """Asserts a plain suggestion is handed off with the modal contents."""
-    ctx, result, guild_config, user_config = await invoke_interaction(
+    ctx, _, guild_config, user_config = await invoke_interaction(
         localisation, create_fields("test")
     )
 
@@ -176,7 +176,7 @@ async def test_delegates_to_handle_queued_suggestion(
     """Asserts guilds using the queue hand off to the queued delegate."""
     gc = await configs.ensure_guild_config(GUILD_ID)
     gc.uses_suggestion_queue = True
-    ctx, result, guild_config, user_config = await invoke_interaction(
+    ctx, _, guild_config, user_config = await invoke_interaction(
         localisation, create_fields("test"), guild_config=gc
     )
 
