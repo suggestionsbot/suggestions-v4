@@ -16,10 +16,9 @@ from hikari.interactions.interaction_components import (
     TextSelectMenuInteractionComponent,  # noqa: TC002 # PR Means this may yet change
 )
 
-import shared.utils
 from bot import constants, utils
 from bot.constants import ErrorCode, MAX_CONTENT_LENGTH
-from bot.exceptions import MissingQueueChannel, InvalidFileType
+from bot.exceptions import InvalidFileType
 from bot.tables import (
     InternalErrors,
     MessageAddons,
@@ -28,7 +27,7 @@ from bot.tables import (
     CommandTypes,
 )
 from bot.utils import generate_id
-from shared.utils import r2, configs
+from shared.utils import r2, configs, autocomplete
 
 if typing.TYPE_CHECKING:
     import lightbulb
@@ -591,12 +590,12 @@ class SuggestionMenu:
         s.channel_id = message.channel_id
         s.message_id = message.id
         await s.save()
-        await shared.utils.cache_sid_in_autocomplete(
+        await autocomplete.cache_sid_in_autocomplete(
             guild_id=cast("int", ctx.guild_id),
             suggestion_id=s.sID,
             index="shared_sid_autocomplete_index",
         )
-        await shared.utils.cache_sid_in_autocomplete(
+        await autocomplete.cache_sid_in_autocomplete(
             guild_id=cast("int", ctx.guild_id),
             suggestion_id=s.sID,
             index="suggestion_sid_autocomplete_index",
@@ -788,12 +787,12 @@ class SuggestionMenu:
             qs.message_id = message.id
 
         await qs.save()
-        await shared.utils.cache_sid_in_autocomplete(
+        await autocomplete.cache_sid_in_autocomplete(
             guild_id=cast("int", ctx.guild_id),
             suggestion_id=qs.sID,
             index="shared_sid_autocomplete_index",
         )
-        await shared.utils.cache_sid_in_autocomplete(
+        await autocomplete.cache_sid_in_autocomplete(
             guild_id=cast("int", ctx.guild_id),
             suggestion_id=qs.sID,
             index="queue_sid_autocomplete_index",
