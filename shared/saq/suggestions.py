@@ -55,65 +55,74 @@ async def edit_suggestion_message(
     exclude_buttons: bool,
     as_resolved: bool,
 ) -> None:
-    suggestion = await Suggestions.fetch_suggestion(suggestion_id, guild_id)
-    if suggestion is None:
-        log.error(
-            "Suggestion was none when attempting to edit",
-            extra={"suggestion.id": suggestion_id},
-        )
-        return
-
-    if suggestion.channel_id is None or suggestion.message_id is None:
-        log.error(
-            "Suggestion channel or message id was none when attempting to edit",
-            extra={
-                "suggestion.id": suggestion_id,
-                "suggestion.channel.id": suggestion.channel_id,
-                "suggestion.message.id": suggestion.message_id,
-            },
-        )
-        return
-
-    async with constants.DISCORD_REST_CLIENT.acquire(
-        constants.BOT_TOKEN, hikari.TokenType.BOT
-    ) as client:
-        await ctx["job"].update()
-        guild_config = await ensure_guild_config(suggestion.guild_id)
-        components = await suggestion.as_components(
-            guild_config=guild_config,
-            locale=guild_config.primary_language,
-            rest=client,
-            localisations=b_constants.LOCALISATIONS,
-            exclude_buttons=exclude_buttons,
-            as_resolved=as_resolved,
+    with b_constants.OTEL_TRACER.start_as_current_span("edit_suggestion_message") as span:
+        span.set_attribute("suggestion.id", suggestion_id)
+        span.set_attribute("interaction.guild.id", guild_id)
+        log.debug(
+            "Job timeout was set to %s with %s retries",
+            ctx["job"].timeout,
+            ctx["job"].retries,
         )
 
-        try:
-            await client.edit_message(
-                suggestion.channel_id,
-                suggestion.message_id,
-                components=components,
-                # This must be set to None to clear old embeds
-                # to ensure we remain backwards compatible
-                embeds=None,
-            )
-        except hikari.NotFoundError:
+        suggestion = await Suggestions.fetch_suggestion(suggestion_id, guild_id)
+        if suggestion is None:
             log.error(
-                "Suggestion was not found when attempting to edit",
+                "Suggestion was none when attempting to edit",
                 extra={"suggestion.id": suggestion_id},
             )
-        except hikari.ForbiddenError as e:
+            return
+
+        if suggestion.channel_id is None or suggestion.message_id is None:
             log.error(
-                "Encountered ForbiddenError when attempting to edit suggestion",
+                "Suggestion channel or message id was none when attempting to edit",
                 extra={
                     "suggestion.id": suggestion_id,
-                    "traceback": commons.exception_as_string(e),
+                    "suggestion.channel.id": suggestion.channel_id,
+                    "suggestion.message.id": suggestion.message_id,
                 },
             )
-            await SAQ_QUEUE.enqueue(
-                "notify_guild_of_missing_suggestion_permissions",
-                guild_id=guild_config.guild_id,
+            return
+
+        async with constants.DISCORD_REST_CLIENT.acquire(
+            constants.BOT_TOKEN, hikari.TokenType.BOT
+        ) as client:
+            await ctx["job"].update()
+            guild_config = await ensure_guild_config(suggestion.guild_id)
+            components = await suggestion.as_components(
+                guild_config=guild_config,
+                locale=guild_config.primary_language,
+                rest=client,
+                localisations=b_constants.LOCALISATIONS,
+                exclude_buttons=exclude_buttons,
+                as_resolved=as_resolved,
             )
+
+            try:
+                await client.edit_message(
+                    suggestion.channel_id,
+                    suggestion.message_id,
+                    components=components,
+                    # This must be set to None to clear old embeds
+                    # to ensure we remain backwards compatible
+                    embeds=None,
+                )
+            except hikari.NotFoundError:
+                log.error(
+                    "Suggestion was not found when attempting to edit",
+                    extra={"suggestion.id": suggestion_id},
+                )
+            except hikari.ForbiddenError as e:
+                log.error(
+                    "Encountered ForbiddenError when attempting to edit suggestion",
+                    extra={
+                        "suggestion.id": suggestion_id,
+                        "traceback": commons.exception_as_string(e),
+                    },
+                )
+                await SAQ_QUEUE.enqueue(
+                    "notify_guild_of_missing_suggestion_permissions",
+                    guild_id=guild_config.guild_id,
+                )
 
 
 async def populate_sid_autocomplete(ctx):
