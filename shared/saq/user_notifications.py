@@ -6,9 +6,15 @@ import hikari
 from bot.constants import LOCALISATIONS
 from bot.utils import cv2, HandleClientHTTPResponse
 from bot.utils.users import fetch_user_dm_channel_id
-from shared.tables import Suggestions, QueuedSuggestions, SuggestionVotes
+from shared.tables import (
+    Suggestions,
+    QueuedSuggestions,
+    SuggestionVotes,
+    PremiumUserConfigs,
+)
 from shared.utils import configs
 from web import constants
+from bot import constants as b_constants
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +68,58 @@ async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_
 
 async def notify_voters_of_suggestion_resolution(_, suggestion_id: str, guild_id: int):
     """Notifies premium users who have subscribed to DM's of outcomes."""
-    users_who_voted = await SuggestionVotes.objects(SuggestionVotes.suggestion).where(
-        SuggestionVotes.suggestion.sID == suggestion_id
+    suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
+        suggestion_id, guild_id
     )
+    if not suggestion:
+        logger.error(
+            "Suggestion was none when notifying premium users of resolution",
+            extra={"suggestion.id": suggestion_id},
+        )
+        return
+
+    premium_user_ids = PremiumUserConfigs.select(
+        PremiumUserConfigs.user_config._.user_id
+    ).where(PremiumUserConfigs.wants_voting_notifications.eq(True))
+
+    users_who_voted = await SuggestionVotes.objects().where(
+        SuggestionVotes.suggestion._.sID == suggestion_id,
+        SuggestionVotes.suggestion._.guild_configuration._.guild_id == guild_id,
+        SuggestionVotes.user_id.is_in(premium_user_ids),
+    )
+    with b_constants.OTEL_TRACER.start_as_current_span("edit_suggestion_message") as span:
+        span.set_attribute("suggestion.id", suggestion_id)
+        span.set_attribute("interaction.guild.id", guild_id)
+        async with constants.DISCORD_REST_CLIENT.acquire(
+            constants.BOT_TOKEN, hikari.TokenType.BOT
+        ) as client:
+            for vote in users_who_voted:
+                try:
+                    user_config = await configs.ensure_user_config(suggestion.author_id)
+                    dm_channel = await fetch_user_dm_channel_id(vote.user_id, rest=client)
+                    message_components = (
+                        await cv2.build_user_resolution_voter_notification(
+                            user_config=user_config, suggestion=suggestion
+                        )
+                    )
+                    async with HandleClientHTTPResponse(
+                        inspect.currentframe().f_code.co_name,  # ty:ignore[unresolved-attribute],
+                        f"suggestion_id={suggestion.id}",
+                    ):
+                        await client.create_message(
+                            dm_channel, components=message_components
+                        )
+
+                except hikari.ForbiddenError:
+                    # I'd consider it 'fine' if the bot can't send this message
+                    logger.debug(
+                        "Failed to dm user about a suggestion resolution",
+                        extra={
+                            "interaction.user.id": suggestion.author_id,
+                            "interaction.guild.id": suggestion.guild_id,
+                            "suggestion.id": suggestion_id,
+                        },
+                    )
 
 
 async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int):

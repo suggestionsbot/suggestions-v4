@@ -395,6 +395,8 @@
   "saq.queued_suggestion_resolved_notifications.responses.rejected.description": "Hey $AUTHOR.\nA queued suggestion of yours has been rejected by $RESOLVED_BY.\n\nThe suggestion which was rejected is attached for your convenience.",
   "saq.queued_suggestion_resolved_notifications.responses.suggestion_resolved.footer": "Guild ID: $GUILD_ID | sID: $SID",
   "saq.suggestion_resolved_notifications.responses.suggestion_resolved.description": "Hey $AUTHOR.\nA suggestion of yours has been marked as **$STATE** by $RESOLVED_BY.\n\nYou can view the relevant suggestion at this link: $JUMP_TO",
+  "saq.suggestion_resolved_notifications.responses.voter_suggestion_resolved.description": "Hey $USER.\nA suggestion of yours has been marked as **$STATE** by $RESOLVED_BY.\n\nYou can view the relevant suggestion at this link: $JUMP_TO",
+  "saq.suggestion_resolved_notifications.responses.voter_suggestion_resolved.footer": "Guild ID: $GUILD_ID | sID: $SID",
   "saq.suggestion_resolved_notifications.responses.suggestion_resolved.footer": "Guild ID: $GUILD_ID | sID: $SID",
   "values.suggest.allowed_image_types": "We only allow image like files in suggestion uploads and it looks like one of your images did not meet our criteria.\nPlease try again with one of the following files:`.jpeg`, `.jpg`, `.png`, `.mp3`, `.mp4`, `.gif`",
   "values.suggest.no_anonymous_suggestions": "Your guild does not allow anonymous suggestions.",

@@ -56,6 +56,15 @@ class SuggestionVotes(Table, AuditMixin):
         return f"<@{self.user_id}>"
 
     @property
+    def readable_vote_type(self) -> str:
+        # TODO Localize this
+        return (
+            "Up Vote"
+            if self.vote_type_enum == SuggestionsVoteTypeEnum.UpVote
+            else "Down Vote"
+        )
+
+    @property
     def vote_type_enum(self) -> SuggestionsVoteTypeEnum:
         return SuggestionsVoteTypeEnum(self.vote_type)
 
