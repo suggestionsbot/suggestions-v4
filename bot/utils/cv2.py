@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Protocol
 import hikari
 
 from bot.constants import LOCALISATIONS, EMBED_COLOR
-from bot.utils import fetch_user_avatar
+from bot import utils
 from shared.tables import (
     UserConfigs,
     Suggestions,
@@ -188,7 +188,7 @@ async def insert_user_segment(
     locale_key: str,
 ) -> None:
     """Safely insert user segments that handle 415 status codes."""
-    user_avatar = await fetch_user_avatar(user_id=user_id, rest=rest)
+    user_avatar = await utils.fetch_user_avatar(user_id=user_id, rest=rest)
     if not data.is_anonymous and user_avatar is None:
         logger.debug(
             "Skipping avatar for %s %s as the avatar is not available",

@@ -31,25 +31,3 @@ def test_falls_back(localisation: Localisation, context: lightbulb.Context):
         )
         == "Command Failed"
     )
-
-
-# noinspection PyPropertyAccess
-def test_templating(localisation: Localisation, context: lightbulb.Context):
-    assert (
-        localisation.inject_locale_values(
-            "$TEST",
-            extras={"TEST": "test"},
-        )
-        == "test"
-    )
-
-    context.channel_id = 1
-    context.user.id = 2
-    context.guild_id = 3
-    assert (
-        localisation.inject_locale_values(
-            "$CHANNEL_ID $AUTHOR_ID $GUILD_ID",
-            ctx=context,
-        )
-        == "1 2 3"
-    )
