@@ -6,7 +6,7 @@ import hikari
 from bot.constants import LOCALISATIONS
 from bot.utils import cv2, HandleClientHTTPResponse
 from bot.utils.users import fetch_user_dm_channel_id
-from shared.tables import Suggestions, QueuedSuggestions
+from shared.tables import Suggestions, QueuedSuggestions, SuggestionVotes
 from shared.utils import configs
 from web import constants
 
@@ -58,6 +58,13 @@ async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_
                     "suggestion.type": "queued",
                 },
             )
+
+
+async def notify_voters_of_suggestion_resolution(_, suggestion_id: str, guild_id: int):
+    """Notifies premium users who have subscribed to DM's of outcomes."""
+    users_who_voted = await SuggestionVotes.objects(SuggestionVotes.suggestion).where(
+        SuggestionVotes.suggestion.sID == suggestion_id
+    )
 
 
 async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int):
