@@ -15,6 +15,8 @@ from shared.tables import (
 from shared.utils import configs
 from web import constants
 from bot import constants as b_constants
+from web.tables import UserTokens
+from web.util.table_mixins import utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +68,33 @@ async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_
             )
 
 
+async def get_voters_for_suggestion_with_notifications_enabled(
+    suggestion: Suggestions,
+) -> list[SuggestionVotes]:
+    premium_user_ids = await PremiumUserConfigs.select(
+        PremiumUserConfigs.user_config.user_id
+    ).where(PremiumUserConfigs.wants_voting_notifications.eq(value=True))
+    if not premium_user_ids:
+        logger.debug("No premium user configs found, returning empty list")
+        return []
+
+    valid_token_user_ids = await UserTokens.select(UserTokens.user_id).where(
+        UserTokens.expires_at > utc_now()
+    )
+    if not valid_token_user_ids:
+        logger.debug("No premium users found, returning empty list")
+        return []
+
+    premium_user_ids = [user["user_config.user_id"] for user in premium_user_ids]
+    valid_token_user_ids = [token["user_id"] for token in valid_token_user_ids]
+
+    return await SuggestionVotes.objects().where(
+        SuggestionVotes.suggestion == suggestion,
+        SuggestionVotes.user_id.is_in(premium_user_ids),
+        SuggestionVotes.user_id.is_in(valid_token_user_ids),
+    )
+
+
 async def notify_voters_of_suggestion_resolution(_, suggestion_id: str, guild_id: int):
     """Notifies premium users who have subscribed to DM's of outcomes."""
     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
@@ -78,14 +107,8 @@ async def notify_voters_of_suggestion_resolution(_, suggestion_id: str, guild_id
         )
         return
 
-    premium_user_ids = PremiumUserConfigs.select(
-        PremiumUserConfigs.user_config._.user_id
-    ).where(PremiumUserConfigs.wants_voting_notifications.eq(True))
-
-    users_who_voted = await SuggestionVotes.objects().where(
-        SuggestionVotes.suggestion._.sID == suggestion_id,
-        SuggestionVotes.suggestion._.guild_configuration._.guild_id == guild_id,
-        SuggestionVotes.user_id.is_in(premium_user_ids),
+    users_who_voted = await get_voters_for_suggestion_with_notifications_enabled(
+        suggestion
     )
     with b_constants.OTEL_TRACER.start_as_current_span("edit_suggestion_message") as span:
         span.set_attribute("suggestion.id", suggestion_id)
@@ -99,7 +122,7 @@ async def notify_voters_of_suggestion_resolution(_, suggestion_id: str, guild_id
                     dm_channel = await fetch_user_dm_channel_id(vote.user_id, rest=client)
                     message_components = (
                         await cv2.build_user_resolution_voter_notification(
-                            user_config=user_config, suggestion=suggestion
+                            user_config=user_config, suggestion=suggestion, vote=vote
                         )
                     )
                     async with HandleClientHTTPResponse(
