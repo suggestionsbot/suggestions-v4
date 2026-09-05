@@ -1,11 +1,13 @@
 import inspect
 import logging
+import time
 
 import hikari
 
 from bot.constants import LOCALISATIONS
 from bot.utils import cv2, HandleClientHTTPResponse
 from bot.utils.users import fetch_user_dm_channel_id
+from shared.saq.worker import SAQ_QUEUE
 from shared.tables import (
     Suggestions,
     QueuedSuggestions,
@@ -101,7 +103,9 @@ async def get_voters_for_suggestion_with_notifications_enabled(
     return await query
 
 
-async def notify_voters_of_suggestion_resolution(_, suggestion_id: str, guild_id: int):
+async def notify_voters_of_suggestion_resolution(
+    _, suggestion_id: str, guild_id: int
+) -> None:
     """Notifies premium users who have subscribed to DM's of outcomes."""
     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
         suggestion_id, guild_id
@@ -123,6 +127,10 @@ async def notify_voters_of_suggestion_resolution(_, suggestion_id: str, guild_id
             constants.BOT_TOKEN, hikari.TokenType.BOT
         ) as client:
             for vote in users_who_voted:
+                if vote.user_id == suggestion.user_configuration.user_id:
+                    # Don't notify the author of their own suggestion
+                    continue
+
                 try:
                     user_config = await configs.ensure_user_config(suggestion.author_id)
                     dm_channel = await fetch_user_dm_channel_id(vote.user_id, rest=client)
@@ -151,7 +159,7 @@ async def notify_voters_of_suggestion_resolution(_, suggestion_id: str, guild_id
                     )
 
 
-async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int):
+async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int) -> None:
     """Notifies users of when there suggestion has been resolved"""
     # TODO Support dm'ing subscribed users
     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
@@ -163,6 +171,13 @@ async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int
             extra={"suggestion.id": suggestion_id},
         )
         return
+
+    await SAQ_QUEUE.enqueue(
+        "notify_voters_of_suggestion_resolution",
+        suggestion_id=suggestion_id,
+        guild_id=guild_id,
+        scheduled=time.time() + 5,
+    )
 
     guild_config = await configs.ensure_guild_config(guild_id)
     user_config = await configs.ensure_user_config(suggestion.author_id)

@@ -58,7 +58,8 @@ async def grant_user_premium(*, expired: bool = False) -> None:
     ).save()
 
 
-async def test_fetches_users_for_notifications() -> None:
+async def test_fetches_users_for_notifications(monkeypatch) -> None:
+    monkeypatch.setattr(bot.constants, "ENABLE_FREE_USER_PREMIUM", False)
     suggestion, gc, uc = await create_suggestion()
     r_1 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
     assert r_1 == []
@@ -76,7 +77,7 @@ async def test_fetches_users_for_notifications() -> None:
     r_2 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
     assert r_2 == []
 
-    # Third vote, premium config with premium but no notif
+    # Third vote, premium config with notif but no premium
     puc = await uc.fetch_premium_object()
     puc.wants_voting_notifications = True
     await puc.save()
