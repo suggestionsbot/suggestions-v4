@@ -78,21 +78,27 @@ async def get_voters_for_suggestion_with_notifications_enabled(
         logger.debug("No premium user configs found, returning empty list")
         return []
 
-    valid_token_user_ids = await UserTokens.select(UserTokens.user_id).where(
-        UserTokens.expires_at > utc_now()
-    )
-    if not valid_token_user_ids:
-        logger.debug("No premium users found, returning empty list")
-        return []
+    valid_token_user_ids = None
+    if not b_constants.ENABLE_FREE_USER_PREMIUM:
+        valid_token_user_ids = await UserTokens.select(UserTokens.user_id).where(
+            UserTokens.expires_at > utc_now()
+        )
+        if not valid_token_user_ids:
+            logger.debug("No premium users found, returning empty list")
+            return []
+
+        valid_token_user_ids = [token["user_id"] for token in valid_token_user_ids]
 
     premium_user_ids = [user["user_config.user_id"] for user in premium_user_ids]
-    valid_token_user_ids = [token["user_id"] for token in valid_token_user_ids]
 
-    return await SuggestionVotes.objects().where(
+    query = SuggestionVotes.objects().where(
         SuggestionVotes.suggestion == suggestion,
         SuggestionVotes.user_id.is_in(premium_user_ids),
-        SuggestionVotes.user_id.is_in(valid_token_user_ids),
     )
+    if valid_token_user_ids is not None:
+        query = query.where(SuggestionVotes.user_id.is_in(valid_token_user_ids))
+
+    return await query
 
 
 async def notify_voters_of_suggestion_resolution(_, suggestion_id: str, guild_id: int):

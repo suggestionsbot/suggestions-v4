@@ -1,3 +1,4 @@
+import bot.constants
 import datetime
 
 from shared.saq.user_notifications import (
@@ -57,7 +58,7 @@ async def grant_user_premium(*, expired: bool = False) -> None:
     ).save()
 
 
-async def test_sql():
+async def test_fetches_users_for_notifications() -> None:
     suggestion, gc, uc = await create_suggestion()
     r_1 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
     assert r_1 == []
@@ -86,6 +87,43 @@ async def test_sql():
     await grant_user_premium(expired=True)
     r_4 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
     assert r_4 == []
+
+    # Fifth vote, premium config with premium and notif
+    await grant_user_premium()
+    r_5 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
+    assert r_5 == [vote_1]
+
+
+async def test_enable_user_premium(monkeypatch) -> None:
+    monkeypatch.setattr(bot.constants, "ENABLE_FREE_USER_PREMIUM", True)
+    suggestion, gc, uc = await create_suggestion()
+    r_1 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
+    assert r_1 == []
+
+    # First vote, no premium
+    vote_1 = SuggestionVotes(
+        suggestion=suggestion, vote_type=SuggestionsVoteTypeEnum.UpVote, user_id=USER_ID
+    )
+    await vote_1.save()
+    r_2 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
+    assert r_2 == []
+
+    # Second vote, premium config but no notif
+    await uc.fetch_premium_object()
+    r_2 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
+    assert r_2 == []
+
+    # Third vote, premium config with notif
+    puc = await uc.fetch_premium_object()
+    puc.wants_voting_notifications = True
+    await puc.save()
+    r_3 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
+    assert r_3 == [vote_1]
+
+    # Fourth vote, premium config with expired premium and notif
+    await grant_user_premium(expired=True)
+    r_4 = await get_voters_for_suggestion_with_notifications_enabled(suggestion)
+    assert r_4 == [vote_1]
 
     # Fifth vote, premium config with premium and notif
     await grant_user_premium()
