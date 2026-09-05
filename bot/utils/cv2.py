@@ -12,6 +12,7 @@ from shared.tables import (
     Suggestions,
     QueuedSuggestions,
     QueuedSuggestionStateEnum,
+    SuggestionVotes,
 )
 
 if TYPE_CHECKING:
@@ -87,6 +88,46 @@ async def build_user_resolution_notification(
                 hikari.impl.TextDisplayComponentBuilder(
                     content=LOCALISATIONS.get_localized_string(
                         "saq.suggestion_resolved_notifications.responses.suggestion_resolved.footer",
+                        user_config.primary_language,
+                        extras={
+                            "GUILD_ID": suggestion.guild_id,
+                            "SID": suggestion.footer_sid,
+                        },
+                    ),
+                ),
+            ],
+        ),
+    ]
+
+
+async def build_user_resolution_voter_notification(
+    *, user_config: UserConfigs, suggestion: Suggestions, vote: SuggestionVotes
+) -> list[hikari.impl.ContainerComponentBuilder]:
+    return [
+        hikari.impl.ContainerComponentBuilder(
+            accent_color=suggestion.color,
+            components=[
+                hikari.impl.TextDisplayComponentBuilder(
+                    content=LOCALISATIONS.get_localized_string(
+                        "saq.suggestion_resolved_notifications.responses.voter_suggestion_resolved.description",
+                        user_config.primary_language,
+                        extras={
+                            "USER": vote.voter_display_name,
+                            "STATE": suggestion.state.value,
+                            "JUMP_TO": suggestion.message_jump_link,
+                            "RESOLVED_BY": suggestion.resolved_by_display_text,
+                            "SID": f"**{suggestion.sID}**",
+                            "VOTE": f"{vote.readable_vote_type.lower()}d",
+                        },
+                    ),
+                ),
+                hikari.impl.SeparatorComponentBuilder(
+                    divider=True,
+                    spacing=hikari.SpacingType.SMALL,
+                ),
+                hikari.impl.TextDisplayComponentBuilder(
+                    content=LOCALISATIONS.get_localized_string(
+                        "saq.suggestion_resolved_notifications.responses.voter_suggestion_resolved.footer",
                         user_config.primary_language,
                         extras={
                             "GUILD_ID": suggestion.guild_id,

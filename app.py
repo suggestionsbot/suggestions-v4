@@ -191,6 +191,7 @@ saq = SAQPlugin(
                     suggestions_worker.test_message_send,
                     suggestions_user_notifications_worker.suggestion_resolved_notifications,
                     suggestions_user_notifications_worker.notify_users_of_new_suggestion,
+                    suggestions_user_notifications_worker.notify_voters_of_suggestion_resolution,
                     suggestions_user_notifications_worker.queued_suggestion_resolved_notifications,
                     error_propagation_worker.notify_guild_of_missing_suggestion_permissions,
                     aggregate_command_invokes_worker.compute_aggregate_command_invokes,
