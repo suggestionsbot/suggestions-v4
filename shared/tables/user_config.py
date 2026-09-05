@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 import hikari
 from piccolo.table import Table
@@ -9,6 +10,8 @@ from shared.tables.mixins import AuditMixin
 
 if TYPE_CHECKING:
     from shared.tables import PremiumUserConfigs
+
+logger = logging.getLogger(__name__)
 
 
 class UserConfigs(AuditMixin, Table):
@@ -40,6 +43,24 @@ class UserConfigs(AuditMixin, Table):
     async def fetch_premium_object(self) -> PremiumUserConfigs:
         """Fetch or create the associated premium user config."""
         from shared.tables import PremiumUserConfigs
+
+        try_insert = (
+            await PremiumUserConfigs.insert(PremiumUserConfigs(user_config=self))
+            .on_conflict(action="DO NOTHING", target=(PremiumUserConfigs.user_config,))
+            .returning(*PremiumUserConfigs.all_columns())
+        )
+        if try_insert:
+            # New object
+            logger.debug("Created new PremiumUserConfigs for %s", self.user_id)
+            obj = PremiumUserConfigs(**try_insert[0])
+            obj._exists_in_db = True
+            return obj
+
+        return (
+            await PremiumUserConfigs.objects()
+            .first()
+            .where(PremiumUserConfigs.user_config == self)
+        )
 
         puc = await PremiumUserConfigs.objects().get(
             PremiumUserConfigs.user_config == self

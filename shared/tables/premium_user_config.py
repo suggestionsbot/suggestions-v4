@@ -18,6 +18,7 @@ class PremiumUserConfigs(AuditMixin, Table):
         index=True,
         null=False,
         required=True,
+        unique=True,
     )
     wants_voting_notifications = Boolean(
         default=False,
