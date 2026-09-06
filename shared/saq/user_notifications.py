@@ -165,7 +165,6 @@ async def notify_voters_of_suggestion_resolution(
 
 async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int) -> None:
     """Notifies users of when there suggestion has been resolved"""
-    # TODO Support dm'ing subscribed users
     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
         suggestion_id, guild_id
     )
@@ -205,7 +204,7 @@ async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int
             ):
                 await client.create_message(dm_channel, components=message_components)
 
-        except (hikari.ForbiddenError,):
+        except hikari.ForbiddenError:
             # I'd consider it 'fine' if the bot can't send this message
             logger.debug(
                 "Failed to dm user about a suggestion resolution",
