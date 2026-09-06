@@ -223,10 +223,10 @@ async def test_with_no_guild_items(
             customer_id=BASE_CUSTOMER_ID,
         )
 
-    assert caplog.messages == [
-        f"Observed price id '{STRIPE_PRICE_ID_USERS_MONTHLY}' not needing "
-        f"to be handled by fulfil_guild_purchase"
-    ]
+    assert (
+        f"Observed price id '{STRIPE_PRICE_ID_USERS_MONTHLY}' needing to be"
+        f" handled by handle_customer_subscription_created" in caplog.messages
+    )
 
 
 # noinspection DuplicatedCode
