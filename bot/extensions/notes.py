@@ -89,9 +89,7 @@ async def notify_user_of_change(
         ),
     ]
     try:
-        dm_channel = await fetch_user_dm_channel_id(
-            user_config.user_id, rest=ctx.client.rest
-        )
+        dm_channel = await fetch_user_dm_channel_id(user_config, rest=ctx.client.rest)
         await ctx.client.rest.create_message(dm_channel, components=result)
     except hikari.ForbiddenError:
         # I'd consider it 'fine' if the bot can't send this message

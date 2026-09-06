@@ -40,7 +40,7 @@ async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
         try:
-            dm_channel = await fetch_user_dm_channel_id(user_config.user_id, rest=client)
+            dm_channel = await fetch_user_dm_channel_id(user_config, rest=client)
             (
                 message_components,
                 suggestion_components,
@@ -132,8 +132,8 @@ async def notify_voters_of_suggestion_resolution(
                     continue
 
                 try:
-                    user_config = await configs.ensure_user_config(suggestion.author_id)
-                    dm_channel = await fetch_user_dm_channel_id(vote.user_id, rest=client)
+                    user_config = await configs.ensure_user_config(vote.user_id)
+                    dm_channel = await fetch_user_dm_channel_id(user_config, rest=client)
                     message_components = (
                         await cv2.build_user_resolution_voter_notification(
                             user_config=user_config, suggestion=suggestion, vote=vote
@@ -191,7 +191,7 @@ async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
         try:
-            dm_channel = await fetch_user_dm_channel_id(user_config.user_id, rest=client)
+            dm_channel = await fetch_user_dm_channel_id(user_config, rest=client)
             message_components = await cv2.build_user_resolution_notification(
                 user_config=user_config, suggestion=suggestion
             )
@@ -238,7 +238,7 @@ async def notify_users_of_new_suggestion(_, suggestion_id: str, guild_id: int):
         constants.BOT_TOKEN, hikari.TokenType.BOT
     ) as client:
         try:
-            dm_channel = await fetch_user_dm_channel_id(user_config.user_id, rest=client)
+            dm_channel = await fetch_user_dm_channel_id(user_config, rest=client)
             components = await cv2.build_new_suggestion_notification(
                 user_config=user_config, suggestion=suggestion
             )

@@ -3,6 +3,8 @@ from datetime import timedelta
 import hikari
 import httpx
 
+from shared.tables import UserConfigs
+
 
 async def fetch_user_avatar(user_id: int, *, rest) -> hikari.URL | None:
     """Fetches the user avatar, returning None if the avatar is not available."""
@@ -35,15 +37,12 @@ async def fetch_user_avatar(user_id: int, *, rest) -> hikari.URL | None:
 
 
 async def fetch_user_dm_channel_id(
-    user_id: int, *, rest: hikari.api.RESTClient
+    user_config: UserConfigs, *, rest: hikari.api.RESTClient
 ) -> hikari.Snowflakeish:
-    from web.constants import REDIS_CLIENT
+    if user_config.dm_channel_id is not None:
+        return user_config.dm_channel_id
 
-    redis_key = f"dm_channel_id:{user_id}"
-    dm_channel_id = await REDIS_CLIENT.get(redis_key)
-    if dm_channel_id is not None:
-        return int(dm_channel_id)
-
-    dm_channel = await rest.create_dm_channel(user_id)
-    await REDIS_CLIENT.set(redis_key, dm_channel.id, ex=timedelta(hours=12))
+    dm_channel = await rest.create_dm_channel(user_config.user_id)
+    user_config.dm_channel_id = dm_channel.id
+    await user_config.save()
     return dm_channel.id

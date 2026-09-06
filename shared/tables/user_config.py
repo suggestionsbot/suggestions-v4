@@ -21,6 +21,12 @@ class UserConfigs(AuditMixin, Table):
         index=True,
         help_text="The discord user id",
     )
+    # In an attempt to get rate limited less
+    dm_channel_id = BigInt(
+        null=True,
+        default=None,
+        help_text="The ID of this users DM channel ",
+    )
     generic_dm_messages_disabled = Boolean(
         default=False,
         help_text="If True, don't send this user dms for generic messages"
