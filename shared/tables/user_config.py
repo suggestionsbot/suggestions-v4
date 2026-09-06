@@ -1,4 +1,5 @@
 from __future__ import annotations
+from bot.constants import ENABLE_FREE_USER_PREMIUM
 
 import logging
 from typing import TYPE_CHECKING
@@ -62,12 +63,11 @@ class UserConfigs(AuditMixin, Table):
             .where(PremiumUserConfigs.user_config == self)
         )
 
-        puc = await PremiumUserConfigs.objects().get(
-            PremiumUserConfigs.user_config == self
-        )
-        if puc is not None:
-            return puc
+    async def premium_is_enabled(self) -> bool:
+        """Returns true if this user is considered to have active premium."""
+        from web.tables import UserTokens
 
-        puc = PremiumUserConfigs(user_config=self)
-        await puc.save()
-        return puc
+        if ENABLE_FREE_USER_PREMIUM:
+            return True
+
+        return await UserTokens.does_user_have_premium(self.user_id)

@@ -11,6 +11,7 @@ from hikari.api import special_endpoints
 from bot import utils, constants
 from bot.exceptions import SuggestionException
 from bot.localisation import Localisation
+from bot.menus import UserPremiumMenu
 from shared.tables import GuildConfigs, UserConfigs
 from shared.utils import configs
 from shared.utils.locales import language_as_word
@@ -28,8 +29,14 @@ class UserConfigurationMenus:
         event: hikari.ComponentInteractionCreateEvent,
         link_id: str,
     ) -> None:
-        await ctx.defer(ephemeral=True)
         user_config = await configs.ensure_user_config(cast("int", ctx.user.id))
+        if id_data.startswith("premium_"):
+            await UserPremiumMenu.handle_interaction(
+                id_data, ctx=ctx, event=event, user_config=user_config
+            )
+            return
+
+        await ctx.defer(ephemeral=True)
         event_values: Sequence[str] = event.interaction.values
         log.debug(
             "Processing UCM component %s",
@@ -204,6 +211,17 @@ class UserConfigurationMenus:
                     ),
                 ],
             ),
+        ]
+
+        # TODO Move premium to its own page eventually
+        components.extend(
+            await UserPremiumMenu.build_premium_components(
+                link_id=link_id,
+                user_config=user_config,
+            )
+        )
+
+        components.append(
             hikari.impl.MessageActionRowBuilder(
                 components=[
                     hikari.impl.LinkButtonBuilder(
@@ -213,8 +231,29 @@ class UserConfigurationMenus:
                             user_config.primary_language,
                         ),
                     ),
+                    hikari.impl.LinkButtonBuilder(
+                        url="https://docs.suggestions.gg/docs/premium",
+                        label=localisations.get_localized_string(
+                            "menus.guild_configuration.view_premium_docs",
+                            user_config.primary_language,
+                        ),
+                    ),
                 ],
-            ),
-        ]
+            )
+        )
+        if not await user_config.premium_is_enabled():
+            components.append(
+                hikari.impl.MessageActionRowBuilder(
+                    components=[
+                        hikari.impl.LinkButtonBuilder(
+                            url="https://dashboard.suggestions.gg/stripe/users/checkout",
+                            label=localisations.get_localized_string(
+                                "menus.user_configuration.premium_menu.responses.premium_required.link",
+                                user_config.primary_language,
+                            ),
+                        ),
+                    ],
+                ),
+            )
 
         return components
