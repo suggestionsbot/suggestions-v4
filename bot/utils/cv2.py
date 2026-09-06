@@ -1,5 +1,4 @@
 from __future__ import annotations
-from psutil import v
 
 import logging
 from typing import TYPE_CHECKING, Protocol
