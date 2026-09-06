@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import logging
 import time
@@ -127,6 +128,9 @@ async def notify_voters_of_suggestion_resolution(
             constants.BOT_TOKEN, hikari.TokenType.BOT
         ) as client:
             for vote in users_who_voted:
+                # See if we can't avoid rate limits
+                # If it doesn't work, can increase
+                await asyncio.sleep(2)
                 if vote.user_id == suggestion.user_configuration.user_id:
                     # Don't notify the author of their own suggestion
                     continue
