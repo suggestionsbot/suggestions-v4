@@ -8,6 +8,7 @@ from hikari.api import special_endpoints
 
 from bot import utils
 from bot.constants import LOCALISATIONS
+from bot.utils.users import fetch_user_dm_channel_id
 from shared.tables import UserConfigs
 
 log = logging.getLogger(__name__)
@@ -56,6 +57,9 @@ class UserPremiumMenu:
             result = commons.value_to_bool(event_values[0])
             premium_config.wants_voting_notifications = result
             await premium_config.save()
+
+            # Pre-cache the DM channel ID
+            await fetch_user_dm_channel_id(user_config, rest=ctx.client.rest)
 
             key = (
                 "menus.user_configuration.premium_menu.responses.will_notify"
