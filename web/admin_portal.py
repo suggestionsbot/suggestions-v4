@@ -1,4 +1,9 @@
-from shared.tables import UserConfigs, GuildConfigs, PremiumGuildConfigs
+from shared.tables import (
+    UserConfigs,
+    GuildConfigs,
+    PremiumGuildConfigs,
+    PremiumUserConfigs,
+)
 from bot.tables import (
     InternalErrors,
     MessageAddons,
@@ -18,6 +23,7 @@ from web.tables import (
     Users,
     Alerts,
     GuildTokens,
+    UserTokens,
 )
 
 
@@ -105,6 +111,20 @@ def configure_piccolo_admin():
             GuildTokens.expires_at,
         ],
     )
+    user_tokens_tc = TableConfig(
+        UserTokens,
+        menu_group="Stripe",
+        order_by=[
+            OrderBy(UserTokens.id, ascending=False),
+        ],
+        visible_columns=[
+            UserTokens.id,
+            UserTokens.user,
+            UserTokens.user_id,
+            UserTokens.created_at,
+            UserTokens.expires_at,
+        ],
+    )
     internal_errors_tc = TableConfig(
         InternalErrors,
         menu_group="Bot",
@@ -158,6 +178,17 @@ def configure_piccolo_admin():
             PremiumGuildConfigs.last_modified_at,
         ],
     )
+    puc_tc = TableConfig(
+        PremiumUserConfigs,
+        menu_group="Configurations",
+        order_by=[
+            OrderBy(PremiumUserConfigs.id, ascending=False),
+        ],
+        exclude_visible_columns=[
+            PremiumUserConfigs.created_at,
+            PremiumUserConfigs.last_modified_at,
+        ],
+    )
     invoke_tc = TableConfig(
         CommandInvokes,
         menu_group="Bot",
@@ -193,7 +224,9 @@ def configure_piccolo_admin():
             gc_tc,
             invoke_tc,
             pgc_tc,
+            puc_tc,
             aggregate_invoke_tc,
+            user_tokens_tc,
         ],
         production=constants.IS_PRODUCTION,
         allowed_hosts=constants.SERVING_DOMAIN,
