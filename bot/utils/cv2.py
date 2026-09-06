@@ -1,4 +1,5 @@
 from __future__ import annotations
+from psutil import v
 
 import logging
 from typing import TYPE_CHECKING, Protocol
@@ -13,6 +14,7 @@ from shared.tables import (
     QueuedSuggestions,
     QueuedSuggestionStateEnum,
     SuggestionVotes,
+    SuggestionsVoteTypeEnum,
 )
 
 if TYPE_CHECKING:
@@ -103,6 +105,11 @@ async def build_user_resolution_notification(
 async def build_user_resolution_voter_notification(
     *, user_config: UserConfigs, suggestion: Suggestions, vote: SuggestionVotes
 ) -> list[hikari.impl.ContainerComponentBuilder]:
+    vote_key = (
+        "values.tense_up_vote"
+        if vote.vote_type_enum == SuggestionsVoteTypeEnum.UpVote
+        else "values.tense_down_vote"
+    )
     return [
         hikari.impl.ContainerComponentBuilder(
             accent_color=suggestion.color,
@@ -117,7 +124,9 @@ async def build_user_resolution_voter_notification(
                             "JUMP_TO": suggestion.message_jump_link,
                             "RESOLVED_BY": suggestion.resolved_by_display_text,
                             "SID": f"**{suggestion.sID}**",
-                            "VOTE": f"{vote.readable_vote_type.lower()}d",
+                            "VOTE": LOCALISATIONS.get_localized_string(
+                                vote_key, user_config.primary_language
+                            ),
                         },
                     ),
                 ),
