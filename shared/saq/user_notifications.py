@@ -164,7 +164,7 @@ async def notify_voters_of_suggestion_resolution(
 
 
 async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int) -> None:
-    """Notifies users of when there suggestion has been resolved"""
+    """Notifies users of when there suggestion has been resolved."""
     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
         suggestion_id, guild_id
     )

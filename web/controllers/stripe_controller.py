@@ -5,6 +5,7 @@ from datetime import timedelta
 from urllib.parse import quote_plus
 
 import arrow
+import hikari
 import orjson
 import stripe
 from litestar import Controller, get, Request, post
@@ -13,6 +14,7 @@ from starlette.datastructures import State
 from starlette.responses import Response
 
 from bot.tables import InternalErrors
+from bot.utils.users import fetch_user_dm_channel_id
 from shared.utils import configs
 from shared.utils.ntfy import notify_ethan_of_something
 from web import constants
@@ -404,6 +406,17 @@ class StripeController(Controller):
         if premium_config.wants_voting_notifications != commons.value_to_bool(row):
             premium_config.wants_voting_notifications = commons.value_to_bool(row)
             await premium_config.save()
+
+            if (
+                premium_config.wants_voting_notifications
+                and user_config.dm_channel_id is None
+            ):
+                # Let's cache the DM channel
+                async with constants.DISCORD_REST_CLIENT.acquire(
+                    constants.BOT_TOKEN, hikari.TokenType.BOT
+                ) as client:
+                    await fetch_user_dm_channel_id(user_config, rest=client)
+
             alert(request, "Thanks, I have changed that value.", level="success")
 
         return Redirect(request.url_for("manage_user_tokens"))
