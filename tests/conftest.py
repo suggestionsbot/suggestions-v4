@@ -28,7 +28,7 @@ from bot.localisation import Localisation
 from shared.saq.worker import SAQ_QUEUE
 from web import constants as w_constants
 from web.controllers import AuthController, oauth_controller
-from web.tables import APIToken, Users, OAuthEntry, GuildTokens
+from web.tables import APIToken, Users, OAuthEntry, GuildTokens, UserTokens
 from web.util.table_mixins import utc_now
 
 T = TypeVar("T")
@@ -200,6 +200,16 @@ class GuildTokenT(BaseModel):
     expires_at: datetime.datetime = utc_now()
 
 
+class UserTokenT(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    subscription_id: str
+    subscription_item_id: str
+    user_id: int
+    user: Users
+    expires_at: datetime.datetime = utc_now()
+
+
 class BaseGiven:
     data: dict[str, Any] = {}
 
@@ -255,6 +265,18 @@ class BaseGiven:
                 subscription_item_id=gtt.subscription_item_id,
             )
             gt.save().run_sync()
+        return self
+
+    def user_tokens_exist(self, *ids: UserTokenT) -> Self:
+        for utt in ids:
+            ut = UserTokens(
+                subscription_id=utt.subscription_id,
+                user=utt.user,
+                user_id=utt.user_id,
+                expires_at=utt.expires_at,
+                subscription_item_id=utt.subscription_item_id,
+            )
+            ut.save().run_sync()
         return self
 
     @property

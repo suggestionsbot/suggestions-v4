@@ -1,8 +1,18 @@
+from __future__ import annotations
+from bot.constants import ENABLE_FREE_USER_PREMIUM
+
+import logging
+from typing import TYPE_CHECKING
 import hikari
 from piccolo.table import Table
 from piccolo.columns import BigInt, Boolean, Text
 
 from shared.tables.mixins import AuditMixin
+
+if TYPE_CHECKING:
+    from shared.tables import PremiumUserConfigs
+
+logger = logging.getLogger(__name__)
 
 
 class UserConfigs(AuditMixin, Table):
@@ -10,6 +20,12 @@ class UserConfigs(AuditMixin, Table):
         unique=True,
         index=True,
         help_text="The discord user id",
+    )
+    # In an attempt to get rate limited less
+    dm_channel_id = BigInt(
+        null=True,
+        default=None,
+        help_text="The ID of this users DM channel ",
     )
     generic_dm_messages_disabled = Boolean(
         default=False,
@@ -30,3 +46,34 @@ class UserConfigs(AuditMixin, Table):
     @property
     def primary_language(self) -> hikari.Locale:
         return hikari.Locale(self.primary_language_raw)
+
+    async def fetch_premium_object(self) -> PremiumUserConfigs:
+        """Fetch or create the associated premium user config."""
+        from shared.tables import PremiumUserConfigs
+
+        try_insert = (
+            await PremiumUserConfigs.insert(PremiumUserConfigs(user_config=self))
+            .on_conflict(action="DO NOTHING", target=(PremiumUserConfigs.user_config,))
+            .returning(*PremiumUserConfigs.all_columns())
+        )
+        if try_insert:
+            # New object
+            logger.debug("Created new PremiumUserConfigs for %s", self.user_id)
+            obj = PremiumUserConfigs(**try_insert[0])
+            obj._exists_in_db = True
+            return obj
+
+        return (
+            await PremiumUserConfigs.objects()
+            .first()
+            .where(PremiumUserConfigs.user_config == self)
+        )
+
+    async def premium_is_enabled(self) -> bool:
+        """Returns true if this user is considered to have active premium."""
+        from web.tables import UserTokens
+
+        if ENABLE_FREE_USER_PREMIUM:
+            return True
+
+        return await UserTokens.does_user_have_premium(self.user_id)

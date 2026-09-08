@@ -1,4 +1,5 @@
 from .guild_premium import GuildPremiumMenu
+from .user_premium import UserPremiumMenu
 from .guild_configuration_menu import GuildConfigurationMenus
 from .user_configuration_menu import UserConfigurationMenus
 from .suggestion_menu import SuggestionMenu
@@ -8,6 +9,7 @@ from .suggestions_queue_viewer import SuggestionsQueueViewerMenu
 __all__ = [
     "GuildConfigurationMenus",
     "GuildPremiumMenu",
+    "UserPremiumMenu",
     "SuggestionMenu",
     "SuggestionsQueueMenu",
     "SuggestionsQueueViewerMenu",

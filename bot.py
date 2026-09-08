@@ -21,6 +21,9 @@ from bot.constants import (
     BLOCKLIST_GROUP,
     TOTAL_SHARDS,
     SHARDS_PER_CLUSTER,
+    ENABLE_FREE_USER_PREMIUM,
+    ENABLE_CUSTOM_NAME_AND_AVATARS,
+    ENABLE_FREE_GUILD_PREMIUM,
 )
 from bot.extensions.resolve import ResolveMessageCommand
 from shared.tables import GuildConfigs
@@ -119,6 +122,13 @@ async def main():
         logger.info("Cluster %s - Handling shards %s", CLUSTER_ID, shard_ids)
     else:
         cluster_kwargs = {}
+
+    if ENABLE_FREE_GUILD_PREMIUM:
+        logger.info("Bot is starting with free guild premium enabled")
+    if ENABLE_FREE_USER_PREMIUM:
+        logger.info("Bot is starting with free user premium enabled")
+    if ENABLE_CUSTOM_NAME_AND_AVATARS:
+        logger.info("Bot is starting with custom names and avatars enabled")
 
     await bot.start(**cluster_kwargs)  # ty:ignore[invalid-argument-type]
     await bot.join()

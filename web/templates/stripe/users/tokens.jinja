@@ -1,0 +1,67 @@
+{% extends "base.jinja" %}
+{% block title %}Manage User Premium | Suggestions{% endblock %}
+{% block content %}
+    <div class="page">
+        <div class="container py-4">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <h2 class="page-title">
+                                Manage Your Premium
+                            </h2><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% include 'alerts.jinja' %}
+            <div class="card card-md">
+                <div class="card-body">
+
+                    <p>Edit various premium configuration options here.</p>
+                    <div class="col-xl-4">
+                        <form class="card card-md" method="POST" autocomplete="off" novalidate>
+                            {{ csrf_input | safe }}
+                            <div class="card-body">
+                                <div>
+                                    <div class="form-label">Notifications on resolved suggestions</div>
+                                    <small>Would you like to receive a notification when a suggestion you voted on
+                                        is
+                                        resolved?</small><br><br>
+                                    <select id="wants_voting_notifications" name="wants_voting_notifications"
+                                            class="form-select">
+                                        <option value="yes"
+                                                {% if config.wants_voting_notifications %}selected=""{% endif %}>
+                                            Yes! Send me a message.
+                                        </option>
+                                        <option value="no"
+                                                {% if not config.wants_voting_notifications %}selected=""{% endif %}>
+                                            No, I don't want to receive a message.
+                                        </option>
+                                    </select>
+                                </div>
+                                <br>
+                                {% if user_has_premium %}
+                                    <button type="submit" class="btn btn-outline w-100">Save Changes</button>
+                                {% else %}
+                                    <p>To configure this setting, premium is required.</p>
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                    <br>
+
+                    {% if not user_has_premium %}
+                        <p>Looking for Premium? Click <a href="{{ url_for("stripe_user_checkout") }}">this link
+                            to get it.</a></p>
+                    {% else %}
+                        <p>You have premium! Click <a
+                                href="{{ url_for("stripe_customer_portal") }}">this link
+                        </a>to manage your subscription.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock content %}

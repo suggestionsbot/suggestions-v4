@@ -25,6 +25,10 @@ class DebugController(Controller):
         )
         return html_template("stripe/thanks.jinja")
 
+    @get(path="/stripe/users/thanks", name="debug_stripe_user_thanks")
+    async def debug_stripe_user_thanks(self, request: Request) -> Template:
+        return html_template("stripe/users/thanks.jinja")
+
     @get(path="/oauth/data", name="debug_oauth_data")
     async def list_oauth(self, request: Request) -> Template:
         """List all oauth raw data"""
