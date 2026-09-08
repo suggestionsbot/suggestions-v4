@@ -1,3 +1,4 @@
+import commons
 import datetime
 import logging
 from datetime import timedelta
@@ -12,6 +13,7 @@ from starlette.datastructures import State
 from starlette.responses import Response
 
 from bot.tables import InternalErrors
+from shared.utils import configs
 from shared.utils.ntfy import notify_ethan_of_something
 from web import constants
 from web.controllers import AuthController
@@ -292,3 +294,116 @@ class StripeController(Controller):
             )
         await guild_token.save()
         return redirect_url
+
+    @get("/users/callback", name="stripe_user_callback", middleware=[EnsureAuth])
+    async def user_callback(
+        self, request: Request, checkout_session_id: str
+    ) -> Template | Redirect:
+        checkout_session = await stripe.checkout.Session.retrieve_async(
+            checkout_session_id
+        )
+        subscription = await stripe.Subscription.retrieve_async(
+            checkout_session["subscription"]
+        )
+        await payments.handle_customer_subscription_created(
+            subscription_id=checkout_session["subscription"],
+            customer_id=subscription["customer"],
+        )
+        alert(request, "Purchase successful! You now have premium.", level="success")
+        if "next_route" in request.cookies:
+            next_route = AuthController.validate_next_route(
+                next_route=request.cookies["next_route"]
+            )
+            response: Redirect = Redirect(next_route)
+            response.delete_cookie("next_route")
+            return response
+
+        return html_template("stripe/users/thanks.jinja")
+
+    @get("/users/checkout", name="stripe_user_checkout", middleware=[EnsureAuth])
+    async def checkout_user(self) -> Template:
+        price_result = await stripe.Price.retrieve_async(
+            constants.STRIPE_PRICE_ID_USERS_MONTHLY
+        )
+        return html_template(
+            "stripe/users/checkout.jinja",
+            {"pricing": price_result},
+        )
+
+    @post("/users/checkout", middleware=[EnsureAuth])
+    async def create_user_checkout(
+        self,
+        request: Request[Users, None, State],  # ty:ignore[invalid-type-arguments]
+        allow_promo_code: bool = False,
+        next_route: str | None = None,
+    ) -> Redirect | Template:
+        if await request.user.premium_is_enabled():
+            alert(
+                request,
+                "You already have premium, consider managing it instead.",
+                level="success",
+            )
+            return html_template("stripe/users/thanks.jinja")
+
+        addons = {}
+        if allow_promo_code:
+            addons["allow_promotion_codes"] = True
+        else:
+            coupon_result = await stripe.Coupon.retrieve_async(
+                constants.STRIPE_COUPON_EARLY_ADOPTER
+            )
+            addons["discounts"] = [{"coupon": coupon_result["id"]}]
+
+        checkout_session = await stripe.checkout.Session.create_async(
+            line_items=[
+                {
+                    "price": constants.STRIPE_PRICE_ID_USERS_MONTHLY,
+                    "quantity": 1,
+                },
+            ],
+            customer_email=request.user.email,
+            mode="subscription",
+            success_url=request.url_for("stripe_user_callback")
+            + "?checkout_session_id={CHECKOUT_SESSION_ID}",
+            **addons,
+        )
+        redirect_url = checkout_session.url
+        assert isinstance(redirect_url, str)
+        response: Redirect = Redirect(redirect_url, status_code=303)
+        if next_route is not None:
+            response.set_cookie(
+                key="next_route",
+                value=next_route,
+                httponly=True,
+                secure=constants.IS_PRODUCTION,
+                max_age=int(timedelta(minutes=30).total_seconds()),
+                samesite="lax",
+            )
+        return response
+
+    @get("/users/tokens", name="manage_user_tokens", middleware=[EnsureAuth])
+    async def manage_user_tokens(self, request: Request) -> Template:
+        oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
+        user_config = await configs.ensure_user_config(oauth_entry.oauth_id)
+        return html_template(
+            "stripe/users/tokens.jinja",
+            {
+                "user_has_premium": await request.user.premium_is_enabled(),
+                "oauth_entry": oauth_entry,
+                "config": await user_config.fetch_premium_object(),
+            },
+        )
+
+    @post("/users/tokens", middleware=[EnsureAuth])
+    async def manage_user_tokens_post(self, request: Request) -> Redirect:
+        form = await request.form()
+        row: str | bool = form.get("wants_voting_notifications", False)
+        oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
+        user_config = await configs.ensure_user_config(oauth_entry.oauth_id)
+        premium_config = await user_config.fetch_premium_object()
+        if premium_config.wants_voting_notifications != commons.value_to_bool(row):
+            premium_config.wants_voting_notifications = commons.value_to_bool(row)
+            await premium_config.save()
+            alert(request, "Thanks, I have changed that value.", level="success")
+
+        return Redirect(request.url_for("manage_user_tokens"))

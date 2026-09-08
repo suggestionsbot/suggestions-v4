@@ -257,3 +257,13 @@ class Users(AuditMixin, Table, tablename="users"):
         from web.tables import OAuthEntry
 
         return await OAuthEntry.objects().get(OAuthEntry.user == self)
+
+    async def premium_is_enabled(self) -> bool:
+        """Returns true if this user is considered to have active premium."""
+        from web.tables import UserTokens
+        from bot.constants import ENABLE_FREE_USER_PREMIUM
+
+        if ENABLE_FREE_USER_PREMIUM:
+            return True
+
+        return await UserTokens.does_web_user_have_premium(self)

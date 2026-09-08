@@ -1,0 +1,23 @@
+{% extends 'base.jinja' %}
+{% block title %}Purchase User Premium{% endblock %}
+{% block content %}
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            {% include 'alerts.jinja' %}
+            <form class="card card-md" method="POST" autocomplete="off" novalidate>
+                {{ csrf_input | safe }}
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Purchase Premium For Yourself</h2>
+                    <div>
+                        <p>We are currently running an early adopter discount! Your first 3 months are 50% off on us
+                            ❤️</p>
+                    </div>
+                    <div class="form-footer">
+                        <small>You will be redirected to Stripe to view pricing and complete your purchase.</small>
+                        <button type="submit" class="btn btn-indigo w-100">Checkout</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -17,6 +17,9 @@ from piccolo.table import Table
 from web.util import AuditMixin
 from web.util.table_mixins import utc_now
 
+if TYPE_CHECKING:
+    from web.tables import Users
+
 
 class UserTokens(AuditMixin, Table):
     if TYPE_CHECKING:
@@ -62,7 +65,15 @@ class UserTokens(AuditMixin, Table):
             .where(utc_now() < UserTokens.expires_at)
         )
 
+    @classmethod
+    async def does_web_user_have_premium(cls, user: Users) -> bool:
+        return (
+            await UserTokens.exists()
+            .where(UserTokens.user == user)
+            .where(utc_now() < UserTokens.expires_at)
+        )
+
     async def invalidate(self) -> None:
-        """Mark a token as expired and therefore not usable"""
+        """Mark a token as expired and therefore not usable."""
         self.expires_at = utc_now()
         await self.save()
