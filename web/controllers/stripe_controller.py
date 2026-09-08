@@ -164,7 +164,10 @@ class StripeController(Controller):
             addons["discounts"] = [{"coupon": coupon_result["id"]}]
 
         checkout_session = await self.create_checkout_session(
-            request, allow_promo_code, redirect_url="stripe_guild_callback"
+            request,
+            allow_promo_code,
+            redirect_url="stripe_guild_callback",
+            price_sku=constants.STRIPE_PRICE_ID_GUILDS_MONTHLY,
         )
         redirect_url = checkout_session.url
         assert isinstance(redirect_url, str)
@@ -322,7 +325,10 @@ class StripeController(Controller):
         request: Request[Users, None, State],  # ty:ignore[invalid-type-arguments]
         allow_promo_code: bool = False,
         redirect_url: str = "home",
+        price_sku=None,
     ) -> stripe.checkout.Session:
+        if price_sku is None:
+            raise ValueError
         addons = {}
         if allow_promo_code:
             addons["allow_promotion_codes"] = True
@@ -341,7 +347,7 @@ class StripeController(Controller):
         checkout_session = await stripe.checkout.Session.create_async(
             line_items=[
                 {
-                    "price": constants.STRIPE_PRICE_ID_USERS_MONTHLY,
+                    "price": price_sku,
                     "quantity": 1,
                 },
             ],
@@ -368,7 +374,10 @@ class StripeController(Controller):
             return html_template("stripe/users/thanks.jinja")
 
         checkout_session = await self.create_checkout_session(
-            request, allow_promo_code, redirect_url="stripe_user_callback"
+            request,
+            allow_promo_code,
+            redirect_url="stripe_user_callback",
+            price_sku=constants.STRIPE_PRICE_ID_USERS_MONTHLY,
         )
         redirect_url = checkout_session.url
         assert isinstance(redirect_url, str)
