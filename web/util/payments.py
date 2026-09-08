@@ -162,11 +162,12 @@ async def handle_customer_subscription_created(
             active=True,
             auths_without_password=True,
         )
-        await user.save()
 
-    if user.stripe_customer_id is None:
-        user.stripe_customer_id = customer_id
-        await user.save()
+    # Force update to current, mainly useful
+    # for when I delete customers in test envs
+    # and don't want to reset test data
+    user.stripe_customer_id = customer_id
+    await user.save()
 
     # noinspection protected-member
     async with GuildTokens._meta.db.transaction():
