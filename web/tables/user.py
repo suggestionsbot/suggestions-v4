@@ -10,7 +10,7 @@ import secrets
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 from piccolo.columns import Boolean, Secret, Varchar
-from piccolo.columns.column_types import Serial, Timestamptz
+from piccolo.columns.column_types import Serial, Timestamptz, Text
 from piccolo.columns.readable import Readable
 from piccolo.table import Table
 
@@ -59,6 +59,13 @@ class Users(AuditMixin, Table, tablename="users"):
     email_is_verified = Boolean(
         default=False,
         help_text="Is the users current email address verified?",
+    )
+
+    stripe_customer_id = Text(
+        required=False,
+        null=True,
+        default=None,
+        help_text="The Stripe customer ID related to this user",
     )
 
     _min_password_length = 20 if IS_PRODUCTION else 6

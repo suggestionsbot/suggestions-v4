@@ -163,23 +163,8 @@ class StripeController(Controller):
             )
             addons["discounts"] = [{"coupon": coupon_result["id"]}]
 
-        checkout_session = await stripe.checkout.Session.create_async(
-            line_items=[
-                {
-                    "price": constants.STRIPE_PRICE_ID_GUILDS_MONTHLY,
-                    "quantity": quantity,
-                },
-                # TODO Implement yearly support later
-                # {
-                #     "price": constants.STRIPE_PRICE_ID_GUILDS_YEARLY,
-                #     "quantity": quantity,
-                # },
-            ],
-            customer_email=request.user.email,
-            mode="subscription",
-            success_url=request.url_for("stripe_guild_callback")
-            + "?checkout_session_id={CHECKOUT_SESSION_ID}",
-            **addons,
+        checkout_session = await self.create_checkout_session(
+            request, allow_promo_code, redirect_url="stripe_guild_callback"
         )
         redirect_url = checkout_session.url
         assert isinstance(redirect_url, str)
@@ -332,6 +317,41 @@ class StripeController(Controller):
             {"pricing": price_result},
         )
 
+    async def create_checkout_session(
+        self,
+        request: Request[Users, None, State],  # ty:ignore[invalid-type-arguments]
+        allow_promo_code: bool = False,
+        redirect_url: str = "home",
+    ) -> stripe.checkout.Session:
+        addons = {}
+        if allow_promo_code:
+            addons["allow_promotion_codes"] = True
+        else:
+            coupon_result = await stripe.Coupon.retrieve_async(
+                constants.STRIPE_COUPON_EARLY_ADOPTER
+            )
+            addons["discounts"] = [{"coupon": coupon_result["id"]}]
+
+        if request.user.stripe_customer_id is None:
+            addons["customer_email"] = request.user.email
+
+        else:
+            addons["customer"] = request.user.stripe_customer_id
+
+        checkout_session = await stripe.checkout.Session.create_async(
+            line_items=[
+                {
+                    "price": constants.STRIPE_PRICE_ID_USERS_MONTHLY,
+                    "quantity": 1,
+                },
+            ],
+            mode="subscription",
+            success_url=request.url_for(redirect_url)
+            + "?checkout_session_id={CHECKOUT_SESSION_ID}",
+            **addons,
+        )
+        return checkout_session
+
     @post("/users/checkout", middleware=[EnsureAuth])
     async def create_user_checkout(
         self,
@@ -347,27 +367,8 @@ class StripeController(Controller):
             )
             return html_template("stripe/users/thanks.jinja")
 
-        addons = {}
-        if allow_promo_code:
-            addons["allow_promotion_codes"] = True
-        else:
-            coupon_result = await stripe.Coupon.retrieve_async(
-                constants.STRIPE_COUPON_EARLY_ADOPTER
-            )
-            addons["discounts"] = [{"coupon": coupon_result["id"]}]
-
-        checkout_session = await stripe.checkout.Session.create_async(
-            line_items=[
-                {
-                    "price": constants.STRIPE_PRICE_ID_USERS_MONTHLY,
-                    "quantity": 1,
-                },
-            ],
-            customer_email=request.user.email,
-            mode="subscription",
-            success_url=request.url_for("stripe_user_callback")
-            + "?checkout_session_id={CHECKOUT_SESSION_ID}",
-            **addons,
+        checkout_session = await self.create_checkout_session(
+            request, allow_promo_code, redirect_url="stripe_user_callback"
         )
         redirect_url = checkout_session.url
         assert isinstance(redirect_url, str)
