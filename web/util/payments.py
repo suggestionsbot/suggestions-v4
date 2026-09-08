@@ -164,6 +164,10 @@ async def handle_customer_subscription_created(
         )
         await user.save()
 
+    if user.stripe_customer_id is None:
+        user.stripe_customer_id = customer_id
+        await user.save()
+
     # noinspection protected-member
     async with GuildTokens._meta.db.transaction():
         subscription = await stripe.Subscription.retrieve_async(subscription_id)
