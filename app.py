@@ -279,6 +279,7 @@ rate_limit_config = RateLimitConfig(
         "/docs",
         "/admin/",
         "/api",
+        "/stripe/webhook",
     ],
 )
 
