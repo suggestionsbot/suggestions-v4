@@ -398,6 +398,14 @@ class StripeController(Controller):
 
     @post("/users/tokens", middleware=[EnsureAuth])
     async def manage_user_tokens_post(self, request: Request) -> Redirect:
+        if not await request.user.premium_is_enabled():
+            alert(
+                request,
+                "Editing configurations require premium, please purchase it to continue.",
+                level="error",
+            )
+            return Redirect(request.url_for("stripe_user_checkout"))
+
         form = await request.form()
         row: str | bool = form.get("wants_voting_notifications", False)
         oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
