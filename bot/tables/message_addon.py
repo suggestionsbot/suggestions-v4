@@ -34,10 +34,7 @@ GLOBAL_MESSAGES: list[PossibleMessageAddons] = [
 ]
 """Messages we can add to any situation"""
 
-WITHHOLD_SENDING: list[PossibleMessageAddons] = [
-    # Premium not yet released
-    PossibleMessageAddons.SUGGESTION_RESOLUTION_NOTIFICATIONS,
-]
+WITHHOLD_SENDING: list[PossibleMessageAddons] = []
 """Items we currently support but dont want to send out"""
 
 
@@ -93,10 +90,6 @@ class MessageAddons(Table):
         # We can create one for usage
         if hint is None:
             hint = random.choice(GLOBAL_MESSAGES)  # Not security related # noqa: S311
-
-        # For the first couple of months we are locking it to this
-        # TODO Change later
-        hint = PossibleMessageAddons.READ_CHANGELOG
 
         ma = cls(shown_message=hint, user=user)
         await ma.save()
