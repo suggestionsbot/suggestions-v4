@@ -1,0 +1,118 @@
+# .github/workflows/priority-sync.yml
+#
+# Mirrors the "p: *" issue labels onto the Priority field of
+# suggestionsbot project #2.
+#
+# Setup:
+#   1. Fine-grained PAT, resource owner = suggestionsbot org.
+#      Organization permissions -> Projects: Read and write.
+#      Repository access: none. Repository permissions: none.
+#   2. Repo -> Settings -> Environments -> new environment
+#      "projects-automation", restricted to the default branch.
+#   3. Add the PAT to that environment as the secret PROJECTS_TOKEN.
+#
+# The IDs below are stable unless the project or the Priority field is
+# deleted and recreated. Re-read them with:
+#   gh project view 2 --owner suggestionsbot --format json --jq .id
+#   gh project field-list 2 --owner suggestionsbot --limit 100 --format json \
+#     --jq '.fields[] | select(.name == "Priority") | {id, options: [.options[] | {name, id}]}'
+
+name: Sync priority label to project
+
+on:
+  issues:
+    types: [ labeled ]
+
+# No job needs GITHUB_TOKEN; all project access goes through the PAT.
+permissions: { }
+
+# One run per issue. A rapid relabel cancels the stale run so the most
+# recently applied label is the one that wins.
+concurrency:
+  group: priority-sync-for-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_ID: PVT_kwDOBBUVQc4BMkM7
+  FIELD_ID: PVTSSF_lADOBBUVQc4BMkM7zg7z838
+  OPTION_IDS: >-
+    {
+      "p: critical": "da944a9c",
+      "p: high":     "cca036f1",
+      "p: medium":   "0e79221c",
+      "p: low":      "212b864c"
+    }
+
+jobs:
+  set-priority:
+    if: >-
+      github.event.sender.login == 'Skelmis' &&
+      contains(fromJSON('["p: critical","p: high","p: medium","p: low"]'), github.event.label.name)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: projects-automation
+    steps:
+      - name: Update project Priority field
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PROJECTS_TOKEN }}
+          # Untrusted values are passed as env vars, never interpolated
+          # into the script body, so bash receives them as data.
+          ISSUE_ID: ${{ github.event.issue.node_id }}
+          LABEL: ${{ github.event.label.name }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::PROJECTS_TOKEN is empty — is the environment secret set?"
+            exit 1
+          fi
+
+          # Preflight. Turns an expired or revoked PAT into a clear message
+          # instead of an opaque GraphQL error two calls later.
+          if ! gh api graphql --silent \
+                 -f query='query($id: ID!) { node(id: $id) { ... on ProjectV2 { id } } }' \
+                 -f id="$PROJECT_ID" 2>/dev/null; then
+            echo "::error::Cannot read project $PROJECT_ID — PROJECTS_TOKEN is likely expired, revoked, or missing org Projects write"
+            exit 1
+          fi
+
+          # -e makes a missing key a hard failure. A miss here means this map
+          # and the job-level label allowlist have drifted apart.
+          option_id=$(jq -er --arg v "$LABEL" '.[$v]' <<< "$OPTION_IDS")
+
+          # Idempotent: returns the existing item if the issue is already on
+          # the board, adds it and returns the new item if not.
+          item_id=$(gh api graphql \
+            -f query='
+              mutation($project: ID!, $content: ID!) {
+                addProjectV2ItemById(input: {projectId: $project, contentId: $content}) {
+                  item { id }
+                }
+              }' \
+            -f project="$PROJECT_ID" -f content="$ISSUE_ID" \
+            --jq '.data.addProjectV2ItemById.item.id')
+
+          if [ -z "$item_id" ]; then
+            echo "::error::Failed to resolve a project item for this issue"
+            exit 1
+          fi
+
+          gh api graphql --silent \
+            -f query='
+              mutation($project: ID!, $item: ID!, $field: ID!, $option: String!) {
+                updateProjectV2ItemFieldValue(input: {
+                  projectId: $project
+                  itemId: $item
+                  fieldId: $field
+                  value: { singleSelectOptionId: $option }
+                }) {
+                  projectV2Item { id }
+                }
+              }' \
+            -f project="$PROJECT_ID" -f item="$item_id" \
+            -f field="$FIELD_ID" -f option="$option_id"
+
+          # Untrusted label text goes to the step summary, which is inert,
+          # rather than into a ::notice:: workflow command.
+          printf 'Set Priority from label: `%s`\n' "$LABEL" >> "$GITHUB_STEP_SUMMARY"
