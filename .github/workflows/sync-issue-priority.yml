@@ -26,12 +26,6 @@ on:
 # No job needs GITHUB_TOKEN; all project access goes through the PAT.
 permissions: { }
 
-# One run per issue. A rapid relabel cancels the stale run so the most
-# recently applied label is the one that wins.
-concurrency:
-  group: priority-sync-for-${{ github.event.issue.number }}
-  cancel-in-progress: true
-
 env:
   PROJECT_ID: PVT_kwDOBBUVQc4BMkM7
   FIELD_ID: PVTSSF_lADOBBUVQc4BMkM7zg7z838
