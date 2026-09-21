@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import timedelta
 
 from litestar import Request
 from litestar.connection import ASGIConnection
@@ -20,7 +21,7 @@ class EnsureAuth(AbstractAuthenticationMiddleware):
     admin_only = False
     superuser_only = False
     active_only = True
-    increase_expiry = None
+    increase_expiry = timedelta(hours=3)
     requires_auth = True
 
     @classmethod
