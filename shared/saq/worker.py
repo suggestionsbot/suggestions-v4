@@ -1,3 +1,4 @@
+# ruff: noqa: T201
 import datetime
 import os
 from typing import cast
@@ -16,23 +17,23 @@ from web.util.table_mixins import utc_now
 load_dotenv()
 
 
-async def tick(_):
-    print(f"tick {datetime.datetime.now(datetime.timezone.utc)}")
+async def tick(_: Context) -> None:
+    print(f"tick {utc_now()}")
 
 
-async def log_current_valid_sessions(_):
+async def log_current_valid_sessions(_: Context) -> None:
     meter = get_meter_provider().get_meter("users.sessions")
     session_counter = meter.create_up_down_counter(
         name="current_valid_user_sessions",
         description="Total number of currently valid User sessions",
     )
     count = await SessionsBase.count(distinct=[SessionsBase.user_id]).where(
-        datetime.datetime.now() < SessionsBase.expiry_date
+        datetime.datetime.now() < SessionsBase.expiry_date  # noqa: DTZ005
     )
     session_counter.add(count)
 
 
-async def log_current_api_tokens(_):
+async def log_current_api_tokens(_: Context) -> None:
     meter = get_meter_provider().get_meter("users.api_tokens")
     session_counter = meter.create_up_down_counter(
         name="current_valid_api_tokens",
@@ -46,7 +47,7 @@ async def log_current_api_tokens(_):
     session_counter.add(count)
 
 
-async def before_process(ctx):
+async def before_process(ctx: Context) -> None:
     print(f"Starting job: {ctx['job'].function}\n\tWith kwargs: {ctx['job'].kwargs}")
     job: saq.Job = ctx["job"]
     job.retries = 0
@@ -54,7 +55,7 @@ async def before_process(ctx):
     await job.update(timeout=SAQ_TIMEOUT)
 
 
-async def after_process(ctx: Context):
+async def after_process(ctx: Context) -> None:
     print(f"Finished job: {ctx['job'].function}\n\tWith kwargs: {ctx['job'].kwargs}")
     if "exception" in ctx:
         from bot.tables import InternalErrors
@@ -67,13 +68,14 @@ async def after_process(ctx: Context):
         )
         await notify_ethan_of_something(
             title="SAQ Error",
-            message=f"Observed an error in the following saq function: `{ctx['job'].function!r}`",
+            message="Observed an error in the following saq function: "
+            f"`{ctx['job'].function!r}`",
             internal_error_reference=internal_error,
             tags="warning",
         )
 
 
-async def startup(_):
+async def startup(_: Context) -> None:
     # Ensure logger is started in SAQ process
     constants.configure_otel(constants.DASHBOARD_SERVICE_NAME)
     await constants.DISCORD_REST_CLIENT.start()
@@ -83,9 +85,9 @@ async def startup(_):
     await SAQ_QUEUE.enqueue("compute_aggregate_command_invokes")
 
 
-async def shutdown(_):
+async def shutdown(_: Context) -> None:
     await constants.DISCORD_REST_CLIENT.close()
 
 
 SAQ_TIMEOUT = int(datetime.timedelta(hours=1).total_seconds())
-SAQ_QUEUE = Queue.from_url(os.environ.get("REDIS_URL"), name="shared")
+SAQ_QUEUE = Queue.from_url(os.environ.get("REDIS_URL", ""), name="shared")

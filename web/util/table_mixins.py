@@ -3,8 +3,8 @@ import datetime
 from piccolo.columns import Timestamptz
 
 
-def utc_now():
-    return datetime.datetime.now(datetime.timezone.utc)
+def utc_now() -> datetime.datetime:
+    return datetime.datetime.now(datetime.UTC)
 
 
 class AuditMixin:
