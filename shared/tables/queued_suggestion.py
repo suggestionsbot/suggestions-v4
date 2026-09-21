@@ -27,7 +27,7 @@ from piccolo.table import Table
 from bot import utils
 from bot.localisation import Localisation
 from bot.utils.id import generate_id
-from shared.saq.worker import SAQ_QUEUE
+from shared.saq.worker import SAQ_QUEUE, enqueue_traced
 from shared.tables.mixins import AuditMixin
 
 
@@ -257,9 +257,10 @@ class QueuedSuggestions(Table, AuditMixin):
 
         return True
 
-    async def notify_users_of_resolution(self):
+    async def notify_users_of_resolution(self) -> None:
         """Helper to queue user resolution notifications."""
-        await SAQ_QUEUE.enqueue(
+        await enqueue_traced(
+            SAQ_QUEUE,
             "queued_suggestion_resolved_notifications",
             suggestion_id=self.sID,
             guild_id=self.guild_id,

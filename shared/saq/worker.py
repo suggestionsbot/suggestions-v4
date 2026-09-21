@@ -1,26 +1,53 @@
 # ruff: noqa: T201
+import functools
 import datetime
 import os
 from typing import cast
 
 import saq
 from dotenv import load_dotenv
+from opentelemetry import trace, propagate
 from opentelemetry.metrics import get_meter_provider
 from piccolo_api.session_auth.tables import SessionsBase
-from saq import Queue
+from saq import Queue, Job
 from saq.types import Context
 
 from web import constants
 from web.tables import APIToken
 from web.util.table_mixins import utc_now
+from bot.constants import OTEL_TRACER
 
 load_dotenv()
 
 
+def traced_task(fn):  # noqa: ANN001, ANN201
+    @functools.wraps(fn)  # SAQ registers by __name__ — keep it
+    async def wrapper(ctx: Context, **kwargs):  # noqa: ANN003, ANN202
+        job = ctx["job"]
+        carrier = job.meta.get("otel") or {}
+        parent = propagate.extract(carrier) if carrier else None
+        with OTEL_TRACER.start_as_current_span(
+            job.function,
+            context=parent,
+            kind=trace.SpanKind.CONSUMER,
+        ) as span:
+            span.set_attribute("messaging.system", "saq")
+            span.set_attribute("messaging.message.id", job.key)
+            span.set_attribute("saq.job.attempts", job.attempts)
+            span.set_attribute("saq.job.retries", job.retries)
+            span.set_attribute("saq.job.timeout", job.timeout)
+            span.set_attribute("saq.job.id", job.id)
+            return await fn(ctx, **kwargs)
+
+    return wrapper
+
+
+@traced_task
 async def tick(_: Context) -> None:
     print(f"tick {utc_now()}")
 
 
+@traced_task
 async def log_current_valid_sessions(_: Context) -> None:
     meter = get_meter_provider().get_meter("users.sessions")
     session_counter = meter.create_up_down_counter(
@@ -33,6 +60,7 @@ async def log_current_valid_sessions(_: Context) -> None:
     session_counter.add(count)
 
 
+@traced_task
 async def log_current_api_tokens(_: Context) -> None:
     meter = get_meter_provider().get_meter("users.api_tokens")
     session_counter = meter.create_up_down_counter(
@@ -45,6 +73,16 @@ async def log_current_api_tokens(_: Context) -> None:
         .where()
     )
     session_counter.add(count)
+
+
+async def enqueue_traced(queue: Queue, function: str, **kwargs) -> Job | None:
+    with OTEL_TRACER.start_as_current_span(
+        f"queuing '{function}'", kind=trace.SpanKind.PRODUCER
+    ):
+        carrier: dict[str, str] = {}
+        propagate.inject(carrier)  # writes traceparent/tracestate
+        kwargs["meta"] = {**kwargs.get("meta", {}), "otel": carrier}
+        return await queue.enqueue(function, **kwargs)
 
 
 async def before_process(ctx: Context) -> None:

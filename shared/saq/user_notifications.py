@@ -4,11 +4,12 @@ import logging
 import time
 
 import hikari
+from saq.types import Context
 
 from bot.constants import LOCALISATIONS
 from bot.utils import cv2, HandleClientHTTPResponse
 from bot.utils.users import fetch_user_dm_channel_id
-from shared.saq.worker import SAQ_QUEUE
+from shared.saq.worker import SAQ_QUEUE, traced_task, enqueue_traced
 from shared.tables import (
     Suggestions,
     QueuedSuggestions,
@@ -24,8 +25,11 @@ from web.util.table_mixins import utc_now
 logger = logging.getLogger(__name__)
 
 
-async def queued_suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int):
-    """Notifies users of when there queued suggestion has been resolved"""
+@traced_task
+async def queued_suggestion_resolved_notifications(
+    _: Context, suggestion_id: str, guild_id: int
+) -> None:
+    """Notifies users of when there queued suggestion has been resolved."""
     suggestion: (
         QueuedSuggestions | None
     ) = await QueuedSuggestions.fetch_queued_suggestion(suggestion_id, guild_id)
@@ -104,8 +108,9 @@ async def get_voters_for_suggestion_with_notifications_enabled(
     return await query
 
 
+@traced_task
 async def notify_voters_of_suggestion_resolution(
-    _, suggestion_id: str, guild_id: int
+    _: Context, suggestion_id: str, guild_id: int
 ) -> None:
     """Notifies premium users who have subscribed to DM's of outcomes."""
     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
@@ -163,7 +168,10 @@ async def notify_voters_of_suggestion_resolution(
                     )
 
 
-async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int) -> None:
+@traced_task
+async def suggestion_resolved_notifications(
+    _: Context, suggestion_id: str, guild_id: int
+) -> None:
     """Notifies users of when there suggestion has been resolved."""
     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
         suggestion_id, guild_id
@@ -175,7 +183,8 @@ async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int
         )
         return
 
-    await SAQ_QUEUE.enqueue(
+    await enqueue_traced(
+        SAQ_QUEUE,
         "notify_voters_of_suggestion_resolution",
         suggestion_id=suggestion_id,
         guild_id=guild_id,
@@ -216,8 +225,11 @@ async def suggestion_resolved_notifications(_, suggestion_id: str, guild_id: int
             )
 
 
-async def notify_users_of_new_suggestion(_, suggestion_id: str, guild_id: int):
-    """Notify suggestion author of creation"""
+@traced_task
+async def notify_users_of_new_suggestion(
+    _: Context, suggestion_id: str, guild_id: int
+) -> None:
+    """Notify suggestion author of creation."""
     # TODO Notify premium users who subscribed to new suggestion notifications
     suggestion: Suggestions | None = await Suggestions.fetch_suggestion(
         suggestion_id, guild_id

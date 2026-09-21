@@ -1,23 +1,19 @@
-from IPython.utils.decorators import F
-from curses import raw
 import asyncio
-
-import orjson
-from commons import timing
-from piccolo.columns.operators.comparison import GreaterThan, GreaterEqualThan, LessThan
 import datetime
 from collections import defaultdict
 from typing import cast
 
 import arrow
+import orjson
+from commons import timing
 from piccolo.columns import Where, And
-from piccolo.table import Table
+from piccolo.columns.operators.comparison import GreaterEqualThan, LessThan
 from pydantic import BaseModel
 from saq.types import Context
 
 from bot.tables import CommandInvokes, AggregateCommandInvokes
+from shared.saq.worker import traced_task
 from shared.utils import query_helpers
-
 
 type COMMAND_NAME = str
 type USER_LOCALE = str
@@ -47,6 +43,7 @@ class RawComputedData(BaseModel):
     )
 
 
+@traced_task
 async def compute_base_data_for_week(
     ctx: Context, week_starting: arrow.Arrow
 ) -> RawComputedData:
@@ -117,6 +114,7 @@ class WeeklyAggregateData(BaseModel):
     data_for_week_starting: datetime.datetime
 
 
+@traced_task
 async def calculate_weekly_aggregate(
     ctx: Context, raw_data: RawComputedData
 ) -> WeeklyAggregateData:
@@ -153,6 +151,7 @@ def stringify_keys(data: dict) -> dict:
     return orjson.loads(orjson.dumps(data, option=orjson.OPT_NON_STR_KEYS))
 
 
+@traced_task
 async def compute_aggregate_command_invokes(
     ctx: Context, *, force_load_short_week: bool = False
 ) -> None:

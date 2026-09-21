@@ -31,7 +31,7 @@ from bot.constants import (
     DUPLICATE_COLOR,
 )
 from bot.localisation import Localisation
-from shared.saq.worker import SAQ_QUEUE
+from shared.saq.worker import SAQ_QUEUE, enqueue_traced
 from shared.tables import (
     GuildConfigs,
     UserConfigs,
@@ -271,8 +271,8 @@ class Suggestions(Table, AuditMixin):
 
     async def queue_message_edit(
         self, *, exclude_buttons: bool = False, as_resolved: bool = False
-    ):
-        """Helper to queue the update of the message in discord"""
+    ) -> None:
+        """Helper to queue the update of the message in discord."""
         from shared.saq.suggestions import queue_suggestion_edit
 
         await queue_suggestion_edit(
@@ -282,18 +282,20 @@ class Suggestions(Table, AuditMixin):
             as_resolved=as_resolved,
         )
 
-    async def notify_users_of_new_suggestion(self):
-        """Helper to queue user creation notifications"""
-        await SAQ_QUEUE.enqueue(
+    async def notify_users_of_new_suggestion(self) -> None:
+        """Helper to queue user creation notifications."""
+        await enqueue_traced(
+            SAQ_QUEUE,
             "notify_users_of_new_suggestion",
             suggestion_id=self.sID,
             guild_id=self.guild_id,
             scheduled=time.time() + 5,
         )
 
-    async def notify_users_of_resolution(self):
-        """Helper to queue user resolution notifications"""
-        await SAQ_QUEUE.enqueue(
+    async def notify_users_of_resolution(self) -> None:
+        """Helper to queue user resolution notifications."""
+        await enqueue_traced(
+            SAQ_QUEUE,
             "suggestion_resolved_notifications",
             suggestion_id=self.sID,
             guild_id=self.guild_id,

@@ -4,8 +4,10 @@ from bot.constants import LOCALISATIONS
 from datetime import timedelta
 
 import hikari
+from saq.types import Context
 
 from bot import utils
+from shared.saq.worker import traced_task
 from web import constants
 from shared.tables import GuildConfigs
 from shared.utils import configs
@@ -13,7 +15,10 @@ from shared.utils import configs
 logger = logging.getLogger(__name__)
 
 
-async def notify_guild_of_missing_suggestion_permissions(_, guild_id: int) -> None:
+@traced_task
+async def notify_guild_of_missing_suggestion_permissions(
+    _: Context, guild_id: int
+) -> None:
     """Notify a guild that the bot is missing permissions to edit suggestions."""
     has_been_sent_key: str = f"errors:missing_suggestion_perms_sent:{guild_id}"
     has_been_sent = await constants.REDIS_CLIENT.get(has_been_sent_key)
