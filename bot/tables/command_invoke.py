@@ -58,9 +58,9 @@ class CommandInvokes(Table):
             action=action,
             action_type=command_type,
             user_id=user_config.user_id,
-            user_locale=user_config.primary_language.value,
+            user_locale=user_config.primary_language,
             guild_id=guild_config.guild_id if guild_config else None,
-            guild_locale=guild_config.primary_language.value if guild_config else None,
+            guild_locale=guild_config.primary_language if guild_config else None,
         )
         await obj.save()
         return obj

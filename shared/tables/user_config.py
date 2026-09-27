@@ -44,7 +44,8 @@ class UserConfigs(AuditMixin, Table):
     )
 
     @property
-    def primary_language(self) -> hikari.Locale:
+    def primary_language(self) -> hikari.Locale | str:
+        """Returns str if enum doesn't have locale."""
         return hikari.Locale(self.primary_language_raw)
 
     async def fetch_premium_object(self) -> PremiumUserConfigs:

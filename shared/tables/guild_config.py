@@ -137,7 +137,8 @@ class GuildConfigs(AuditMixin, Table):
     )
 
     @property
-    def primary_language(self) -> hikari.Locale:
+    def primary_language(self) -> hikari.Locale | str:
+        """Return the language as a Locale, str if the locale enum value doesn't exist."""
         return hikari.Locale(self.primary_language_raw)
 
     async def ensure_config_is_setup(
