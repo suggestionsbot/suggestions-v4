@@ -18,6 +18,7 @@ class AggregateCommandInvokes(Table, help_text="A week by week view of command d
     action_types = JSONB()
     user_locales = JSONB()
     guild_locales = JSONB()
+    message_addons = JSONB()
     raw_data = JSONB(help_text="The raw data used to compute the above statistics.")
     created_at = Timestamptz(
         default=utc_now, help_text="When this object was created.", index=True

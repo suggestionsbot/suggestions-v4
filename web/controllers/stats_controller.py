@@ -51,6 +51,7 @@ class StatsController(Controller):
         action_types = defaultdict(lambda: 0)
         user_locales = defaultdict(lambda: 0)
         guild_locales = defaultdict(lambda: 0)
+        message_addons = defaultdict(lambda: 0)
         for row in all_aggregate_stats:
             total_users_seen += row.total_users_seen
             total_guilds_seen += row.total_guilds_seen
@@ -60,11 +61,13 @@ class StatsController(Controller):
             update_collection_with_row(action_types, row.action_types)
             update_collection_with_row(user_locales, row.user_locales)
             update_collection_with_row(guild_locales, row.guild_locales)
+            update_collection_with_row(message_addons, row.message_addons)
 
         actions = sort_dict_by_value(actions)
         action_types = sort_dict_by_value(action_types)
         user_locales = sort_dict_by_value(user_locales)
         guild_locales = sort_dict_by_value(guild_locales)
+        message_addons = sort_dict_by_value(message_addons)
         return html_template(
             "stats/aggregate.jinja",
             context={
@@ -81,5 +84,6 @@ class StatsController(Controller):
                 "total_guilds_seen": total_guilds_seen,
                 "total_voters_seen": total_voters_seen,
                 "total_users_who_only_voted": total_users_who_only_voted,
+                "message_addons": message_addons,
             },
         )

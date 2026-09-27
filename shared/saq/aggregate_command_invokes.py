@@ -11,7 +11,12 @@ from piccolo.columns.operators.comparison import GreaterEqualThan, LessThan
 from pydantic import BaseModel
 from saq.types import Context
 
-from bot.tables import CommandInvokes, AggregateCommandInvokes
+from bot.tables import (
+    CommandInvokes,
+    AggregateCommandInvokes,
+    MessageAddons,
+    PossibleMessageAddons,
+)
 from shared.saq.worker import traced_task
 from shared.utils import query_helpers
 
@@ -41,6 +46,7 @@ class RawComputedData(BaseModel):
     action_types_invoked_by: dict[COMMAND_TYPE, dict[USER_ID, list[INVOKED_AT]]] = (
         defaultdict(lambda: defaultdict(list))
     )
+    message_addons: dict[PossibleMessageAddons, list[USER_ID]] = defaultdict(list)
 
 
 @traced_task
@@ -98,6 +104,23 @@ async def compute_base_data_for_week(
         )
         await ctx["job"].update()
 
+    where_classes = And(
+        Where(MessageAddons.shown_at, week_starting.datetime, operator=GreaterEqualThan),
+        Where(
+            MessageAddons.shown_at,
+            week_starting.shift(weeks=1).datetime,
+            operator=LessThan,
+        ),
+    )
+    await ctx["job"].update()
+    async for row in query_helpers.iterate_over_table(
+        MessageAddons, where_clause=where_classes, prefetch_cols=[MessageAddons.user]
+    ):
+        raw_data.message_addons[
+            cast("PossibleMessageAddons", cast("object", row.shown_message_enum))
+        ].append(cast("USER_ID", row.user.user_id))
+        await ctx["job"].update()
+
     return raw_data
 
 
@@ -110,6 +133,7 @@ class WeeklyAggregateData(BaseModel):
     action_types: dict[COMMAND_TYPE, COUNT] = defaultdict(lambda: 0)
     user_locales: dict[USER_LOCALE, COUNT] = defaultdict(lambda: 0)
     guild_locales: dict[GUILD_LOCALE, COUNT] = defaultdict(lambda: 0)
+    message_addons: dict[PossibleMessageAddons, COUNT] = defaultdict(lambda: 0)
     raw_data: RawComputedData
     data_for_week_starting: datetime.datetime
 
@@ -128,6 +152,8 @@ async def calculate_weekly_aggregate(
     data.guild_locales = raw_data.guild_locales
     data.actions = raw_data.actions
     data.action_types = raw_data.action_types
+    for k, v in raw_data.message_addons.items():
+        data.message_addons[k] = len(v)
 
     users_seen_voting = set(
         raw_data.actions_invoked_by[cast("COMMAND_NAME", "Suggestion Vote")].keys()
@@ -230,6 +256,7 @@ async def compute_aggregate_command_invokes(
             action_types=stringify_keys(row.action_types),
             user_locales=stringify_keys(row.user_locales),
             guild_locales=stringify_keys(row.guild_locales),
+            message_addons=stringify_keys(row.message_addons),
             raw_data=stringify_keys(row.raw_data.model_dump()),
             data_for_week_starting=row.data_for_week_starting,
         )
@@ -239,6 +266,8 @@ async def compute_aggregate_command_invokes(
 if __name__ == "__main__":
     from unittest.mock import AsyncMock
 
-    mock_ctx = {"job": AsyncMock()}
+    mock = AsyncMock()
+    mock.meta = {"otel": {}}
+    mock_ctx = {"job": mock}
 
     asyncio.run(compute_aggregate_command_invokes(mock_ctx, force_load_short_week=True))

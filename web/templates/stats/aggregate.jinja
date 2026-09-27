@@ -185,7 +185,29 @@
                                     </table>
                                 </div>
                             </div>
-
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Message Addons Shown</h3>
+                                    </div>
+                                    <table class="table card-table table-vcenter">
+                                        <thead>
+                                        <tr>
+                                            <th>Message</th>
+                                            <th colspan="2">Count</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for k, v in message_addons.items() %}
+                                            <tr>
+                                                <td>{{ k.removeprefix("message_addons.") }}</td>
+                                                <td>{{ v|intcomma }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
