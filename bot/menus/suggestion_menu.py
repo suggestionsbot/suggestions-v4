@@ -603,6 +603,7 @@ class SuggestionMenu:
 
         if guild_config.threads_for_suggestions:
             try:
+                logger.debug("Creating thread with name '%s'", thread_name)
                 thread = await bot.rest.create_message_thread(
                     channel,
                     message,
