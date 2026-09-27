@@ -22,9 +22,10 @@ load_dotenv()
 
 def traced_task(fn):  # noqa: ANN001, ANN201
     @functools.wraps(fn)  # SAQ registers by __name__ — keep it
-    async def wrapper(ctx: Context, **kwargs):  # noqa: ANN003, ANN202
+    async def wrapper(ctx: Context, *args, **kwargs):  # noqa: ANN002, ANN003, ANN202
         job = ctx["job"]
         carrier = job.meta.get("otel") or {}
+        carrier = {} if not isinstance(carrier, dict) else carrier
         parent = propagate.extract(carrier) if carrier else None
         with OTEL_TRACER.start_as_current_span(
             job.function,
@@ -37,7 +38,7 @@ def traced_task(fn):  # noqa: ANN001, ANN201
             span.set_attribute("saq.job.retries", job.retries)
             span.set_attribute("saq.job.timeout", job.timeout)
             span.set_attribute("saq.job.id", job.id)
-            return await fn(ctx, **kwargs)
+            return await fn(ctx, *args, **kwargs)
 
     return wrapper
 
