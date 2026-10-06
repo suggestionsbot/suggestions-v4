@@ -293,9 +293,7 @@ class OAuthController(Controller):
                 "providers": [
                     (
                         k,
-                        request.url_for(
-                            "provider_sign_in", provider=k, next_route=next_route
-                        ),
+                        request.url_for("discord_sign_in", next_route=next_route),
                     )
                     for k in [DISCORD_OAUTH]
                 ],
@@ -409,8 +407,7 @@ class OAuthController(Controller):
                         (
                             k,
                             request.url_for(
-                                "provider_sign_in",
-                                provider=k,
+                                "discord_sign_in",
                             ),
                         )
                         for k in [DISCORD_OAUTH]
@@ -461,8 +458,7 @@ class OAuthController(Controller):
                         (
                             k,
                             request.url_for(
-                                "provider_sign_in",
-                                provider=k,
+                                "discord_sign_in",
                             ),
                         )
                         for k in [DISCORD_OAUTH]
