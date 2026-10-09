@@ -347,7 +347,7 @@
   "menus.queue_paginator.responses.page.footer": "**Visor de sugerencias en cola**\nPágina `$CURRENT`/`$TOTAL`",
   "menus.queue_resolve.no": "No",
   "menus.queue_resolve.options.anonymously.description": "Envía tu respuesta de forma anónima.",
-  "menus.queue_resolve.options.anonymously.title": "anonimamente",
+  "menus.queue_resolve.options.anonymously.title": "Anónimamente",
   "menus.queue_resolve.options.note.description": "Una nota para adjuntar a la sugerencia cuando se rechace.",
   "menus.queue_resolve.options.note.title": "Nota",
   "menus.queue_resolve.options.state.approve": "Aprobada",
