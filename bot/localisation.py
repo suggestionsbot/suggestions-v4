@@ -27,6 +27,7 @@ class Localisation:
             base_path / Path("locales/fr.json"): hikari.Locale.FR,
             base_path / Path("locales/pt_BR.json"): hikari.Locale.PT_BR,
             base_path / Path("locales/tr.json"): hikari.Locale.TR,
+            base_path / Path("locales/es_ES.json"): hikari.Locale.ES_ES,
         }
         data: dict[hikari.Locale, dict[str, str]] = {}
         for k, v in self._file_to_locale.items():

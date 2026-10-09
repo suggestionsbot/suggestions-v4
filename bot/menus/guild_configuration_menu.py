@@ -1249,6 +1249,7 @@ class GuildConfigurationMenus:
                                         "French": "fr",
                                         "German": "de",
                                         "Portuguese, Brazilian": "pt-BR",
+                                        "Spanish": "es-ES",
                                     }.items()
                                 ],
                                 min_values=1,
