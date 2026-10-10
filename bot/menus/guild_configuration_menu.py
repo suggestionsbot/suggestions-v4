@@ -181,7 +181,7 @@ class GuildConfigurationMenus:
             message: str | None = guild_config.premium.suggestion_button_message_prefix
             button_message: str | None = guild_config.premium.suggestion_button_message
             if message is None:
-                message = localisations.get_localized_string(
+                message: str = localisations.get_localized_string(
                     "menus.guild_configuration.responses.sent_suggestions_button.description",
                     guild_config.primary_language,
                 )
@@ -192,22 +192,26 @@ class GuildConfigurationMenus:
                     guild_config.primary_language,
                 )
 
-            try:
-                await ctx.client.rest.create_message(
-                    channel,
+            components = []
+            if not guild_config.premium.suggestion_button_hide_message:
+                components.append(
+                    hikari.impl.TextDisplayComponentBuilder(content=message)
+                )
+
+            components.append(
+                hikari.impl.MessageActionRowBuilder(
                     components=[
-                        hikari.impl.TextDisplayComponentBuilder(content=message),
-                        hikari.impl.MessageActionRowBuilder(
-                            components=[
-                                hikari.impl.InteractiveButtonBuilder(
-                                    style=hikari.ButtonStyle.PRIMARY,
-                                    label=button_message,
-                                    custom_id="v4_suggest_button",
-                                ),
-                            ],
+                        hikari.impl.InteractiveButtonBuilder(
+                            style=hikari.ButtonStyle.PRIMARY,
+                            label=button_message,
+                            custom_id="v4_suggest_button",
                         ),
                     ],
                 )
+            )
+
+            try:
+                await ctx.client.rest.create_message(channel, components=components)
             except hikari.ForbiddenError as e:
                 internal_error = await InternalErrors.persist_error(
                     e,

@@ -1,3 +1,4 @@
+import commons
 import bot.constants
 from web.constants import REDIS_CLIENT
 import logging
@@ -167,11 +168,14 @@ class GuildPremiumMenu:
 
         elif id_data == "suggest_button_message":
             message: str | None = cast("str|None", cls.extract_value(event, "message"))
+            hide_message: str = cast("str", cls.extract_value(event, "hide_message")[0])
+            hide_message: bool = commons.value_to_bool(hide_message)
             button_message: str | None = cast(
                 "str|None", cls.extract_value(event, "button")
             )
             guild_config.premium.suggestion_button_message_prefix = message or None
             guild_config.premium.suggestion_button_message = button_message or None
+            guild_config.premium.suggestion_button_hide_message = hide_message
             await guild_config.premium.save()
             await ctx.respond(
                 localisations.get_localized_string(
@@ -461,6 +465,39 @@ class GuildPremiumMenu:
                     required=False,
                     min_length=1,
                     max_length=100,
+                ),
+            ),
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.suggestion_button_no_message.title",
+                    user_config.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.suggestion_button_no_message.description",
+                    user_config.primary_language,
+                ),
+                component=hikari.impl.TextSelectMenuBuilder(
+                    custom_id="hide_message",
+                    options=[
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "menus.guild_configuration.premium_menu.suggestion_button_no_message.hide_message",
+                                user_config.primary_language,
+                            ),
+                            value="yes",
+                            is_default=False,
+                        ),
+                        hikari.impl.SelectOptionBuilder(
+                            label=localisations.get_localized_string(
+                                "menus.guild_configuration.premium_menu.suggestion_button_no_message.show_message",
+                                user_config.primary_language,
+                            ),
+                            value="no",
+                            is_default=True,
+                        ),
+                    ],
+                    min_values=1,
+                    max_values=1,
                 ),
             ),
         ]

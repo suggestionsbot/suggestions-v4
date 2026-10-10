@@ -2,7 +2,7 @@ from datetime import timedelta
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from piccolo.columns import Text, Integer, BigInt, Serial
+from piccolo.columns import Text, Integer, BigInt, Serial, Boolean
 from piccolo.table import Table
 
 from shared.tables.mixins import AuditMixin
@@ -55,6 +55,11 @@ class PremiumGuildConfigs(AuditMixin, Table):
         default=None,
         null=True,
         help_text="What to send alongside the physical create suggestion button.",
+    )
+    suggestion_button_hide_message = Boolean(
+        default=False,
+        null=True,
+        help_text="Should the sent messages only be the button?.",
     )
     suggestion_button_message = Text(
         default=None,
