@@ -1,3 +1,5 @@
+import io
+
 import commons
 import bot.constants
 from web.constants import REDIS_CLIENT
@@ -197,6 +199,19 @@ class GuildPremiumMenu:
         guild_config: GuildConfigs,
     ) -> None:
         if not await guild_config.premium_is_enabled():
+            if not ENABLE_CUSTOM_NAME_AND_AVATARS and id_data in (
+                "premium_modal_custom_name",
+                "premium_modal_custom_avatar",
+            ):
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        "menus.guild_configuration.premium_menu.responses.only_custom_instances",
+                        user_config.primary_language,
+                    ),
+                    ephemeral=True,
+                )
+                return
+
             await ctx.respond(
                 components=[
                     hikari.impl.TextDisplayComponentBuilder(
@@ -562,6 +577,21 @@ class GuildPremiumMenu:
         if link_id is None:
             link_id = await utils.otel.generate_trace_link_state()
 
+        custom_details = io.StringIO()
+        custom_details.write(
+            localisations.get_localized_string(
+                "menus.guild_configuration.premium_menu.custom_details",
+                user_config.primary_language,
+            )
+        )
+        if not IS_CUSTOM_BOT:
+            custom_details.write(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_details.custom_instance_required",
+                    user_config.primary_language,
+                )
+            )
+
         components: list[special_endpoints.ComponentBuilder] = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
@@ -572,10 +602,7 @@ class GuildPremiumMenu:
             hikari.impl.ContainerComponentBuilder(
                 components=[
                     hikari.impl.TextDisplayComponentBuilder(
-                        content=localisations.get_localized_string(
-                            "menus.guild_configuration.premium_menu.custom_details",
-                            user_config.primary_language,
-                        ),
+                        content=custom_details.getvalue(),
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
