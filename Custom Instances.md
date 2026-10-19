@@ -136,3 +136,10 @@ suggestions_XXX_saq:
       POSTGRES_DB: XXX
       REDIS_URL: "redis://default:password@suggestions_redis:2202/X"
 ```
+
+From within portainer, navigate to the postgres db and also create the table:
+
+```shell
+psql -U suggestions_db_user -d suggestions_db -p 2403 -c 'CREATE DATABASE XXX;'
+psql -U suggestions_db_user -d suggestions_db -p 2403 -c '\l'
+```
