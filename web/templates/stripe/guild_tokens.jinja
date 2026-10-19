@@ -17,63 +17,70 @@
             {% include 'alerts.jinja' %}
             <div class="card card-md">
                 <div class="card-body">
-                    <p>Manage how your current guild tokens are used here.</p>
-                    <table class="table table-vcenter card-table">
-                        <thead>
-                        <tr>
-                            <th>Purchased At</th>
-                            <th>Expires</th>
-                            <th class="w-50">Assigned Guild</th>
-                            <th class="w-1"> Assign Premium</th>
-                            <th class="w-1"> Remove Assigned</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for token in tokens %}
-                            <tr>
-                                <td>{{ token.created_at|fmt('date') }}</td>
-                                <td>{{ token.expires_at|fmt('date') }}</td>
-                                <td class="text-secondary">{% if token.used_for_guild %}<a
-                                        href="{{ token.guild_view_url }}">{{ guild_names[token.used_for_guild] }}</a>
-                                {% endif %}
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-animate-icon btn-animate-icon-rotate"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#gt_modal-{{ token.id }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                             stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
-                                            <path d="M12 5l0 14"></path>
-                                            <path d="M5 12l14 0"></path>
-                                        </svg>
-                                        {% if token.used_for_guild %}Change Guild{% else %}Assign Guild{% endif %}
-                                    </button>
-                                    {% include "stripe/gt_form.jinja" %}
-                                </td>
-                                <td>
-                                    {% if token.used_for_guild %}
-                                        <button type="button" class="btn btn-danger btn-outline" data-bs-toggle="modal"
-                                                data-bs-target="#gt_modal_remove-{{ token.id }}">
-                                            Remove
-                                        </button>
-                                        {% include "stripe/gt_form_remove.jinja" %}
-                                    {% endif %}
-
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                    <br>
-                    {% if not has_tokens %}
-                        <p>Looking for Guild Tokens? Click <a href="{{ url_for("stripe_guild_checkout") }}">this link
-                            to get more.</a></p>
+                    {% if has_free_premium %}
+                        <p>This instance already has unlimited guild premium. Enjoy!</p>
                     {% else %}
-                        <p>Looking for more Guild Tokens? <br>As you already have a subscription, increasing the amount
-                            on your existing subscription will save you over 30% per new guild! Click <a
-                                    href="{{ url_for("stripe_customer_portal") }}">this link
+                        <p>Manage how your current guild tokens are used here.</p>
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                            <tr>
+                                <th>Purchased At</th>
+                                <th>Expires</th>
+                                <th class="w-50">Assigned Guild</th>
+                                <th class="w-1"> Assign Premium</th>
+                                <th class="w-1"> Remove Assigned</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for token in tokens %}
+                                <tr>
+                                    <td>{{ token.created_at|fmt('date') }}</td>
+                                    <td>{{ token.expires_at|fmt('date') }}</td>
+                                    <td class="text-secondary">{% if token.used_for_guild %}<a
+                                            href="{{ token.guild_view_url }}">{{ guild_names[token.used_for_guild] }}</a>
+                                    {% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-animate-icon btn-animate-icon-rotate"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#gt_modal-{{ token.id }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                 stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">
+                                                <path d="M12 5l0 14"></path>
+                                                <path d="M5 12l14 0"></path>
+                                            </svg>
+                                            {% if token.used_for_guild %}Change Guild{% else %}Assign Guild{% endif %}
+                                        </button>
+                                        {% include "stripe/gt_form.jinja" %}
+                                    </td>
+                                    <td>
+                                        {% if token.used_for_guild %}
+                                            <button type="button" class="btn btn-danger btn-outline"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#gt_modal_remove-{{ token.id }}">
+                                                Remove
+                                            </button>
+                                            {% include "stripe/gt_form_remove.jinja" %}
+                                        {% endif %}
+
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <br>
+                        {% if not has_tokens %}
+                            <p>Looking for Guild Tokens? Click <a href="{{ url_for("stripe_guild_checkout") }}">this
+                                link
                                 to get more.</a></p>
+                        {% else %}
+                            <p>Looking for more Guild Tokens? <br>As you already have a subscription, increasing the
+                                amount
+                                on your existing subscription will save you over 30% per new guild! Click <a
+                                        href="{{ url_for("stripe_customer_portal") }}">this link
+                                    to get more.</a></p>
+                        {% endif %}
                     {% endif %}
                 </div>
 

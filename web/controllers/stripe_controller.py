@@ -1,3 +1,4 @@
+from bot.constants import ENABLE_FREE_GUILD_PREMIUM, ENABLE_FREE_USER_PREMIUM
 import commons
 import datetime
 import logging
@@ -208,6 +209,7 @@ class StripeController(Controller):
                 "has_tokens": has_tokens,
                 "guilds": guilds,
                 "guild_names": guild_names,
+                "has_free_premium": ENABLE_FREE_GUILD_PREMIUM,
             },
         )
 
@@ -403,6 +405,7 @@ class StripeController(Controller):
                 "user_has_premium": await request.user.premium_is_enabled(),
                 "oauth_entry": oauth_entry,
                 "config": await user_config.fetch_premium_object(),
+                "has_free_premium": ENABLE_FREE_USER_PREMIUM,
             },
         )
 
