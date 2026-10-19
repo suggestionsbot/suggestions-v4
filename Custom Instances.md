@@ -128,7 +128,6 @@ suggestions_XXX_saq:
       - suggestions_custom_redis
     environment:
       <<: *common-variables
-      BOT_TOKEN: XXX
       CLUSTER_NAME: XXX
       TOTAL_SHARDS: "1"
       SHARDS_PER_CLUSTER: "10"
