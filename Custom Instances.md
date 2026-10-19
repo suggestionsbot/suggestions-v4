@@ -151,4 +151,5 @@ If you are keen you will need to create your own bot which can be done using the
 When you have completed that, share the token with me via this link: https://secrets.skelmis.co.nz/secret-request/secret/XXX
 ```
 
-Also need to make instructions for OAuth callback if they want the dashboard exposed.
+Also need to make instructions for OAuth callback if they want the dashboard exposed. The URL redirect is
+`https://XXX-dashboard.suggestions.gg/auth/oauth/discord/authorize`
