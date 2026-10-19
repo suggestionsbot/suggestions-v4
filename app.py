@@ -1,3 +1,4 @@
+from bot.constants import IS_CUSTOM_BOT
 import os
 from urllib.parse import quote_plus
 
@@ -334,10 +335,12 @@ routes = [
     StripeController,
     ErrorController,
     StatsController,
-    GiftController,
 ]
+if (not IS_CUSTOM_BOT and constants.IS_PRODUCTION) or not constants.IS_PRODUCTION:
+    routes.append(GiftController)  # ty:ignore[invalid-argument-type]
+
 if not constants.IS_PRODUCTION:
-    routes.append(DebugController)
+    routes.append(DebugController)  # ty:ignore[invalid-argument-type]
 
 middleware = [
     rate_limit_config.middleware,
