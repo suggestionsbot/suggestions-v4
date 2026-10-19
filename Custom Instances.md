@@ -103,6 +103,11 @@ suggestions_XXX_saq:
     CLUSTER_NAME: XXX
     POSTGRES_DB: XXX
     REDIS_URL: "redis://default:password@suggestions_custom_redis:2402/X"
+  deploy:
+    resources:
+      limits:
+        cpus: '1'
+        memory: 275M
   suggestions_XXX_web:
     container_name: "suggestions_XXX_web"
     image: ghcr.io/suggestionsbot/v4_suggestions_web:master
@@ -119,6 +124,11 @@ suggestions_XXX_saq:
       POSTGRES_DB: XXX
       REDIS_URL: "redis://default:password@suggestions_custom_redis:2402/X"
       CLUSTER_NAME: XXX
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 275M
   suggestions_XXX_bot:
     container_name: "suggestions_XXX_bot"
     image: ghcr.io/suggestionsbot/v4_suggestions_bot:master
@@ -134,6 +144,11 @@ suggestions_XXX_saq:
       SYNC_APPLICATION_COMMANDS: "1"
       POSTGRES_DB: XXX
       REDIS_URL: "redis://default:password@suggestions_custom_redis:2402/X"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 325M
 ```
 
 From within portainer, navigate to the postgres db and also create the table:
