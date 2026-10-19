@@ -25,6 +25,7 @@ from bot.constants import (
     ENABLE_CUSTOM_NAME_AND_AVATARS,
     ENABLE_FREE_GUILD_PREMIUM,
     CLUSTER_NAME,
+    IS_CUSTOM_BOT,
 )
 from bot.extensions.resolve import ResolveMessageCommand
 from shared.tables import GuildConfigs
@@ -105,7 +106,7 @@ async def main():
 
         await client.start()
 
-    if IS_PRODUCTION:
+    if IS_PRODUCTION and not IS_CUSTOM_BOT:
         offset = CLUSTER_ID - 1
         shard_ids = [
             i
