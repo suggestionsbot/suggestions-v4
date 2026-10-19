@@ -33,6 +33,8 @@ from piccolo_api.encryption.providers import XChaCha20Provider
 from piccolo_api.mfa.authenticator.provider import AuthenticatorProvider
 from redis import asyncio as aioredis
 
+logger = logging.getLogger(__name__)
+
 load_dotenv()
 infisical_client = InfisicalSDKClient(host="https://secrets.skelmis.co.nz")
 infisical_client.auth.universal_auth.login(
@@ -211,6 +213,7 @@ BOT_USER_ID = (
 )
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 if BOT_TOKEN is None:
+    logger.debug("Using secret_path of %s for this process", CUSTOMS_SECRET_PATH)
     BOT_TOKEN = get_secret("BOT_TOKEN", infisical_client, secret_path=CUSTOMS_SECRET_PATH)
 
 BOT_INVITE_URL = f"https://discord.com/oauth2/authorize?client_id={BOT_USER_ID}&permissions=395137379328&integration_type=0&scope=bot+applications.commands"

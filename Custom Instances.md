@@ -102,7 +102,7 @@ suggestions_XXX_saq:
     <<: *common-variables
     CLUSTER_NAME: XXX
     POSTGRES_DB: XXX
-    REDIS_URL: "redis://default:password@suggestions_custom_redis:2202/X"
+    REDIS_URL: "redis://default:password@suggestions_custom_redis:2402/X"
   suggestions_XXX_web:
     container_name: "suggestions_XXX_web"
     image: ghcr.io/suggestionsbot/v4_suggestions_web:master
@@ -117,7 +117,7 @@ suggestions_XXX_saq:
       SERVING_DOMAIN: "XXX-dashboard.suggestions.gg"
       PORT: 2500
       POSTGRES_DB: XXX
-      REDIS_URL: "redis://default:password@suggestions_custom_redis:2202/X"
+      REDIS_URL: "redis://default:password@suggestions_custom_redis:2402/X"
       CLUSTER_NAME: XXX
   suggestions_XXX_bot:
     container_name: "suggestions_XXX_bot"
@@ -133,7 +133,7 @@ suggestions_XXX_saq:
       SHARDS_PER_CLUSTER: "10"
       SYNC_APPLICATION_COMMANDS: "1"
       POSTGRES_DB: XXX
-      REDIS_URL: "redis://default:password@suggestions_custom_redis:2202/X"
+      REDIS_URL: "redis://default:password@suggestions_custom_redis:2402/X"
 ```
 
 From within portainer, navigate to the postgres db and also create the table:
