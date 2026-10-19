@@ -5,7 +5,7 @@ import hikari
 import lightbulb
 import orjson
 
-from bot.constants import CLUSTER_ID
+from bot.constants import CLUSTER_ID, CLUSTER_NAME
 from web import constants
 
 loader = lightbulb.Loader()
@@ -35,6 +35,6 @@ async def update_redis(bot: hikari.GatewayBot) -> None:
 
     logger.info(
         "Updated redis with current guilds for cluster %s",
-        CLUSTER_ID,
-        extra={"cluster.id": CLUSTER_ID, "cluster.guilds.count": guild_count},
+        CLUSTER_NAME,
+        extra={"cluster.id": CLUSTER_NAME, "cluster.guilds.count": guild_count},
     )

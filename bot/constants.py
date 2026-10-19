@@ -118,7 +118,10 @@ DEFAULT_DOWN_VOTE = hikari.CustomEmoji(
 )
 
 # Clustering stuff
+CLUSTER_NAME = os.environ.get("CLUSTER_NAME")
 CLUSTER_ID = int(os.environ.get("CLUSTER_ID", "1"))
+if CLUSTER_NAME is None:
+    CLUSTER_NAME = CLUSTER_ID
 TOTAL_SHARDS = int(os.environ.get("TOTAL_SHARDS", "1"))
 SHARDS_PER_CLUSTER = int(os.environ.get("SHARDS_PER_CLUSTER", "10"))
 

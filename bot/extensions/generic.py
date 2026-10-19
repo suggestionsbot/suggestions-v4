@@ -8,7 +8,14 @@ import lightbulb
 from hikari import snowflakes
 
 import shared.utils
-from bot.constants import TOTAL_SHARDS, CLUSTER_ID, VERSION, EMBED_COLOR, LOADED_AT
+from bot.constants import (
+    TOTAL_SHARDS,
+    CLUSTER_ID,
+    VERSION,
+    EMBED_COLOR,
+    LOADED_AT,
+    CLUSTER_NAME,
+)
 from bot.localisation import Localisation
 from bot.tables import CommandTypes, CommandInvokes
 from shared.tables import GuildConfigs, UserConfigs
@@ -53,7 +60,7 @@ class InfoCmd(
             shard_id = snowflakes.calculate_shard_id(TOTAL_SHARDS, guild_config.guild_id)
             shard_latency = bot._get_shard(guild_config.guild_id).heartbeat_latency
             await ctx.respond(
-                f"**Guild ID:** `{guild_config.guild_id}`\n**Cluster {CLUSTER_ID} - "
+                f"**Guild ID:** `{guild_config.guild_id}`\n**Cluster {CLUSTER_NAME} - "
                 f"Shard {shard_id}:** `{round(shard_latency, 2)}ms`\n"
                 f"**Average cluster latency:** `{round(bot.heartbeat_latency, 2)}ms`\n",
             )
@@ -149,7 +156,6 @@ class StatsCmd(
     localize=True,
     contexts=[hikari.ApplicationContextType.GUILD],
 ):
-
     @lightbulb.invoke
     async def invoke(
         self,
@@ -230,7 +236,7 @@ class StatsCmd(
             text=localisations.get_localized_string(
                 "commands.stats.responses.cluster",
                 user_config.primary_language,
-                extras={"CLUSTER": CLUSTER_ID, "SHARD": shard_id},
+                extras={"CLUSTER": CLUSTER_NAME, "SHARD": shard_id},
             ),
         )
 

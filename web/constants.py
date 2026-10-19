@@ -42,12 +42,12 @@ infisical_client.auth.universal_auth.login(
 OTEL_PROPAGATOR = TraceContextTextMapPropagator()
 
 
-def configure_otel(service_name: str):
+def configure_otel(service_name: str) -> None:
     host = get_secret("OTEL_HOST", infisical_client)
     endpoint = get_secret("OTEL_ENDPOINT", infisical_client)
     bearer_token = get_secret("OTEL_BEARER", infisical_client)
     deployment_environment: Literal["Production", "Development", "Staging"] = cast(
-        Literal["Production", "Development", "Staging"],
+        "Literal['Production', 'Development', 'Staging']",
         get_secret("OTEL_DEPLOYMENT_ENVIRONMENT", infisical_client),
     )
     headers = {"Authorization": f"Bearer {bearer_token}"}
@@ -55,6 +55,7 @@ def configure_otel(service_name: str):
         SERVICE_NAME: service_name,
         DEPLOYMENT_ENVIRONMENT: deployment_environment,
         HOST_NAME: host,
+        "cluster.name": os.environ.get("CLUSTER_NAME", "Unknown"),
     }
     resource = Resource.create(attributes=attributes)
 
@@ -97,7 +98,7 @@ def get_secret(secret_name: str, infisical_client: InfisicalSDKClient) -> str:
         secret_name=secret_name,
         project_id=os.environ["INFISICAL_PROJECT_ID"],
         environment_slug=os.environ["INFISICAL_SLUG"],
-        secret_path="/",
+        secret_path="/",  # noqa: S106
         view_secret_value=True,
     ).secretValue
 
@@ -115,51 +116,51 @@ IS_PRODUCTION: bool = not value_to_bool(os.environ.get("DEBUG"))
 ENFORCE_OTEL: bool = value_to_bool(os.environ.get("ENFORCE_OTEL"))
 """Force OTEL usage, good for local debugging."""
 
-ALLOW_REGISTRATION: bool = value_to_bool(os.environ.get("ALLOW_REGISTRATION", True))
+ALLOW_REGISTRATION: bool = value_to_bool(os.environ.get("ALLOW_REGISTRATION", True))  # noqa: PLW1508
 """Whether users should be allowed to create new accounts."""
 
 SERVING_DOMAIN: list[str] = os.environ.get("SERVING_DOMAIN", "localhost").split(",")
 """The domain this site will run on. Used for cookies etc."""
 
 CHECK_PASSWORD_AGAINST_HIBP: bool = not value_to_bool(
-    os.environ.get("DISABLE_HIBP", False)
+    os.environ.get("DISABLE_HIBP", False)  # noqa: PLW1508
 )
 """If True, checks passwords against Have I Been Pwned"""
 
 SIMPLE_EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 """A simple email regex. Not perfect, but good enough."""
 
-MAKE_FIRST_USER_ADMIN: bool = value_to_bool(os.environ.get("MAKE_FIRST_USER_ADMIN", True))
+MAKE_FIRST_USER_ADMIN: bool = value_to_bool(os.environ.get("MAKE_FIRST_USER_ADMIN", True))  # noqa: PLW1508
 """Makes the first user to sign in admin. Just makes life easier."""
 
-REQUIRE_MFA: bool = value_to_bool(os.environ.get("REQUIRE_MFA", False))
+REQUIRE_MFA: bool = value_to_bool(os.environ.get("REQUIRE_MFA", False))  # noqa: PLW1508
 """Enforces the usage of MFA for authentication.
 
 Due to platform limitations, it won't be enforced if users
 only sign in via the admin portal.
 """
 
-DONT_SEND_EMAILS: bool = value_to_bool(os.environ.get("DONT_SEND_EMAILS", False))
+DONT_SEND_EMAILS: bool = value_to_bool(os.environ.get("DONT_SEND_EMAILS", False))  # noqa: PLW1508
 """If True, prints emails to console instead of sending them"""
 
 MAGIC_LINK_VALIDITY_WINDOW = timedelta(minutes=5)
 """How long since it is sent can a link be used to authenticate"""
 
-HAS_IMPLEMENTED_OAUTH = value_to_bool(os.environ.get("HAS_IMPLEMENTED_OAUTH", False))
+HAS_IMPLEMENTED_OAUTH = value_to_bool(os.environ.get("HAS_IMPLEMENTED_OAUTH", False))  # noqa: PLW1508
 """Set to True if `oauth_controller.py` has been setup and configured to work."""
 
-TRUSTED_PROXIES = value_to_bool(os.environ.get("TRUSTED_PROXIES", False))
+TRUSTED_PROXIES = value_to_bool(os.environ.get("TRUSTED_PROXIES", False))  # noqa: PLW1508
 """Trust proxy headers"""
 
 HAS_IMPLEMENTED_MAGIC_LINK = value_to_bool(
-    os.environ.get("HAS_IMPLEMENTED_MAGIC_LINK", False)
+    os.environ.get("HAS_IMPLEMENTED_MAGIC_LINK", False)  # noqa: PLW1508
 )
 """Set to True if emails are configured to work."""
 
 # CloudFlare Turnstile configuration items
 CF_TURNSTILE_SITE_KEY = None
 CF_TURNSTILE_SECRET_KEY = None
-USE_CF_TURNSTILE = value_to_bool(os.environ.get("USE_CF_TURNSTILE", False))
+USE_CF_TURNSTILE = value_to_bool(os.environ.get("USE_CF_TURNSTILE", False))  # noqa: PLW1508
 if USE_CF_TURNSTILE:
     CF_TURNSTILE_SITE_KEY = get_secret("CF_TURNSTILE_SITE_KEY", infisical_client)
     CF_TURNSTILE_SECRET_KEY = get_secret("CF_TURNSTILE_SECRET_KEY", infisical_client)
@@ -198,7 +199,10 @@ BOT_USER_ID = (
     if IS_PRODUCTION
     else 846324706389786676  # Suggestions  # Localized Stats
 )
-BOT_TOKEN = get_secret("BOT_TOKEN", infisical_client)
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+if BOT_TOKEN is None:
+    BOT_TOKEN = get_secret("BOT_TOKEN", infisical_client)
+
 BOT_INVITE_URL = f"https://discord.com/oauth2/authorize?client_id={BOT_USER_ID}&permissions=395137379328&integration_type=0&scope=bot+applications.commands"
 DISCORD_REST_CLIENT = hikari.RESTApp()
 

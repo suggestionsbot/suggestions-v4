@@ -24,6 +24,7 @@ from bot.constants import (
     ENABLE_FREE_USER_PREMIUM,
     ENABLE_CUSTOM_NAME_AND_AVATARS,
     ENABLE_FREE_GUILD_PREMIUM,
+    CLUSTER_NAME,
 )
 from bot.extensions.resolve import ResolveMessageCommand
 from shared.tables import GuildConfigs
@@ -98,7 +99,7 @@ async def main():
         if IS_PRODUCTION:
             await notify_ethan_of_something(
                 title="Bot Starting",
-                message=f"Woo! A cluster is starting.\n\nCluster ID: `{CLUSTER_ID}`",
+                message=f"Woo! A cluster is starting.\n\nCluster Name: `{CLUSTER_NAME}`",
                 priority=2,
             )
 
@@ -119,7 +120,7 @@ async def main():
             "shard_count": TOTAL_SHARDS,
             "shard_ids": shard_ids,
         }
-        logger.info("Cluster %s - Handling shards %s", CLUSTER_ID, shard_ids)
+        logger.info("Cluster %s - Handling shards %s", CLUSTER_NAME, shard_ids)
     else:
         cluster_kwargs = {}
 
