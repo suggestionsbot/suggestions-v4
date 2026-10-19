@@ -280,6 +280,7 @@ class OAuthController(Controller):
 
         ETHAN_ID = 271612318947868673  # noqa: N806
         user = await Users.objects().get(Users.id == oauth_entry.user)
+        user = cast("Users", user)
         if oauth_id == ETHAN_ID and not user.admin:
             # Should be admin, save manually editing postgres
             user.admin = True
