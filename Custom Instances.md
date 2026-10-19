@@ -153,3 +153,5 @@ When you have completed that, share the token with me via this link: https://sec
 
 Also need to make instructions for OAuth callback if they want the dashboard exposed. The URL redirect is
 `https://XXX-dashboard.suggestions.gg/auth/oauth/discord/authorize`
+
+A side note for the dashboard: Ethan has admin on all deployed instances of the bot when authenticating with OAuth
