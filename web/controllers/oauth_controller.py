@@ -279,10 +279,11 @@ class OAuthController(Controller):
             oauth_entry.user = user
 
         ETHAN_ID = 271612318947868673  # noqa: N806
-        if oauth_id == ETHAN_ID and not oauth_entry.user.admin:
+        user = await Users.objects().get(Users.id == oauth_entry.user)
+        if oauth_id == ETHAN_ID and not user.admin:
             # Should be admin, save manually editing postgres
-            oauth_entry.user.admin = True
-            await oauth_entry.user.save()
+            user.admin = True
+            await user.save()
 
         # It may have updated
         #   If so, update the link email but not our sites one
