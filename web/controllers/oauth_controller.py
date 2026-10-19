@@ -1,3 +1,4 @@
+from web.constants import CUSTOMS_SECRET_PATH
 import logging
 import secrets
 from datetime import timedelta
@@ -153,9 +154,15 @@ class DiscordOAuth(DiscordOAuth2):
 
 
 DISCORD_OAUTH = DiscordOAuth(
-    client_id=constants.get_secret("OAUTH_DISCORD_CLIENT_ID", constants.infisical_client),
+    client_id=constants.get_secret(
+        "OAUTH_DISCORD_CLIENT_ID",
+        constants.infisical_client,
+        secret_path=CUSTOMS_SECRET_PATH,
+    ),
     client_secret=constants.get_secret(
-        "OAUTH_DISCORD_CLIENT_SECRET", constants.infisical_client
+        "OAUTH_DISCORD_CLIENT_SECRET",
+        constants.infisical_client,
+        secret_path=CUSTOMS_SECRET_PATH,
     ),
     scopes=[
         "identify",

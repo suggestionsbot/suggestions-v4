@@ -9,7 +9,7 @@ load_dotenv()
 
 DB = PostgresEngine(
     config={
-        "database": os.environ["POSTGRES_DB"],
+        "database": os.environ["POSTGRES_DB"].lower(),
         "user": os.environ["POSTGRES_USER"],
         "password": os.environ["POSTGRES_PASSWORD"],
         "host": os.environ["POSTGRES_HOST"],

@@ -4,6 +4,7 @@ import re
 from datetime import timedelta
 from typing import Literal, cast
 
+import commons
 import hikari
 import stripe
 from commons import value_to_bool
@@ -93,19 +94,28 @@ def configure_otel(service_name: str) -> None:
     set_global_textmap(TraceContextTextMapPropagator())
 
 
-def get_secret(secret_name: str, infisical_client: InfisicalSDKClient) -> str:
+def get_secret(
+    secret_name: str,
+    infisical_client: InfisicalSDKClient,
+    *,
+    secret_path: str = "/",  # noqa: S107
+) -> str:
     return infisical_client.secrets.get_secret_by_name(
         secret_name=secret_name,
         project_id=os.environ["INFISICAL_PROJECT_ID"],
         environment_slug=os.environ["INFISICAL_SLUG"],
-        secret_path="/",  # noqa: S106
+        secret_path=secret_path,
         view_secret_value=True,
     ).secretValue
 
 
 BOT_SERVICE_NAME = get_secret("OTEL_BOT_SERVICE_NAME", infisical_client)
 DASHBOARD_SERVICE_NAME = get_secret("OTEL_DASHBOARD_SERVICE_NAME", infisical_client)
-
+CUSTOMS_SECRET_PATH = (
+    f"/customs-{os.environ.get('CLUSTER_NAME')}"
+    if commons.value_to_bool(os.environ.get("IS_CUSTOM_BOT", "0"))
+    else "/"
+)
 
 SITE_NAME: str = os.environ.get("SITE_NAME", "Template Website")
 """The site name for usage in templates etc"""
@@ -201,7 +211,7 @@ BOT_USER_ID = (
 )
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 if BOT_TOKEN is None:
-    BOT_TOKEN = get_secret("BOT_TOKEN", infisical_client)
+    BOT_TOKEN = get_secret("BOT_TOKEN", infisical_client, secret_path=CUSTOMS_SECRET_PATH)
 
 BOT_INVITE_URL = f"https://discord.com/oauth2/authorize?client_id={BOT_USER_ID}&permissions=395137379328&integration_type=0&scope=bot+applications.commands"
 DISCORD_REST_CLIENT = hikari.RESTApp()

@@ -16,8 +16,8 @@ Base docker
 
 ```yaml
 x-shared-variables: &common-variables
-  POSTGRES_HOST: suggestions_db
-  POSTGRES_USER: suggestions_db_user
+  POSTGRES_HOST: suggestions_custom_db
+  POSTGRES_USER: suggestions_custom_db_user
   POSTGRES_PASSWORD: password
   POSTGRES_PORT: 2403
   INFISICAL_ID: XXX
@@ -38,9 +38,9 @@ x-shared-variables: &common-variables
 
 
 services:
-  suggestions_redis:
+  suggestions_custom_redis:
     image: redis:8.4.0-alpine
-    container_name: "suggestions_redis"
+    container_name: "suggestions_custom_redis"
     restart: unless-stopped
     ports:
       - '127.0.0.1:2402:2402'
@@ -55,17 +55,17 @@ services:
         reservations:
           cpus: '0.5'
           memory: 256M
-  suggestions_db:
+  suggestions_custom_db:
     image: postgres:17
-    container_name: "suggestions_db"
+    container_name: "suggestions_custom_db"
     command: -p 2403
     restart: unless-stopped
     ports:
       - "127.0.0.1:2403:2403"
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_DB: suggestions_db
-      POSTGRES_USER: suggestions_db_user
+      POSTGRES_DB: suggestions_custom_db
+      POSTGRES_USER: suggestions_custom_db_user
       POSTGRES_PASSWORD: password
     volumes:
       - .db:/var/lib/postgresql/data
@@ -96,13 +96,13 @@ suggestions_XXX_saq:
   container_name: "suggestions_XXX_saq"
   restart: unless-stopped
   depends_on:
-    - suggestions_redis
-    - suggestions_web
+    - suggestions_custom_redis
+    - suggestions_XXX_web
   environment:
     <<: *common-variables
     CLUSTER_NAME: XXX
     POSTGRES_DB: XXX
-    REDIS_URL: "redis://default:password@suggestions_redis:2202/X"
+    REDIS_URL: "redis://default:password@suggestions_custom_redis:2202/X"
   suggestions_XXX_web:
     container_name: "suggestions_XXX_web"
     image: ghcr.io/suggestionsbot/v4_suggestions_web:master
@@ -110,22 +110,22 @@ suggestions_XXX_saq:
     ports:
       - "127.0.0.1:2500:2500"
     depends_on:
-      - suggestions_db
-      - suggestions_redis
+      - suggestions_custom_db
+      - suggestions_custom_redis
     environment:
       <<: *common-variables
-      SERVING_DOMAIN: "XXX.suggestions.gg"
+      SERVING_DOMAIN: "XXX-dashboard.suggestions.gg"
       PORT: 2500
       POSTGRES_DB: XXX
-      REDIS_URL: "redis://default:password@suggestions_redis:2202/X"
+      REDIS_URL: "redis://default:password@suggestions_custom_redis:2202/X"
       CLUSTER_NAME: XXX
   suggestions_XXX_bot:
     container_name: "suggestions_XXX_bot"
     image: ghcr.io/suggestionsbot/v4_suggestions_bot:master
     restart: unless-stopped
     depends_on:
-      - suggestions_db
-      - suggestions_redis
+      - suggestions_custom_db
+      - suggestions_custom_redis
     environment:
       <<: *common-variables
       BOT_TOKEN: XXX
@@ -134,12 +134,22 @@ suggestions_XXX_saq:
       SHARDS_PER_CLUSTER: "10"
       SYNC_APPLICATION_COMMANDS: "1"
       POSTGRES_DB: XXX
-      REDIS_URL: "redis://default:password@suggestions_redis:2202/X"
+      REDIS_URL: "redis://default:password@suggestions_custom_redis:2202/X"
 ```
 
 From within portainer, navigate to the postgres db and also create the table:
 
 ```shell
-psql -U suggestions_db_user -d suggestions_db -p 2403 -c 'CREATE DATABASE XXX;'
-psql -U suggestions_db_user -d suggestions_db -p 2403 -c '\l'
+psql -U suggestions_custom_db_user -d suggestions_custom_db -p 2403 -c 'CREATE DATABASE XXX;'
+psql -U suggestions_custom_db_user -d suggestions_custom_db -p 2403 -c '\l'
 ```
+
+Text for users:
+
+```text
+If you are keen you will need to create your own bot which can be done using the following guide: https://discordjs.guide/legacy/preparations/app-setup
+
+When you have completed that, share the token with me via this link: https://secrets.skelmis.co.nz/secret-request/secret/XXX
+```
+
+Also need to make instructions for OAuth callback if they want the dashboard exposed.
