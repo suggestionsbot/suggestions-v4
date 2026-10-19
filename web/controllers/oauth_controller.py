@@ -418,12 +418,11 @@ class OAuthController(Controller):
                 {
                     "providers": [
                         (
-                            k,
+                            "Discord",
                             request.url_for(
                                 "discord_sign_in",
                             ),
                         )
-                        for k in [DISCORD_OAUTH]
                     ],
                 },
             )
