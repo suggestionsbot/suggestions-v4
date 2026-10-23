@@ -214,7 +214,7 @@
   "errors.suggest.responses.missing_suggestion_channel_perms.title": "Command Failed",
   "errors.suggest.responses.thread_name_too_long.title": "Command Failed",
   "errors.suggest.responses.thread_name_too_long.description": "The thread name must be between 1 and 100 in length.",
-  "errors.suggest.suggest_channel_not_found.description": "This command requires a queue channel to use.\nPlease contact an administrator and ask them to set one up using the following command.\n`/configure guild`",
+  "errors.suggest.suggest_channel_not_found.description": "This command requires a suggestion channel to use.\nPlease contact an administrator and ask them to set one up using the following command.\n`/configure guild`",
   "errors.suggest.suggest_channel_not_found.title": "Command Failed",
   "menus.guild_configuration.base_menu.allow_anonymous_moderators": "Can moderators be anonymous when resolving suggestions or adding notes?",
   "menus.guild_configuration.base_menu.auto_archive_threads": "Should threads be archived when a suggestion is resolved?",
