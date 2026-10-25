@@ -256,6 +256,7 @@ async def test_queues_a_message_edit(
         as_resolved=False,
         # The edit is deliberately delayed so votes cast together batch up
         scheduled=time.time() + 10,
+        meta={"otel": {}},
     )
 
 
