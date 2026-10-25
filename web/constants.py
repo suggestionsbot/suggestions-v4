@@ -54,11 +54,17 @@ def configure_otel(service_name: str) -> None:
         get_secret("OTEL_DEPLOYMENT_ENVIRONMENT", infisical_client),
     )
     headers = {"Authorization": f"Bearer {bearer_token}"}
+
+    CLUSTER_NAME = os.environ.get("CLUSTER_NAME", None)  # noqa: N806
+    CLUSTER_ID = int(os.environ.get("CLUSTER_ID", "1"))  # noqa: N806
+    if CLUSTER_NAME is None:
+        CLUSTER_NAME = CLUSTER_ID  # noqa: N806
+
     attributes = {
         SERVICE_NAME: service_name,
         DEPLOYMENT_ENVIRONMENT: deployment_environment,
         HOST_NAME: host,
-        "cluster.name": os.environ.get("CLUSTER_NAME", "Unknown"),
+        "cluster.name": CLUSTER_NAME,
     }
     resource = Resource.create(attributes=attributes)
 
