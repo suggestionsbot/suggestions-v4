@@ -626,6 +626,7 @@ class SuggestionMenu:
                     ),
                     ephemeral=True,
                 )
+                await message.delete()
                 await s.delete().where(Suggestions.id == s.id)
                 return None
 
