@@ -1,10 +1,11 @@
+# ruff: noqa: CPY001
 import pytest
 
 from web.controllers.suggestions_controller import person
 
 
 @pytest.mark.parametrize(
-    "display_text,expected",
+    ("display_text", "expected"),
     [
         ("Vixen (<@123>)", {"name": "Vixen", "mention": "Vixen", "user_id": 123}),
         ("Vixen (<@!123>)", {"name": "Vixen", "mention": "Vixen", "user_id": 123}),
@@ -16,5 +17,5 @@ from web.controllers.suggestions_controller import person
         (None, {"name": "Unknown", "mention": None, "user_id": None}),
     ],
 )
-def test_person(display_text, expected):
+def test_person(display_text: str | None, expected: dict) -> None:
     assert person(display_text) == expected
