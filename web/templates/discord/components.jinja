@@ -2,9 +2,9 @@
   Discord-style message building blocks. Plain Jinja: no custom filters or globals.
 
   Import WITH CONTEXT (the accent colour uses the page's csp_nonce):
-      {% import "discord/message.jinja" as dc with context %}
+      {% import "discord/components.jinja" as dc with context %}
 
-  Needs static/discord/discord-components.css (and, optionally, the .js for
+  Needs /static/discord-components.css (and, optionally, the .js for
   local-time timestamps and spoilers), included with your nonce.
 
   Content goes in {% call %} blocks, so you write whatever HTML you like.

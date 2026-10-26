@@ -462,6 +462,11 @@
     padding: 0 2px;
 }
 
+/* Without JS a timestamp already shows its exact date, so don't repeat it. */
+html:not(.dc-js) .dc-ts-exact {
+    display: none;
+}
+
 /* ---------------------------------------------------------------- spoilers */
 
 .dc-spoiler {

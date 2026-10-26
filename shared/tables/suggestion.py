@@ -20,6 +20,7 @@ from piccolo.columns import (
 )
 from piccolo.columns.indexes import IndexMethod
 from piccolo.columns.operators import Equal
+from piccolo.query.functions.aggregate import Count
 from piccolo.table import Table
 
 from bot import constants, utils
@@ -158,8 +159,8 @@ class Suggestions(Table, AuditMixin):
 
     @property
     def footer_sid(self) -> str:
-        return f"[{self.sID}]({self.dashboard_link})"
-        # return f"`{self.sID}`"
+        # sid_text = f"[{self.sID}]({self.dashboard_link})"
+        return f"`{self.sID}`"
 
     @property
     def dashboard_link(self) -> str:
@@ -186,6 +187,21 @@ class Suggestions(Table, AuditMixin):
     @state.setter
     def state(self, value: SuggestionStateEnum) -> None:
         self.state_raw = value.value
+
+    async def vote_counts(self) -> tuple[int, int]:
+        """(up votes, down votes) in one query."""
+        from shared.tables import SuggestionVotes, SuggestionsVoteTypeEnum
+
+        rows = await (
+            SuggestionVotes.select(SuggestionVotes.vote_type, Count())
+            .where(SuggestionVotes.suggestion == self)
+            .group_by(SuggestionVotes.vote_type)
+        )
+        counts = {row["vote_type"]: row["count"] for row in rows}
+        return (
+            counts.get(SuggestionsVoteTypeEnum.UpVote.value, 0),
+            counts.get(SuggestionsVoteTypeEnum.DownVote.value, 0),
+        )
 
     @property
     def color(self) -> hikari.Color:
@@ -454,20 +470,8 @@ class Suggestions(Table, AuditMixin):
                 )
             )
             votes = io.StringIO()
-            from shared.tables import SuggestionVotes, SuggestionsVoteTypeEnum
-
-            up_votes = (
-                await SuggestionVotes.count()
-                .where(SuggestionVotes.suggestion == self)
-                .where(SuggestionVotes.vote_type == SuggestionsVoteTypeEnum.UpVote)
-            )
+            up_votes, down_votes = await self.vote_counts()
             votes.write(f"{constants.DEFAULT_UP_VOTE.mention}: **{up_votes}**\n")
-
-            down_votes = (
-                await SuggestionVotes.count()
-                .where(SuggestionVotes.suggestion == self)
-                .where(SuggestionVotes.vote_type == SuggestionsVoteTypeEnum.DownVote)
-            )
             votes.write(f"{constants.DEFAULT_DOWN_VOTE.mention}: **{down_votes}**")
 
             components.append(

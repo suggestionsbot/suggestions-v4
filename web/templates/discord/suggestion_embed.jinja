@@ -19,7 +19,16 @@
 {#- Anonymous/unparseable people have no mention: just the name, no "@None". -#}
 {#- Screen readers would read "|" as "vertical bar". -#}
 {%- set bar = '<span aria-hidden="true">|</span>'|safe -%}
-{%- macro who(p) -%}{{ p.name }}{% if p.mention %} ({{ dc.mention(p.mention) }}){% endif %}{%- endmacro -%}
+{#- Legacy rows store only "<@123>": no name, so just the mention. -#}
+{%- macro who(p) -%}
+    {%- if p.name and p.mention %}{{ p.name }} ({{ dc.mention(p.mention) }})
+        {%- elif p.mention %}{{ dc.mention(p.mention) }}
+    {%- else %}{{ p.name }}{% endif -%}
+{%- endmacro -%}
+{#- Relative time, then the exact date (hidden without JS, the fallback already is it). -#}
+{%- macro when(t) -%}
+    {{ dc.time(t.unix, "R", t.text, t.iso) }}<span class="dc-ts-exact"> ({{ t.text }})</span>
+{%- endmacro -%}
 
 {% call dc.message() %}
 
@@ -83,13 +92,9 @@
         {% call dc.text() %}
             Suggestion ID: {{ dc.code(suggestion.sID) }}
             {#- Exact dates shown as text: the script's title tooltip is hover-only. -#}
-            {%- if resolved %}<br>Created {{ dc.time(created.unix, "R", created.text, created.iso) }} (
-                {{ created.text }})
-                {%- if resolved_at %} {{ bar }} Resolved
-                    {{ dc.time(resolved_at.unix, "R", resolved_at.text, resolved_at.iso) }} ({{ resolved_at.text }})
-                {% endif %}
-            {%- else %} {{ bar }} Created {{ dc.time(created.unix, "R", created.text, created.iso) }} (
-                {{ created.text }})
+            {%- if resolved %}<br>Created {{ when(created) }}
+                {%- if resolved_at %} {{ bar }} Resolved {{ when(resolved_at) }}{% endif %}
+            {%- else %} {{ bar }} Created {{ when(created) }}
             {%- endif %}
         {% endcall %}
 
