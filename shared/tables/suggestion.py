@@ -23,6 +23,7 @@ from piccolo.columns.operators import Equal
 from piccolo.table import Table
 
 from bot import constants, utils
+from web.constants import SERVING_DOMAIN, IS_PRODUCTION
 from bot.constants import (
     REJECTED_COLOR,
     APPROVED_COLOR,
@@ -157,9 +158,13 @@ class Suggestions(Table, AuditMixin):
 
     @property
     def footer_sid(self) -> str:
-        # sid_text = f"[{self.sID}](https://dashboard.suggestions.gg/guilds/
-        # {self.guild_id}/suggestions/{self.sID})"
+        # sid_text = f"[{self.sID}]({self.dashboard_link})"
         return f"`{self.sID}`"
+
+    @property
+    def dashboard_link(self) -> str:
+        protocol = "https" if IS_PRODUCTION else "http"
+        return f"{protocol}://{SERVING_DOMAIN[0]}/guilds/{self.guild_id}/suggestions/{self.sID}"
 
     @property
     def message_jump_link(self) -> str:
@@ -316,6 +321,13 @@ class Suggestions(Table, AuditMixin):
     ) -> list[
         ContainerComponentBuilder | MessageActionRowBuilder | TextDisplayComponentBuilder
     ]:
+        rough_content_length = len(self.suggestion)
+        if self.resolved_note:
+            rough_content_length += len(self.resolved_note)
+        if self.moderator_note:
+            rough_content_length += len(self.moderator_note)
+        is_probs_over_max_length = rough_content_length >= 3500  # noqa: PLR2004
+
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
                 content=localisations.get_localized_string(
@@ -351,6 +363,16 @@ class Suggestions(Table, AuditMixin):
         )
 
         if self.moderator_note:
+            to_write = self.moderator_note
+            if is_probs_over_max_length:
+                to_write = localisations.get_localized_string(
+                    "components.suggestions.too_much_content",
+                    locale,
+                    extras={
+                        "LINK": self.dashboard_link,
+                    },
+                    guild_config=guild_config,
+                )
             components.append(
                 hikari.impl.SeparatorComponentBuilder(
                     divider=True,
@@ -362,7 +384,7 @@ class Suggestions(Table, AuditMixin):
                 locale,
                 extras={
                     "MODERATOR_NOTE_BY_DISPLAY": self.moderator_note_added_by_display_text,  # noqa: E501
-                    "MODERATOR_NOTE": self.moderator_note,
+                    "MODERATOR_NOTE": to_write,
                 },
                 guild_config=guild_config,
             )
@@ -377,12 +399,23 @@ class Suggestions(Table, AuditMixin):
             )
             content = io.StringIO()
             if self.resolved_note is not None and self.resolved_note:
+                to_write = self.resolved_note
+                if is_probs_over_max_length:
+                    to_write = localisations.get_localized_string(
+                        "components.suggestions.too_much_content",
+                        locale,
+                        extras={
+                            "LINK": self.dashboard_link,
+                        },
+                        guild_config=guild_config,
+                    )
+
                 content.write(
                     localisations.get_localized_string(
                         "components.suggestions.resolved_note",
                         locale,
                         extras={
-                            "RESOLVED_BY_NOTE": self.resolved_note,
+                            "RESOLVED_BY_NOTE": to_write,
                         },
                         guild_config=guild_config,
                     )
