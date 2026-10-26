@@ -1,8 +1,15 @@
 {% macro insert_cf_turnstile() %}
-    <div class="cf-turnstile" data-sitekey="{{ CF_TURNSTILE_SITE_KEY }}" data-response-field-name="turnstile-token"></div>
+    <div class="cf-turnstile" data-sitekey="{{ CF_TURNSTILE_SITE_KEY }}"
+         data-response-field-name="turnstile-token"></div>
+    {#- Match the page theme. Turnstile reads it once, when the widget renders. -#}
+    <script nonce="{{ csp_nonce }}">
+        document.currentScript.previousElementSibling.setAttribute(
+            "data-theme", document.documentElement.getAttribute("data-bs-theme")
+        );
+    </script>
 {%- endmacro %}
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
@@ -26,15 +33,77 @@
             font-feature-settings: "cv03", "cv04", "cv11";
         }
     </style>
+    {#- Runs before paint so the viewer never sees a flash of the wrong theme. Follows the
+        device until the viewer picks one with #theme-toggle. Without JS, <html> stays light. -#}
+    <script nonce="{{ csp_nonce }}">
+        (function () {
+            var root = document.documentElement;
+            var device = window.matchMedia("(prefers-color-scheme: dark)");
+            var button = null;
+            var current;
+            var chosen = null;
+            try {
+                chosen = localStorage.getItem("theme");
+            } catch (e) {
+            }
+
+            function preferred() {
+                if (chosen === "light" || chosen === "dark") return chosen;
+                return device.matches ? "dark" : "light";
+            }
+
+            function apply(theme) {
+                current = theme;
+                root.setAttribute("data-bs-theme", theme);
+                if (button) button.textContent = "Switch to " + (theme === "dark" ? "light" : "dark") + " theme";
+            }
+
+            apply(preferred());
+            device.addEventListener("change", function () {
+                apply(preferred());
+            });
+            // A pick made in another tab.
+            window.addEventListener("storage", function (event) {
+                if (event.key !== "theme") return;
+                chosen = event.newValue;
+                apply(preferred());
+            });
+            // Dark text colours would print near-white on white paper.
+            window.addEventListener("beforeprint", function () {
+                root.setAttribute("data-bs-theme", "light");
+            });
+            window.addEventListener("afterprint", function () {
+                apply(current);
+            });
+
+            document.addEventListener("DOMContentLoaded", function () {
+                button = document.getElementById("theme-toggle");
+                if (!button) return;
+                button.addEventListener("click", function () {
+                    chosen = current === "dark" ? "light" : "dark";
+                    try {
+                        localStorage.setItem("theme", chosen);
+                    } catch (e) {
+                    }
+                    apply(chosen);
+                });
+                apply(current);
+                button.hidden = false;
+            });
+        })();
+    </script>
     <link rel="preconnect" href="https://challenges.cloudflare.com" nonce="{{ csp_nonce }}">
     <script
-      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-      async
-      defer
-      nonce="{{ csp_nonce }}"
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            async
+            defer
+            nonce="{{ csp_nonce }}"
     ></script>
+    {% block head %}{% endblock %}
 </head>
 <body>
+{# Pages with a <main id="main"> fill this with a skip link (WCAG 2.4.1). #}
+{% block skip_link %}{% endblock %}
 {% include 'sidebar.jinja' %}
 {% block content %}{% endblock %}
 </body>

@@ -46,12 +46,12 @@ from web.controllers import (
     ErrorController,
     StatsController,
     GiftController,
+    SuggestionController,
+    OAuthController,
 )
-from web.controllers import OAuthController
+from web.discord_markdown import render as render_markdown
 from web.controllers.api import APIAlertController, APIAuthTokenController
-from web.endpoints import (
-    home,
-)
+from web.endpoints import home
 from web.exception_handlers import (
     redirect_for_auth,
     RedirectForAuth,
@@ -298,6 +298,7 @@ ENVIRONMENT.filters["quote_plus"] = lambda u: quote_plus(u)
 ENVIRONMENT.filters["fmt"] = format_datetime
 ENVIRONMENT.filters["precise_delta"] = precise_delta
 ENVIRONMENT.filters["intcomma"] = humanize.intcomma
+ENVIRONMENT.filters["markdown"] = render_markdown
 
 
 def register_template_callables(engine: JinjaTemplateEngine) -> None:
@@ -335,6 +336,7 @@ routes = [
     StripeController,
     ErrorController,
     StatsController,
+    SuggestionController,
 ]
 if (not IS_CUSTOM_BOT and constants.IS_PRODUCTION) or not constants.IS_PRODUCTION:
     routes.append(GiftController)  # ty:ignore[invalid-argument-type]

@@ -6,6 +6,7 @@ from .stripe_controller import StripeController
 from .error_controller import ErrorController
 from .stats_controller import StatsController
 from .gifts_controller import GiftController
+from .suggestions_controller import SuggestionController
 
 __all__ = [
     "AuthController",
@@ -16,4 +17,5 @@ __all__ = [
     "OAuthController",
     "StatsController",
     "StripeController",
+    "SuggestionController",
 ]

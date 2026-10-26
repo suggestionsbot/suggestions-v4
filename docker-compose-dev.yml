@@ -20,6 +20,14 @@ services:
       POSTGRES_PASSWORD: product-defeat-follow-worshiper-swimwear-drown
     volumes:
       - .db:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '5'
+          memory: 6G
+        reservations:
+          cpus: '1'
+          memory: 1G
   suggestions_saq:
     build:
       context: .
@@ -40,6 +48,14 @@ services:
     command: redis-server --port 2202 --save 20 1 --loglevel warning --requirepass haziness-sloppy-cycle-deduct-superman-undertook
     volumes:
       - cache:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
 
 volumes:

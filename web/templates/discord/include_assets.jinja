@@ -1,0 +1,31 @@
+{# Styles/script for rendered Discord messages. Served by the StaticFilesConfig at
+   /; the nonce satisfies the page CSP. #}
+<link rel="stylesheet" href="/static/discord-components.css" nonce="{{ csp_nonce }}">
+<script src="/static/discord-components.js" nonce="{{ csp_nonce }}" defer></script>
+<style nonce="{{ csp_nonce }}">
+    /* Just the embed, filling the column. */
+    .dc-embed-only > .dc-message {
+        padding: 0;
+        background: none;
+    }
+
+    .dc-embed-only .dc-container {
+        max-width: none;
+    }
+
+    /* Discord's 4px stripe is easy to miss at page width: widen it and tint
+       the border so the suggestion's state colour reads at a glance. */
+    .dc-embed-only .dc-container.dc-has-accent {
+        border-color: color-mix(in srgb, var(--dc-accent) 45%, var(--dc-container-border));
+        border-left: 6px solid var(--dc-accent);
+    }
+
+    /* Field labels are headings for screen readers but look like Discord's bold text. */
+    .dc-embed-only .dc-label {
+        color: var(--dc-text-strong);
+        font-size: 1em;
+        font-weight: 700;
+        line-height: inherit;
+        margin: 0;
+    }
+</style>
