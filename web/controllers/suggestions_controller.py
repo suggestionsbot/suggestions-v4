@@ -6,7 +6,7 @@ import re
 
 import hikari
 import httpx
-from litestar import Controller, get
+from litestar import Controller, get, Request
 from litestar.exceptions import NotFoundException
 from litestar.response import Template
 
@@ -16,6 +16,7 @@ from shared.tables.suggestion import SuggestionStateEnum
 from web import constants
 from web.guards import ensure_user_is_in_guild
 from web.middleware import EnsureAuth
+from web.tables import OAuthEntry
 from web.util import html_template
 
 logger = logging.getLogger(__name__)
@@ -98,7 +99,16 @@ class SuggestionController(Controller):
     path = "/guilds/{guild_id:int}/suggestions"
 
     @get(path="/{sid:str}", name="view_suggestion", guards=[ensure_user_is_in_guild])
-    async def view_suggestion(self, guild_id: int, sid: str) -> Template:
+    async def view_suggestion(
+        self, guild_id: int, sid: str, request: Request
+    ) -> Template:
+        oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
+        logger.debug(
+            "Discord user %s attempted to view suggestion %s using guild %s as the id",
+            oauth_entry.oauth_id,
+            sid,
+            guild_id,
+        )
         suggestion = await Suggestions.fetch_suggestion(sid, guild_id)
         if suggestion is None or suggestion.state is SuggestionStateEnum.CLEARED:
             raise NotFoundException
