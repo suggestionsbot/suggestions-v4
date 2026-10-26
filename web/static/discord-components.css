@@ -869,3 +869,26 @@ html:not(.dc-js) .dc-spoiler-block:focus > *,
         grid-template-columns: 1fr 1fr;
     }
 }
+
+/* Markdown-rendered user text (web/discord_markdown.py). Blank lines are
+   .dc-gap spans and newlines stay as text, so no paragraph margins. */
+.dc-md > :first-child {
+    margin-top: 0;
+}
+
+.dc-md > :last-child {
+    margin-bottom: 0;
+}
+
+.dc-md p {
+    margin: 0;
+}
+
+.dc-md :where(p, li) {
+    white-space: pre-wrap;
+}
+
+.dc-link-host {
+    color: var(--dc-muted);
+    font-size: 0.875em;
+}
