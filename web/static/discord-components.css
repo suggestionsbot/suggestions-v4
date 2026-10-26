@@ -443,6 +443,13 @@
     font-family: "Twemoji Mozilla", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }
 
+/* Vote counts on the suggestion page. line-height keeps the rows from spreading. */
+.dc-votes .dc-emoji-unicode {
+    font-size: 1.2em;
+    line-height: 1;
+    vertical-align: -0.1em;
+}
+
 .dc-button .dc-emoji {
     width: var(--dc-font-size);
     height: var(--dc-font-size);
