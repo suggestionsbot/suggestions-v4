@@ -158,8 +158,8 @@ class Suggestions(Table, AuditMixin):
 
     @property
     def footer_sid(self) -> str:
-        # sid_text = f"[{self.sID}]({self.dashboard_link})"
-        return f"`{self.sID}`"
+        return f"[{self.sID}]({self.dashboard_link})"
+        # return f"`{self.sID}`"
 
     @property
     def dashboard_link(self) -> str:
