@@ -1,3 +1,4 @@
+from bot.constants import MAX_CONTENT_LENGTH
 from bot.hooks import early_ephemeral_defer
 import io
 import logging
@@ -320,6 +321,7 @@ class ResolveCmd(
         "commands.resolve.options.response.description",
         localize=True,
         default=None,
+        max_length=MAX_CONTENT_LENGTH,
     )
     anonymously = lightbulb.boolean(
         "commands.resolve.options.anonymously.name",
@@ -412,6 +414,7 @@ class ApproveCmd(
         "commands.approve.options.response.description",
         localize=True,
         default=None,
+        max_length=MAX_CONTENT_LENGTH,
     )
     anonymously = lightbulb.boolean(
         "commands.approve.options.anonymously.name",
@@ -504,6 +507,7 @@ class RejectCmd(
         "commands.reject.options.response.description",
         localize=True,
         default=None,
+        max_length=MAX_CONTENT_LENGTH,
     )
     anonymously = lightbulb.boolean(
         "commands.reject.options.anonymously.name",

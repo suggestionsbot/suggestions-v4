@@ -7,7 +7,7 @@ import lightbulb
 
 import shared.utils
 from bot import utils
-from bot.constants import NOTES_GROUP, EMBED_COLOR
+from bot.constants import NOTES_GROUP, EMBED_COLOR, MAX_CONTENT_LENGTH
 from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
 from bot.tables import CommandTypes, CommandInvokes
@@ -132,6 +132,7 @@ class NotesAddCmd(
         "commands.note.add.options.note.name",
         "commands.note.add.options.note.description",
         localize=True,
+        max_length=MAX_CONTENT_LENGTH,
     )
     anonymously = lightbulb.boolean(
         "commands.note.options.anonymously.name",
