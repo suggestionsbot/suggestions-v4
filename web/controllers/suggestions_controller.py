@@ -15,7 +15,7 @@ from shared.tables import (
 )
 from shared.tables.suggestion import SuggestionStateEnum
 from web import constants
-from web.guards import ensure_user_has_manage_permissions
+from web.guards import ensure_user_is_in_guild
 from web.middleware import EnsureAuth
 from web.util import html_template
 
@@ -101,13 +101,8 @@ class SuggestionController(Controller):
     middleware = [EnsureAuth]  # noqa: RUF012
     include_in_schema = False
     path = "/guilds/{guild_id:int}/suggestions"
-    # Staff only. Guild membership is not enough: a guild's suggestions or log
-    # channel may be hidden from regular members in Discord, and these pages show
-    # everything (including moderator notes). Opening this to members needs a
-    # per-channel VIEW_CHANNEL check against the suggestion's channel first.
-    guards = [ensure_user_has_manage_permissions]  # noqa: RUF012
 
-    @get(path="/{sid:str}", name="view_suggestion")
+    @get(path="/{sid:str}", name="view_suggestion", guards=[ensure_user_is_in_guild])
     async def view_suggestion(self, guild_id: int, sid: str) -> Template:
         suggestion = await Suggestions.fetch_suggestion(sid, guild_id)
         if suggestion is None or suggestion.state is SuggestionStateEnum.CLEARED:

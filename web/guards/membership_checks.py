@@ -35,12 +35,12 @@ async def ensure_user_is_in_guild(
                 "I am only letting you into this page because you are dashboard admin.",
                 level="info",
             )
-            return None
+            return
 
         alert(request, "You must be in the guild to view it.", level="error")
         raise PermissionDeniedException
 
-    return None
+    return
 
 
 async def ensure_user_has_manage_permissions(
