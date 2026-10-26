@@ -1,5 +1,6 @@
-/* Discord Components V2 → HTML. Dark by default; light follows the OS
-   preference, or force a theme with .dc-theme-light / .dc-theme-dark.
+/* Discord Components V2 → HTML. Dark by default; light follows the page's
+   data-bs-theme when set, else the OS preference, or force a theme with
+   .dc-theme-light / .dc-theme-dark.
 
    Colours and geometry are measured from Discord's desktop client.
    --dc-font-size mirrors Discord's "chat font scaling" (default 16px). */
@@ -53,7 +54,7 @@
 }
 
 @media (prefers-color-scheme: light) {
-    .dc-message:not(.dc-theme-dark) {
+    :root:not([data-bs-theme]) .dc-message:not(.dc-theme-dark) {
         --dc-bg: #ffffff;
         --dc-container-bg: #f5f5f7;
         --dc-container-border: #e1e2e6;
@@ -75,12 +76,13 @@
         --dc-btn-border: rgba(0, 0, 0, 0.04);
     }
 
-    .dc-message:not(.dc-theme-dark) .dc-button-secondary,
-    .dc-message:not(.dc-theme-dark) .dc-button-link {
+    :root:not([data-bs-theme]) .dc-message:not(.dc-theme-dark) .dc-button-secondary,
+    :root:not([data-bs-theme]) .dc-message:not(.dc-theme-dark) .dc-button-link {
         color: #313338;
     }
 }
 
+[data-bs-theme="light"] .dc-message:not(.dc-theme-dark),
 .dc-message.dc-theme-light {
     --dc-bg: #ffffff;
     --dc-container-bg: #f5f5f7;
@@ -103,6 +105,8 @@
     --dc-btn-border: rgba(0, 0, 0, 0.04);
 }
 
+[data-bs-theme="light"] .dc-message:not(.dc-theme-dark) .dc-button-secondary,
+[data-bs-theme="light"] .dc-message:not(.dc-theme-dark) .dc-button-link,
 .dc-message.dc-theme-light .dc-button-secondary,
 .dc-message.dc-theme-light .dc-button-link {
     color: #313338;

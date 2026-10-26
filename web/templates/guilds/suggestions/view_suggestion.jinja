@@ -12,7 +12,8 @@
                         <div class="col">
                             <div class="page-pretitle" aria-hidden="true">Suggestion</div>
                             <h2 class="page-title" id="suggestion-title">
-                                <span class="visually-hidden">Suggestion </span><code>{{ suggestion.sID }}</code>
+                                <span class="visually-hidden">Suggestion </span><span
+                                    class="font-monospace">{{ suggestion.sID }}</span>
                             </h2>
                             {#- State as text, not just the embed's colour bar (WCAG 1.4.1). -#}
                             <span class="dc-state dc-state-{{ suggestion.state.value|lower }} mt-2">{{ suggestion.state.value }}</span>

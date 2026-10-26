@@ -18,7 +18,8 @@
 {#- ------------------------------------------------------------------ message -#}
 
 {# A whole message. author: {"name", "avatar_url", "color", "app", "verified"} #}
-{%- macro message(author=none, timestamp=none, edited=false, theme="dark") -%}
+{# theme: none follows the page's data-bs-theme (else the device); "dark"/"light" forces one. #}
+{%- macro message(author=none, timestamp=none, edited=false, theme=none) -%}
     <div class="dc-message{% if theme %} dc-theme-{{ theme }}{% endif %}{% if author %} dc-has-author{% endif %}"
          data-dc-interactive="false">
         {%- if author %}

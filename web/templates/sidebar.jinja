@@ -25,10 +25,17 @@
     <div class="dropdown-menu-columns">
     <div class="dropdown-menu-column">
 {%- endmacro %}
-{% macro dropdown_item(text, href) %}
-    <a class="dropdown-item" href="{{ href }}">
-        {{ text }}
-    </a>
+{#- No href: a button for a script to drive, hidden until that script shows it. -#}
+{% macro dropdown_item(text, href=none, id=none) %}
+    {%- if href is none %}
+        <button type="button" class="dropdown-item"{% if id %} id="{{ id }}"{% endif %} hidden>
+            {{ text }}
+        </button>
+    {%- else %}
+        <a class="dropdown-item" href="{{ href }}">
+            {{ text }}
+        </a>
+    {%- endif %}
 {%- endmacro %}
 {% macro end_dropdown() %}
     </div>
@@ -97,6 +104,8 @@
                 {{ end_dropdown() }}
                 {{ start_dropdown('Extra', '<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path  d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path><path d="M15 15l3.35 3.35"></path><path d="M9 15l-3.35 3.35"></path><path d="M5.65 5.65l3.35 3.35"></path><path  d="M18.35 5.65l-3.35 3.35"></path></svg>') }}
                 {{ dropdown_item('API Docs', '/docs') }}
+                {#- Label and click handler are set by the theme script in base.jinja. -#}
+                {{ dropdown_item('Toggle theme', id='theme-toggle') }}
                 {% if request.user.admin %}
                     {{ dropdown_item('SAQ Queues', '/saq/') }}
                     {{ dropdown_item('Invoke Stats', url_for('view_invoke_stats')) }}
