@@ -2,13 +2,16 @@
 from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 
+import asyncio
 import datetime
+import os
 from collections.abc import Sequence, AsyncIterator
 from pathlib import Path
 from typing import TypeVar, Any, Self, cast
 from unittest import mock
 from unittest.mock import AsyncMock, Mock
 
+import asyncpg
 import fakeredis
 import hikari
 import httpx
@@ -32,6 +35,41 @@ from web.tables import APIToken, Users, OAuthEntry, GuildTokens, UserTokens
 from web.util.table_mixins import utc_now
 
 T = TypeVar("T")
+
+
+def pytest_configure(config) -> None:  # noqa: ARG001
+    """Create this xdist worker's database, see piccolo_conf_test.py."""
+    worker = os.environ.get("PYTEST_XDIST_WORKER")
+    if worker is not None:
+        asyncio.run(_create_database(f"tests_{worker}"))
+
+
+async def _create_database(name: str) -> None:
+    # Connect to the shared "tests" database to issue CREATE DATABASE. Not via
+    # piccolo_conf_test: constructing its engine checks the server version,
+    # which warns that this worker's database doesn't exist yet.
+    conn = await asyncpg.connect(
+        database="tests",
+        user=os.environ["POSTGRES_USER"],
+        password=os.environ["POSTGRES_PASSWORD"],
+        host=os.environ["POSTGRES_HOST"],
+        port=int(os.environ["POSTGRES_PORT"]),
+    )
+    try:
+        # Workers starting together can trip over each other copying template1.
+        for attempt in range(10):
+            try:
+                await conn.execute(f'CREATE DATABASE "{name}"')
+            except asyncpg.DuplicateDatabaseError:
+                return
+            except asyncpg.ObjectInUseError:
+                await asyncio.sleep(0.2 * (attempt + 1))
+            else:
+                return
+        msg = f"Could not create test database {name}"
+        raise RuntimeError(msg)
+    finally:
+        await conn.close()
 
 
 @pytest.fixture(autouse=True)
