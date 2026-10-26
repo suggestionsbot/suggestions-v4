@@ -21,11 +21,11 @@
 
     --dc-bg: #3e3f45;
     --dc-container-bg: #393a41;
-    --dc-container-border: #44454c;
+    --dc-container-border: #62636b; /* Discord: #44454c, raised for a visible edge */
     --dc-divider: #4c4c54;
     --dc-text: #f2f2f3;
     --dc-text-strong: #ffffff;
-    --dc-muted: #9d9ea5;
+    --dc-muted: #aaabb2; /* Discord: #9d9ea5, 4.2:1 fails WCAG AA */
     --dc-link: #75adf3;
     --dc-code-bg: #3c3d4f;
     --dc-code-border: #484956;
@@ -56,13 +56,13 @@
 @media (prefers-color-scheme: light) {
     :root:not([data-bs-theme]) .dc-message:not(.dc-theme-dark) {
         --dc-bg: #ffffff;
-        --dc-container-bg: #f5f5f7;
-        --dc-container-border: #e1e2e6;
+        --dc-container-bg: #fafafb; /* Discord: #f5f5f7; lighter, between that and white */
+        --dc-container-border: #b9bbc2; /* Discord: #e1e2e6, raised for a visible edge */
         --dc-divider: #dcdde1;
-        --dc-text: #313338;
+        --dc-text: #1e1f22; /* Discord: #313338; gray on gray read as low contrast */
         --dc-text-strong: #060607;
         --dc-muted: #5c5e66;
-        --dc-link: #006ce7;
+        --dc-link: #0067dc; /* Discord: #006ce7, 4.49:1 fails WCAG AA */
         --dc-code-bg: #ebedef;
         --dc-code-border: #dcdee3;
         --dc-codeblock-bg: #f2f3f5;
@@ -85,13 +85,13 @@
 [data-bs-theme="light"] .dc-message:not(.dc-theme-dark),
 .dc-message.dc-theme-light {
     --dc-bg: #ffffff;
-    --dc-container-bg: #f5f5f7;
-    --dc-container-border: #e1e2e6;
+    --dc-container-bg: #fafafb; /* Discord: #f5f5f7; lighter, between that and white */
+    --dc-container-border: #b9bbc2; /* Discord: #e1e2e6, raised for a visible edge */
     --dc-divider: #dcdde1;
-    --dc-text: #313338;
+    --dc-text: #1e1f22; /* Discord: #313338; gray on gray read as low contrast */
     --dc-text-strong: #060607;
     --dc-muted: #5c5e66;
-    --dc-link: #006ce7;
+    --dc-link: #0067dc; /* Discord: #006ce7, 4.49:1 fails WCAG AA */
     --dc-code-bg: #ebedef;
     --dc-code-border: #dcdee3;
     --dc-codeblock-bg: #f2f3f5;
