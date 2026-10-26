@@ -37,6 +37,8 @@
     {% block head %}{% endblock %}
 </head>
 <body>
+{# Pages with a <main id="main"> fill this with a skip link (WCAG 2.4.1). #}
+{% block skip_link %}{% endblock %}
 {% include 'sidebar.jinja' %}
 {% block content %}{% endblock %}
 </body>

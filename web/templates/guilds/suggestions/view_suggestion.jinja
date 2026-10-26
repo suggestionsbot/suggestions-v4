@@ -1,16 +1,29 @@
 {% extends "base.jinja" %}
+{% block title %}Suggestion {{ suggestion.sID }} | Suggestions{% endblock %}
+{% block skip_link %}<a class="visually-hidden-focusable" href="#main">Skip to content</a>{% endblock %}
 {% block head %}{% include "discord/include_assets.jinja" %}{% endblock %}
 
 {% block content %}
     <div class="page">
-        <div class="page-wrapper">
+        <main class="page-wrapper" id="main">
             <div class="page-header d-print-none">
                 <div class="container-xl">
                     <div class="row g-2 align-items-center">
                         <div class="col">
-                            <div class="page-pretitle">Suggestion</div>
-                            <h2 class="page-title"><code>{{ suggestion.sID }}</code></h2>
+                            <div class="page-pretitle" aria-hidden="true">Suggestion</div>
+                            <h2 class="page-title" id="suggestion-title">
+                                <span class="visually-hidden">Suggestion </span><code>{{ suggestion.sID }}</code>
+                            </h2>
+                            {#- State as text, not just the embed's colour bar (WCAG 1.4.1). -#}
+                            <span class="dc-state dc-state-{{ suggestion.state.value|lower }} mt-2">{{ suggestion.state.value }}</span>
                         </div>
+                        {% if suggestion.message_id and suggestion.channel_id %}
+                            <div class="col-auto ms-auto">
+                                <a class="btn btn-primary" href="{{ suggestion.message_jump_link }}"
+                                   target="_blank" rel="noopener noreferrer">View in Discord<span
+                                        class="visually-hidden"> (opens in a new tab)</span></a>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -19,14 +32,14 @@
                 <div class="container-xl">
                     {% include 'alerts.jinja' %}
                     <div class="row">
-                        <div class="col-12 col-lg-8 col-xl-7">
-                            <div class="card overflow-hidden">
-                                {% include "guilds/suggestions/suggestion_embed.jinja" %}
-                            </div>
+                        <div class="col-12">
+                            <article class="dc-embed-only" aria-labelledby="suggestion-title">
+                                {% include "discord/suggestion_embed.jinja" %}
+                            </article>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 {% endblock content %}

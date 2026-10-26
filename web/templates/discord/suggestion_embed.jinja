@@ -1,5 +1,5 @@
 {#-
-  One suggestion, laid out exactly like the bot's message. Fill these variables:
+  One suggestion, laid out like the bot's embed. Fill these variables:
 
     suggestion       .sID .suggestion .image_urls .moderator_note .resolved_note
                      .state.value .color .created_at .resolved_at  (a Suggestions row works)
@@ -8,21 +8,25 @@
     resolved_by      {"name": "Skelmis", "mention": "Ethan"}   (when resolved)
     up_votes, down_votes   ints
     thread_url       discussion thread link or none
-    bot              {"name": "Suggestions", "avatar_url": "...", "color": 0xFFD663, "app": true, "verified": true}
-    edited           optional: show "(edited)" under the message
+    created, resolved_at   {"unix", "iso", "text"} (suggestions_controller.timestamp()); resolved_at may be none
     csp_nonce        your page nonce (html_template() already sets it)
 
   Labels are the bot's en_GB strings; swap in your own localisation as needed.
 -#}
 {% import "discord/components.jinja" as dc with context %}
 {%- set resolved = suggestion.state.value != "Pending" -%}
+{#- Labels are <h3 class="dc-label"> so screen readers can jump between fields. -#}
+{#- Anonymous/unparseable people have no mention: just the name, no "@None". -#}
+{#- Screen readers would read "|" as "vertical bar". -#}
+{%- set bar = '<span aria-hidden="true">|</span>'|safe -%}
+{%- macro who(p) -%}{{ p.name }}{% if p.mention %} ({{ dc.mention(p.mention) }}){% endif %}{%- endmacro -%}
 
-{% call dc.message(author=bot, timestamp=suggestion.created_at.timestamp(), edited=edited is defined and edited) %}
+{% call dc.message() %}
 
     {% call dc.container(accent=suggestion.color) %}
 
         {% call dc.text() %}
-            <strong>Suggestion</strong><br>
+            <h3 class="dc-label">Suggestion</h3>
             <span class="dc-pre">{{ suggestion.suggestion }}</span>
         {% endcall %}
 
@@ -32,19 +36,19 @@
 
         {% call dc.section(thumbnail_url=submitter.avatar_url) %}
             {% call dc.text() %}
-                <strong>Submitter</strong><br>
-                {{ submitter.name }} ({{ dc.mention(submitter.mention) }})
+                <h3 class="dc-label">Submitter</h3>
+                {{ who(submitter) }}
             {% endcall %}
         {% endcall %}
 
         {% if suggestion.moderator_note %}
             {{ dc.separator() }}
             {% call dc.text() %}
-                <strong>Moderator Note</strong><br>
+                <h3 class="dc-label">Moderator Note</h3>
                 <span class="dc-pre">{{ suggestion.moderator_note }}</span>
                 {{ dc.gap() }}
-                <strong>Moderator</strong><br>
-                {{ moderator.name }} ({{ dc.mention(moderator.mention) }})
+                <h3 class="dc-label">Moderator</h3>
+                {{ who(moderator) }}
             {% endcall %}
         {% endif %}
 
@@ -52,24 +56,24 @@
             {{ dc.separator() }}
             {% call dc.text() %}
                 {% if suggestion.resolved_note %}
-                    <strong>Resolution Note</strong><br>
+                    <h3 class="dc-label">Resolution Note</h3>
                     <span class="dc-pre">{{ suggestion.resolved_note }}</span>
                     {{ dc.gap() }}
                 {% endif %}
-                <strong>Resolution Type</strong><br>
+                <h3 class="dc-label">Resolution Type</h3>
                 {{ suggestion.state.value }}
                 {{ dc.gap() }}
-                <strong>Resolved By</strong><br>
-                {{ resolved_by.name }} ({{ dc.mention(resolved_by.mention) }})
+                <h3 class="dc-label">Resolved By</h3>
+                {{ who(resolved_by) }}
             {% endcall %}
         {% endif %}
 
         {{ dc.separator() }}
 
         {% call dc.text() %}
-            <strong>{{ "Results" if resolved else "Results So Far" }}</strong><br>
-            {{ dc.twemoji("2705", "✅") }}: <strong>{{ up_votes }}</strong><br>
-            {{ dc.twemoji("274c", "❌") }}: <strong>{{ down_votes }}</strong>
+            <h3 class="dc-label">{{ "Results" if resolved else "Results So Far" }}</h3>
+            {{ dc.unicode_emoji("✅", "Up votes") }}: <strong>{{ up_votes }}</strong><br>
+            {{ dc.unicode_emoji("❌", "Down votes") }}: <strong>{{ down_votes }}</strong>
         {% endcall %}
 
         {% if resolved and thread_url %}
@@ -78,19 +82,17 @@
 
         {% call dc.text() %}
             Suggestion ID: {{ dc.code(suggestion.sID) }}
-            {%- if resolved %}<br>Created {{ dc.time(suggestion.created_at.timestamp(), "R") }}
-                | Resolved {{ dc.time(suggestion.resolved_at.timestamp(), "R") }}
-            {%- else %} | Created {{ dc.time(suggestion.created_at.timestamp(), "R") }}
+            {#- Exact dates shown as text: the script's title tooltip is hover-only. -#}
+            {%- if resolved %}<br>Created {{ dc.time(created.unix, "R", created.text, created.iso) }} (
+                {{ created.text }})
+                {%- if resolved_at %} {{ bar }} Resolved
+                    {{ dc.time(resolved_at.unix, "R", resolved_at.text, resolved_at.iso) }} ({{ resolved_at.text }})
+                {% endif %}
+            {%- else %} {{ bar }} Created {{ dc.time(created.unix, "R", created.text, created.iso) }} (
+                {{ created.text }})
             {%- endif %}
         {% endcall %}
 
     {% endcall %}
-
-    {% if not resolved %}
-        {% call dc.buttons() %}
-            {{ dc.button(emoji=dc.twemoji("2705", "✅")) }}
-            {{ dc.button(emoji=dc.twemoji("274c", "❌")) }}
-        {% endcall %}
-    {% endif %}
 
 {% endcall %}

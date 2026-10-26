@@ -97,19 +97,22 @@
     </div>
 {%- endmacro %}
 
-{# Image/video grid. urls: list of strings. Videos (.mp4/.webm/.mov) get a player. #}
+{# Image/video grid. urls: list of strings. Videos and audio (as r2.py accepts) get a player. #}
 {%- macro gallery(urls) -%}
     <div class="dc-gallery" data-count="{{ [urls|length, 5]|min }}">
         {%- for url in urls %}
-            {%- if url.split("?")[0].lower().endswith((".mp4", ".webm", ".mov", ".m4v")) %}
+            {%- if url.split("?")[0].lower().endswith((".mp4", ".webm", ".mov", ".m4v", ".mpeg", ".mp3", ".weba")) %}
                 <figure class="dc-gallery-item dc-video">
-                    <video src="{{ url }}" controls preload="metadata" playsinline></video>
+                    <video src="{{ url }}" controls preload="metadata" playsinline
+                           aria-label="Attachment {{ loop.index }} of {{ urls|length }}"></video>
                 </figure>
             {%- else %}
                 <figure class="dc-gallery-item">
-                    <a href="{{ url }}" target="_blank" rel="noopener noreferrer nofollow"><img src="{{ url }}" alt=""
+                    <a href="{{ url }}" target="_blank" rel="noopener noreferrer nofollow"><img src="{{ url }}"
+                                                                                                alt="Attachment {{ loop.index }} of {{ urls|length }}"
                                                                                                 loading="lazy"
-                                                                                                referrerpolicy="no-referrer"></a>
+                                                                                                referrerpolicy="no-referrer"><span
+                            class="visually-hidden"> (opens in a new tab)</span></a>
                 </figure>
             {%- endif %}
         {%- endfor %}
@@ -125,7 +128,7 @@
 {%- endmacro %}
 
 {# style: primary | secondary | success | danger | link. url makes it a link button.
-   emoji: HTML from dc.emoji()/dc.twemoji(). Static (disabled) unless it's a link. #}
+   emoji: HTML from dc.emoji()/dc.unicode_emoji(). Static (disabled) unless it's a link. #}
 {%- macro button(label=none, emoji=none, style="secondary", url=none) -%}
     {%- if url -%}
         <a class="dc-button dc-button-link" href="{{ url }}" target="_blank" rel="noopener noreferrer nofollow">
@@ -151,7 +154,7 @@
 
 {# Link in Discord's link colour. #}
 {%- macro link(label, url) -%}<a class="dc-link" href="{{ url }}" target="_blank"
-                                 rel="noopener noreferrer nofollow">{{ label }}</a>{%- endmacro %}
+                                 rel="noopener noreferrer nofollow">{{ label }}<span class="visually-hidden"> (opens in a new tab)</span></a>{%- endmacro %}
 
 {# Spoiler: hidden until clicked (Enter/Space with the script). #}
 {%- macro spoiler() -%}<span class="dc-spoiler" tabindex="0">{{ caller() }}</span>{%- endmacro %}
@@ -161,9 +164,10 @@
 
 {# Unix timestamp, shown in the viewer's time zone by the script.
    style: t T d D f F R (as in <t:…:style>) or S (message-header date). fallback is
-   the text shown without JS (defaults to the unix value). #}
-{%- macro time(unix, style="R", fallback=none) -%}
-    <time class="dc-timestamp" data-dc-ts="{{ unix|int }}"
+   the text shown without JS (defaults to the unix value). iso: machine-readable
+   datetime attribute for assistive tech. #}
+{%- macro time(unix, style="R", fallback=none, iso=none) -%}
+    <time class="dc-timestamp" data-dc-ts="{{ unix|int }}"{% if iso %} datetime="{{ iso }}"{% endif %}
           data-dc-style="{{ style }}">{{ fallback if fallback is not none else unix|int }}</time>
 {%- endmacro %}
 
@@ -173,9 +177,8 @@
          alt=":{{ name }}:" draggable="false" loading="lazy" referrerpolicy="no-referrer">
 {%- endmacro %}
 
-{# Twemoji by codepoint file name, e.g. "2705" for ✅, "274c" for ❌.
-   base: where you host the SVGs (fits img-src 'self'). #}
-{%- macro twemoji(code, alt="", base="/static/twemoji/") -%}
-    <img class="dc-emoji dc-twemoji" src="{{ base }}{{ code }}.svg" alt="{{ alt }}" draggable="false" loading="lazy"
-         referrerpolicy="no-referrer">
+{# Unicode emoji drawn by the viewer's own emoji font, e.g. unicode_emoji("✅", "Up votes").
+   label: what a screen reader says instead of the emoji's own name. #}
+{%- macro unicode_emoji(char, label) -%}
+    <span class="dc-emoji-unicode" role="img" aria-label="{{ label }}">{{ char }}</span>
 {%- endmacro %}

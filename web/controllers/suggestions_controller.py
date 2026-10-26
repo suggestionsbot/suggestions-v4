@@ -1,33 +1,20 @@
-"""Web views of suggestions, rendered exactly as the bot posts them in Discord.
+"""Web views of suggestions, laid out like the bot's Discord embed."""
 
-The page HTML comes from the same ``Suggestions.as_components()`` the bot uses,
-rendered by ``web.discord_html``, so the dashboard can never drift from what
-members see in their server.
-"""
-
-import asyncio
+import datetime as dt
 import logging
-import math
 import re
 
-import hikari
-from litestar import Controller, Request, get
+from litestar import Controller, get
 from litestar.exceptions import NotFoundException
 from litestar.response import Template
-from piccolo.columns.combination import And, Where
-from piccolo.columns.operators import Equal, NotEqual
 
-from bot.constants import IS_CUSTOM_BOT, LOCALISATIONS, EMBED_COLOR
 from shared.tables import (
-    GuildConfigs,
     Suggestions,
     SuggestionVotes,
     SuggestionsVoteTypeEnum,
 )
 from shared.tables.suggestion import SuggestionStateEnum
-from shared.utils import configs
-from web import constants, discord_html
-from web.discord_html import colors
+from web import constants
 from web.guards import ensure_user_has_manage_permissions
 from web.middleware import EnsureAuth
 from web.util import html_template
@@ -38,13 +25,15 @@ logger = logging.getLogger(__name__)
 _AUTHOR_TEXT = re.compile(r"^(?P<name>.*?)\s*\(<@!?(?P<user_id>\d+)>\)\s*$", re.DOTALL)
 
 
-def person(display_text: str | None) -> dict | None:
+def person(display_text: str | None) -> dict:
     """'Vixen (<@123>)' -> {"name": "Vixen", "mention": "Vixen", "user_id": 123}.
-    Anonymous (or unparseable) text gets no mention, which the template shows as
-    just the name. Discord would show the account's username in the mention; we
-    only store the display name, so it's used for both."""
+
+    Missing text is "Unknown". Anonymous (or unparseable) text gets no mention,
+    which the template shows as just the name. Discord would show the account's
+    username in the mention; we only store the display name, so it's used for both.
+    """
     if not display_text:
-        return None
+        return {"name": "Unknown", "mention": None, "user_id": None}
     match = _AUTHOR_TEXT.match(display_text)
     if match is None:
         return {"name": display_text, "mention": None, "user_id": None}
@@ -57,7 +46,21 @@ async def cached_avatar_url(user_id: int | None) -> str | None:
     if user_id is None:
         return None
     data = await constants.REDIS_CLIENT.get(f"avatars/{user_id}")
-    return data.decode("utf-8") if data else None
+    if isinstance(data, bytes):
+        data = data.decode("utf-8")
+    return data or None
+
+
+def timestamp(value: dt.datetime | None) -> dict | None:
+    """What dc.time() needs: unix for the script, readable UTC text without JS."""
+    if value is None:
+        return None
+    value = value.astimezone(dt.UTC)
+    return {
+        "unix": value.timestamp(),
+        "iso": value.isoformat(),
+        "text": value.strftime("%d %b %Y, %H:%M UTC"),
+    }
 
 
 async def count_votes(suggestion: Suggestions) -> tuple[int, int]:
@@ -74,24 +77,10 @@ async def count_votes(suggestion: Suggestions) -> tuple[int, int]:
     return up, down
 
 
-def bot_author() -> dict:
-    return {
-        "name": "Suggestions",
-        "avatar_url": "/static/suggestion_icon.png",  # same origin: img-src 'self'
-        "color": EMBED_COLOR,
-        "app": True,
-        "verified": not IS_CUSTOM_BOT,  # Discord only ticks the main, verified bot
-    }
-
-
 async def suggestion_context(suggestion: Suggestions) -> dict:
-    """Everything templates/suggestions/suggestion_message.jinja needs."""
+    """Everything templates/guilds/suggestions/suggestion_embed.jinja needs."""
     # "Anonymous" has no mention or user id, so it also gets no avatar, as in Discord.
-    submitter = person(suggestion.author_display_name) or {
-        "name": "Unknown",
-        "mention": None,
-        "user_id": None,
-    }
+    submitter = person(suggestion.author_display_name)
     submitter["avatar_url"] = await cached_avatar_url(submitter["user_id"])
 
     up_votes, down_votes = await count_votes(suggestion)
@@ -103,8 +92,8 @@ async def suggestion_context(suggestion: Suggestions) -> dict:
         "up_votes": up_votes,
         "down_votes": down_votes,
         "thread_url": suggestion.thread_jump_link,
-        "edited": suggestion.last_modified_at > suggestion.created_at,
-        "bot": bot_author(),
+        "created": timestamp(suggestion.created_at),
+        "resolved_at": timestamp(suggestion.resolved_at),
     }
 
 
@@ -119,9 +108,7 @@ class SuggestionController(Controller):
     guards = [ensure_user_has_manage_permissions]  # noqa: RUF012
 
     @get(path="/{sid:str}", name="view_suggestion")
-    async def view_suggestion(
-        self, request: Request, guild_id: int, sid: str
-    ) -> Template:
+    async def view_suggestion(self, guild_id: int, sid: str) -> Template:
         suggestion = await Suggestions.fetch_suggestion(sid, guild_id)
         if suggestion is None or suggestion.state is SuggestionStateEnum.CLEARED:
             raise NotFoundException
