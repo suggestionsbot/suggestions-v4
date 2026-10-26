@@ -8,7 +8,7 @@ from litestar.exceptions import PermissionDeniedException
 from litestar.handlers import BaseRouteHandler
 
 from web.exception_handlers import RedirectForAuth
-from web.tables import Users, OAuthEntry
+from web.tables import OAuthEntry, Users
 from web.util import alert
 
 
@@ -58,14 +58,6 @@ async def ensure_user_has_manage_permissions(
         raise RedirectForAuth(str(request.url))
 
     guild_id = request.path_params.get("guild_id")
-    if request.user.admin:
-        alert(
-            request,
-            "As a dashboard admin I am letting you in",
-            level="info",
-        )
-        return None
-
     from web.controllers.oauth_controller import DISCORD_OAUTH
 
     oauth_entry: OAuthEntry = await request.user.get_oauth_entry()
@@ -75,6 +67,14 @@ async def ensure_user_has_manage_permissions(
         guild_id=guild_id,
     )
     if guild_data is None:
+        if request.user.admin:
+            alert(
+                request,
+                "As a dashboard admin I am letting you in",
+                level="info",
+            )
+            return
+
         alert(
             request,
             "You must be in the guild with sufficient permissions.",
@@ -83,13 +83,21 @@ async def ensure_user_has_manage_permissions(
         raise PermissionDeniedException
 
     if guild_data["owner"] is True:
-        return None
+        return
 
     perms = hikari.Permissions(guild_data["permissions"])
     if ((perms & hikari.Permissions.MANAGE_GUILD) == hikari.Permissions.MANAGE_GUILD) or (
         (perms & hikari.Permissions.ADMINISTRATOR) == hikari.Permissions.ADMINISTRATOR
     ):
-        return None
+        return
+
+    if request.user.admin:
+        alert(
+            request,
+            "As a dashboard admin I am letting you in",
+            level="info",
+        )
+        return
 
     alert(
         request,
