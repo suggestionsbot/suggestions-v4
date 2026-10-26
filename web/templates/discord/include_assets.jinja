@@ -1,0 +1,14 @@
+{# Styles/script for rendered Discord messages. Served by the StaticFilesConfig at
+   /; the nonce satisfies the page CSP. #}
+<link rel="stylesheet" href="/static/discord-components.css" nonce="{{ csp_nonce }}">
+<script src="/static/discord-components.js" nonce="{{ csp_nonce }}" defer></script>
+<style nonce="{{ csp_nonce }}">
+    /* Let the Discord message sit flush inside a Tabler card. */
+    .card > .dc-message {
+        border-radius: var(--tblr-card-border-radius);
+    }
+
+    .suggestion-meta .dc-state {
+        vertical-align: middle;
+    }
+</style>

@@ -46,6 +46,7 @@ from web.controllers import (
     ErrorController,
     StatsController,
     GiftController,
+    SuggestionController,
 )
 from web.controllers import OAuthController
 from web.controllers.api import APIAlertController, APIAuthTokenController
@@ -335,6 +336,7 @@ routes = [
     StripeController,
     ErrorController,
     StatsController,
+    SuggestionController,
 ]
 if (not IS_CUSTOM_BOT and constants.IS_PRODUCTION) or not constants.IS_PRODUCTION:
     routes.append(GiftController)  # ty:ignore[invalid-argument-type]

@@ -1,5 +1,6 @@
 {% macro insert_cf_turnstile() %}
-    <div class="cf-turnstile" data-sitekey="{{ CF_TURNSTILE_SITE_KEY }}" data-response-field-name="turnstile-token"></div>
+    <div class="cf-turnstile" data-sitekey="{{ CF_TURNSTILE_SITE_KEY }}"
+         data-response-field-name="turnstile-token"></div>
 {%- endmacro %}
 <!doctype html>
 <html lang="en">
@@ -28,11 +29,12 @@
     </style>
     <link rel="preconnect" href="https://challenges.cloudflare.com" nonce="{{ csp_nonce }}">
     <script
-      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-      async
-      defer
-      nonce="{{ csp_nonce }}"
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            async
+            defer
+            nonce="{{ csp_nonce }}"
     ></script>
+    {% block head %}{% endblock %}
 </head>
 <body>
 {% include 'sidebar.jinja' %}

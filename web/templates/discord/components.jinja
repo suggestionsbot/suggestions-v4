@@ -1,0 +1,181 @@
+{#-
+  Discord-style message building blocks. Plain Jinja: no custom filters or globals.
+
+  Import WITH CONTEXT (the accent colour uses the page's csp_nonce):
+      {% import "discord/message.jinja" as dc with context %}
+
+  Needs static/discord/discord-components.css (and, optionally, the .js for
+  local-time timestamps and spoilers), included with your nonce.
+
+  Content goes in {% call %} blocks, so you write whatever HTML you like.
+  Inside a dc.text() block, template whitespace is collapsed: use <br> for line
+  breaks, dc.gap() for a blank line, and wrap user-written text in
+  <span class="dc-pre"> to keep its own line breaks.
+
+  Colours are ints (0xFFD663, hikari.Color, suggestion.color).
+-#}
+
+{#- ------------------------------------------------------------------ message -#}
+
+{# A whole message. author: {"name", "avatar_url", "color", "app", "verified"} #}
+{%- macro message(author=none, timestamp=none, edited=false, theme="dark") -%}
+    <div class="dc-message{% if theme %} dc-theme-{{ theme }}{% endif %}{% if author %} dc-has-author{% endif %}"
+         data-dc-interactive="false">
+        {%- if author %}
+            {%- set name_color = "%06x"|format(author.color) if author.color is not none else none %}
+            {%- if name_color %}
+                <style nonce="{{ csp_nonce }}">.dc-author-{{ name_color }} {
+                    color: #{{ name_color }}
+                }</style>{% endif %}
+            <div class="dc-header">
+                {%- if author.avatar_url %}
+                    <img class="dc-avatar" src="{{ author.avatar_url }}" alt="" loading="lazy"
+                         referrerpolicy="no-referrer">
+                {%- else %}
+                    <span class="dc-avatar dc-avatar-blank" aria-hidden="true"></span>
+                {%- endif %}
+                <span class="dc-author{% if name_color %} dc-author-{{ name_color }}{% endif %}">{{ author.name }}</span>
+                {%- if author.app %}
+                    <span class="dc-app-badge">
+      {%- if author.verified -%}
+          <svg aria-label="Verified" width="13" height="13" viewBox="0 0 16 16"><path fill="currentColor"
+                                                                                      d="M7.4 11.17 4 8.62l1-1.36 2.12 1.59L11.04 4l1.33 1.06-4.97 6.11Z"/></svg>
+      {%- endif -%}
+                        APP</span>
+                {%- endif %}
+                {%- if timestamp is not none %}
+                    <span class="dc-header-time">{{ time(timestamp, "S") }}</span>
+                {%- endif %}
+            </div>
+        {%- endif %}
+        {{ caller() }}
+        {%- if edited %}
+            <div class="dc-edited">(edited)</div>
+        {%- endif %}
+    </div>
+{%- endmacro %}
+
+
+{#- ------------------------------------------------------------------ layout -#}
+
+{# The bordered box with the coloured stripe. accent: int colour or none. #}
+{%- macro container(accent=none) -%}
+    {%- set hex = "%06x"|format(accent) if accent is not none else none -%}
+    {%- if hex %}
+        <style nonce="{{ csp_nonce }}">.dc-accent-{{ hex }} {
+            --dc-accent: #{{ hex }}
+        }</style>{% endif %}
+    <div class="dc-container{% if hex %} dc-has-accent dc-accent-{{ hex }}{% endif %}">
+        {{ caller() }}
+    </div>
+{%- endmacro %}
+
+{# A block of text (Discord's Text Display). #}
+{%- macro text() -%}
+    <div class="dc-text dc-raw">{{ caller() }}</div>
+{%- endmacro %}
+
+{# A blank line inside dc.text(), like "\n\n" in Discord. #}
+{%- macro gap() -%}<span class="dc-gap"></span>{%- endmacro %}
+
+{# Horizontal rule. large=true for Discord's "large" spacing. #}
+{%- macro separator(divider=true, large=false) -%}
+    <div class="dc-separator dc-spacing-{{ 'large' if large else 'small' }}{% if divider %} dc-divider{% endif %}"
+         role="{{ 'separator' if divider else 'presentation' }}"></div>
+{%- endmacro %}
+
+{# Text on the left, an 85px thumbnail on the right (e.g. the submitter + avatar). #}
+{%- macro section(thumbnail_url=none, thumbnail_alt="") -%}
+    <div class="dc-section">
+        <div class="dc-section-body">{{ caller() }}</div>
+        {%- if thumbnail_url %}
+            <div class="dc-section-accessory">
+                <figure class="dc-thumbnail"><img src="{{ thumbnail_url }}" alt="{{ thumbnail_alt }}" loading="lazy"
+                                                  referrerpolicy="no-referrer"></figure>
+            </div>
+        {%- endif %}
+    </div>
+{%- endmacro %}
+
+{# Image/video grid. urls: list of strings. Videos (.mp4/.webm/.mov) get a player. #}
+{%- macro gallery(urls) -%}
+    <div class="dc-gallery" data-count="{{ [urls|length, 5]|min }}">
+        {%- for url in urls %}
+            {%- if url.split("?")[0].lower().endswith((".mp4", ".webm", ".mov", ".m4v")) %}
+                <figure class="dc-gallery-item dc-video">
+                    <video src="{{ url }}" controls preload="metadata" playsinline></video>
+                </figure>
+            {%- else %}
+                <figure class="dc-gallery-item">
+                    <a href="{{ url }}" target="_blank" rel="noopener noreferrer nofollow"><img src="{{ url }}" alt=""
+                                                                                                loading="lazy"
+                                                                                                referrerpolicy="no-referrer"></a>
+                </figure>
+            {%- endif %}
+        {%- endfor %}
+    </div>
+{%- endmacro %}
+
+
+{#- ------------------------------------------------------------------ buttons -#}
+
+{# A row of buttons; put dc.button() calls inside. #}
+{%- macro buttons() -%}
+    <div class="dc-action-row">{{ caller() }}</div>
+{%- endmacro %}
+
+{# style: primary | secondary | success | danger | link. url makes it a link button.
+   emoji: HTML from dc.emoji()/dc.twemoji(). Static (disabled) unless it's a link. #}
+{%- macro button(label=none, emoji=none, style="secondary", url=none) -%}
+    {%- if url -%}
+        <a class="dc-button dc-button-link" href="{{ url }}" target="_blank" rel="noopener noreferrer nofollow">
+            {{- emoji or "" }}{% if label %}<span class="dc-button-label">{{ label }}</span>{% endif %}<span
+                class="dc-button-external" aria-hidden="true">↗</span></a>
+    {%- else -%}
+        <button type="button" class="dc-button dc-button-{{ style }}" disabled>
+            {{- emoji or "" }}{% if label %}<span class="dc-button-label">{{ label }}</span>{% endif %}</button>
+    {%- endif -%}
+{%- endmacro %}
+
+
+{#- ------------------------------------------------------------------ inline -#}
+
+{# @name pill. #}
+{%- macro mention(name) -%}<span class="dc-mention">@<bdi>{{ name }}</bdi></span>{%- endmacro %}
+
+{# #channel pill. #}
+{%- macro channel(name) -%}<span class="dc-mention">#<bdi>{{ name }}</bdi></span>{%- endmacro %}
+
+{# Inline code pill. #}
+{%- macro code(value) -%}<code class="dc-code">{{ value }}</code>{%- endmacro %}
+
+{# Link in Discord's link colour. #}
+{%- macro link(label, url) -%}<a class="dc-link" href="{{ url }}" target="_blank"
+                                 rel="noopener noreferrer nofollow">{{ label }}</a>{%- endmacro %}
+
+{# Spoiler: hidden until clicked (Enter/Space with the script). #}
+{%- macro spoiler() -%}<span class="dc-spoiler" tabindex="0">{{ caller() }}</span>{%- endmacro %}
+
+{# Small muted line, like Discord's "-# text". #}
+{%- macro subtext() -%}<span class="dc-subtext">{{ caller() }}</span>{%- endmacro %}
+
+{# Unix timestamp, shown in the viewer's time zone by the script.
+   style: t T d D f F R (as in <t:…:style>) or S (message-header date). fallback is
+   the text shown without JS (defaults to the unix value). #}
+{%- macro time(unix, style="R", fallback=none) -%}
+    <time class="dc-timestamp" data-dc-ts="{{ unix|int }}"
+          data-dc-style="{{ style }}">{{ fallback if fallback is not none else unix|int }}</time>
+{%- endmacro %}
+
+{# Custom Discord emoji by id. #}
+{%- macro emoji(id, name="emoji", animated=false) -%}
+    <img class="dc-emoji" src="https://cdn.discordapp.com/emojis/{{ id }}.{{ 'gif' if animated else 'webp' }}?size=48"
+         alt=":{{ name }}:" draggable="false" loading="lazy" referrerpolicy="no-referrer">
+{%- endmacro %}
+
+{# Twemoji by codepoint file name, e.g. "2705" for ✅, "274c" for ❌.
+   base: where you host the SVGs (fits img-src 'self'). #}
+{%- macro twemoji(code, alt="", base="/static/twemoji/") -%}
+    <img class="dc-emoji dc-twemoji" src="{{ base }}{{ code }}.svg" alt="{{ alt }}" draggable="false" loading="lazy"
+         referrerpolicy="no-referrer">
+{%- endmacro %}

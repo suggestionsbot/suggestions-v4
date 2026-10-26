@@ -1,0 +1,225 @@
+{#-
+  Discord Components V2 → HTML.
+
+  Import WITH CONTEXT so the markdown filter can see `discord_ctx`:
+      {% import "discord/components.html.j2" as discord with context %}
+
+  Public macros:
+      discord.message(components, interactive=false, theme=none,
+                      author=none, timestamp=none, edited=false)
+          A whole message. Accepts Hikari builders, payload dicts, or a mix.
+          author: {"name", "avatar_url", "color", "app", "verified"} adds the
+          Discord-style header; timestamp: datetime or unix seconds.
+      discord.component(c)
+          A single payload dict, for building custom layouts.
+
+  Payloads are accessed with c["key"] / c.get("key") rather than c.key so
+  fields like "items" don't collide with dict methods.
+-#}
+
+{%- set _MAX_DEPTH = 8 -%}
+{%- set _BUTTON_STYLES = {1: "primary", 2: "secondary", 3: "success", 4: "danger", 5: "link", 6: "premium"} -%}
+
+{%- macro message(components, interactive=false, theme=none, author=none, timestamp=none, edited=false) -%}
+<div class="dc-message{% if theme %} dc-theme-{{ theme|e }}{% endif %}{% if author %} dc-has-author{% endif %}"
+     data-dc-interactive="{{ 'true' if interactive else 'false' }}">
+  {%- if author %}
+  {{ header(author, timestamp) }}
+  {%- endif %}
+  {%- for c in components|discord_payload %}
+  {{ component(c, interactive) }}
+  {%- endfor %}
+  {%- if edited %}
+  <div class="dc-edited">(edited)</div>
+  {%- endif %}
+</div>
+{%- endmacro %}
+
+
+{%- macro header(author, timestamp=none) -%}
+{%- set avatar = author.get("avatar_url")|discord_asset -%}
+{%- set color = author.get("color")|discord_color -%}
+<div class="dc-header">
+  {%- if avatar %}
+  <img class="dc-avatar" src="{{ avatar|e }}" alt="" loading="lazy" referrerpolicy="no-referrer">
+  {%- else %}
+  <span class="dc-avatar dc-avatar-blank" aria-hidden="true"></span>
+  {%- endif %}
+  {%- if color %}{{ discord_color_rule("dc-author-" ~ color[1:], "color", color) }}{% endif %}
+  <span class="dc-author{% if color %} dc-author-{{ color[1:] }}{% endif %}">{{ (author.get("name") or "Unknown")|e }}</span>
+  {%- if author.get("app") %}
+  <span class="dc-app-badge">
+    {%- if author.get("verified") -%}
+    <svg aria-label="Verified" width="13" height="13" viewBox="0 0 16 16"><path fill="currentColor" d="M7.4 11.17 4 8.62l1-1.36 2.12 1.59L11.04 4l1.33 1.06-4.97 6.11Z"/></svg>
+    {%- endif -%}
+    APP</span>
+  {%- endif %}
+  {%- if timestamp is not none %}
+  <span class="dc-header-time">{{ discord_timestamp(timestamp, "S") }}</span>
+  {%- endif %}
+</div>
+{%- endmacro %}
+
+
+{%- macro component(c, interactive=false, depth=0) -%}
+{%- set t = c.get("type") -%}
+{%- if depth > _MAX_DEPTH -%}<!-- component nesting too deep -->
+{%- elif t == 10 -%}{{ text_display(c) }}
+{%- elif t == 17 -%}{{ container(c, interactive, depth) }}
+{%- elif t == 9 -%}{{ section(c, interactive, depth) }}
+{%- elif t == 14 -%}{{ separator(c) }}
+{%- elif t == 12 -%}{{ media_gallery(c) }}
+{%- elif t == 11 -%}{{ thumbnail(c) }}
+{%- elif t == 13 -%}{{ file(c) }}
+{%- elif t == 1 -%}{{ action_row(c, interactive, depth) }}
+{%- elif t == 2 -%}{{ button(c, interactive) }}
+{%- elif t in (3, 5, 6, 7, 8) -%}{{ select(c) }}
+{%- else -%}<!-- unsupported component type {{ t|e }} -->
+{%- endif -%}
+{%- endmacro %}
+
+
+{%- macro text_display(c) -%}
+<div class="dc-text">{{ c.get("content")|discord_markdown }}</div>
+{%- endmacro %}
+
+
+{%- macro container(c, interactive=false, depth=0) -%}
+{%- set accent = c.get("accent_color")|discord_color -%}
+{%- if accent %}{{ discord_color_rule("dc-accent-" ~ accent[1:], "--dc-accent", accent) }}{% endif %}
+<div class="dc-container{% if accent %} dc-has-accent dc-accent-{{ accent[1:] }}{% endif %}{% if c.get('spoiler') %} dc-spoiler-block{% endif %}"
+     {%- if c.get('spoiler') %} tabindex="0"{% endif %}>
+  {%- for child in c.get("components") or [] %}
+  {{ component(child, interactive, depth + 1) }}
+  {%- endfor %}
+</div>
+{%- endmacro %}
+
+
+{%- macro section(c, interactive=false, depth=0) -%}
+<div class="dc-section">
+  <div class="dc-section-body">
+    {%- for child in c.get("components") or [] %}
+    {{ component(child, interactive, depth + 1) }}
+    {%- endfor %}
+  </div>
+  {%- if c.get("accessory") %}
+  <div class="dc-section-accessory">{{ component(c["accessory"], interactive, depth + 1) }}</div>
+  {%- endif %}
+</div>
+{%- endmacro %}
+
+
+{%- macro separator(c) -%}
+{%- set divider = c.get("divider", true) -%}
+<div class="dc-separator dc-spacing-{{ 'large' if c.get('spacing') == 2 else 'small' }}{% if divider %} dc-divider{% endif %}"
+     role="{{ 'separator' if divider else 'presentation' }}"></div>
+{%- endmacro %}
+
+
+{%- set _VIDEO_EXTENSIONS = (".mp4", ".webm", ".mov", ".m4v", ".mpeg") -%}
+
+{%- macro _media_link(url, label, class_name) -%}
+{%- set name = url.split("?")[0].split("#")[0].rstrip("/").split("/")[-1] -%}
+<a class="{{ class_name }} dc-media-link" href="{{ url|e }}" target="_blank" rel="noopener noreferrer nofollow">
+  <span class="dc-media-link-icon" aria-hidden="true">{{ "▶" if label == "Video" else "🖼" }}</span>
+  <span class="dc-media-link-text"><strong>{{ label }}</strong><span>{{ name|e }}</span></span>
+</a>
+{%- endmacro %}
+
+{%- macro _media(item, class_name) -%}
+{%- set original = item.get("media")|discord_url -%}
+{%- set url = item.get("media")|discord_media -%}
+{%- set is_video = original and original.split("?")[0].split("#")[0].lower().endswith(_VIDEO_EXTENSIONS) -%}
+{%- if is_video and (_discord_html.videos == "link" or not url) -%}
+{{ _media_link(original, "Video", class_name) }}
+{%- elif url and is_video -%}
+<figure class="{{ class_name }} dc-video{% if item.get('spoiler') %} dc-spoiler-media{% endif %}"
+        {%- if item.get('spoiler') %} tabindex="0"{% endif %}>
+  <video src="{{ url|e }}" controls preload="metadata" playsinline
+         {%- if item.get('description') %} aria-label="{{ item['description']|e }}"{% endif %}></video>
+</figure>
+{%- elif url -%}
+<figure class="{{ class_name }}{% if item.get('spoiler') %} dc-spoiler-media{% endif %}"
+        {%- if item.get('spoiler') %} tabindex="0"{% endif %}>
+  <a href="{{ url|e }}" target="_blank" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer">
+    <img src="{{ url|e }}" alt="{{ (item.get('description') or '')|e }}" loading="lazy" referrerpolicy="no-referrer">
+  </a>
+</figure>
+{%- elif original -%}
+{#- media_url dropped it (e.g. a host the page's CSP can't load): link instead of a broken image -#}
+{{ _media_link(original, "Image", class_name) }}
+{%- endif -%}
+{%- endmacro %}
+
+
+{%- macro thumbnail(c) -%}{{ _media(c, "dc-thumbnail") }}{%- endmacro %}
+
+
+{%- macro media_gallery(c) -%}
+{%- set items = c.get("items") or [] -%}
+<div class="dc-gallery" data-count="{{ [items|length, 5]|min }}">
+  {%- for item in items %}
+  {{ _media(item, "dc-gallery-item") }}
+  {%- endfor %}
+</div>
+{%- endmacro %}
+
+
+{%- macro file(c) -%}
+{%- set url = c.get("file")|discord_media -%}
+{%- set raw = (c.get("file") or {}).get("url", "") if c.get("file") is mapping else (c.get("file") or "") -%}
+<div class="dc-file">
+  <span class="dc-file-icon" aria-hidden="true">📄</span>
+  {%- if url %}
+  <a href="{{ url|e }}" target="_blank" rel="noopener noreferrer nofollow">{{ url.split("/")[-1].split("?")[0]|e }}</a>
+  {%- else %}
+  <span>{{ raw.replace("attachment://", "")|e }}</span>
+  {%- endif %}
+</div>
+{%- endmacro %}
+
+
+{%- macro emoji(e) -%}
+{%- if e and e.get("id") -%}
+<img class="dc-emoji" alt=":{{ (e.get('name') or 'emoji')|e }}:" draggable="false" loading="lazy" referrerpolicy="no-referrer"
+     src="https://cdn.discordapp.com/emojis/{{ e['id']|e }}.{{ 'gif' if e.get('animated') else 'webp' }}?size=48">
+{%- elif e and e.get("name") -%}
+{{ e["name"]|discord_unicode_emoji }}
+{%- endif -%}
+{%- endmacro %}
+
+
+{%- macro action_row(c, interactive=false, depth=0) -%}
+<div class="dc-action-row">
+  {%- for child in c.get("components") or [] %}
+  {{ component(child, interactive, depth + 1) }}
+  {%- endfor %}
+</div>
+{%- endmacro %}
+
+
+{%- macro button(c, interactive=false) -%}
+{%- set style = _BUTTON_STYLES.get(c.get("style"), "secondary") -%}
+{%- set inner -%}
+  {{ emoji(c.get("emoji")) }}
+  {%- if c.get("label") %}<span class="dc-button-label">{{ c["label"]|e }}</span>{% endif %}
+  {%- if style == "link" %}<span class="dc-button-external" aria-hidden="true">↗</span>{% endif %}
+{%- endset -%}
+{%- if style == "link" and c.get("url")|discord_url and not c.get("disabled") -%}
+<a class="dc-button dc-button-link" href="{{ c.get('url')|discord_url|e }}"
+   target="_blank" rel="noopener noreferrer nofollow">{{ inner }}</a>
+{%- else -%}
+<button type="button" class="dc-button dc-button-{{ style }}"
+        {%- if c.get("custom_id") %} data-custom-id="{{ c['custom_id']|e }}"{% endif %}
+        {%- if c.get("disabled") or not interactive %} disabled{% endif %}>{{ inner }}</button>
+{%- endif -%}
+{%- endmacro %}
+
+
+{%- macro select(c) -%}
+<div class="dc-select{% if c.get('disabled') %} dc-disabled{% endif %}" aria-disabled="true">
+  <span class="dc-select-placeholder">{{ (c.get("placeholder") or "Make a selection")|e }}</span>
+  <span class="dc-select-chevron" aria-hidden="true">⌄</span>
+</div>
+{%- endmacro %}

@@ -51,6 +51,7 @@ async def ensure_user_has_manage_permissions(
     - Server owner
     - Admin perms
     - Manage server perms
+
     """
     request = cast(Request[Users, None, State], request)
     if not request.user or request.user is None:

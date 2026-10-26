@@ -1,0 +1,32 @@
+{% extends "base.jinja" %}
+{% block head %}{% include "discord/include_assets.jinja" %}{% endblock %}
+
+{% block content %}
+    <div class="page">
+        <div class="page-wrapper">
+            <div class="page-header d-print-none">
+                <div class="container-xl">
+                    <div class="row g-2 align-items-center">
+                        <div class="col">
+                            <div class="page-pretitle">Suggestion</div>
+                            <h2 class="page-title"><code>{{ suggestion.sID }}</code></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-body">
+                <div class="container-xl">
+                    {% include 'alerts.jinja' %}
+                    <div class="row">
+                        <div class="col-12 col-lg-8 col-xl-7">
+                            <div class="card overflow-hidden">
+                                {% include "guilds/suggestions/suggestion_embed.jinja" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

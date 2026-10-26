@@ -1,0 +1,96 @@
+{#-
+  One suggestion, laid out exactly like the bot's message. Fill these variables:
+
+    suggestion       .sID .suggestion .image_urls .moderator_note .resolved_note
+                     .state.value .color .created_at .resolved_at  (a Suggestions row works)
+    submitter        {"name": "Vixen", "mention": "Vixen", "avatar_url": "https://cdn.discordapp.com/..." or none}
+    moderator        {"name": "Skelmis", "mention": "Ethan"}   (when there's a moderator note)
+    resolved_by      {"name": "Skelmis", "mention": "Ethan"}   (when resolved)
+    up_votes, down_votes   ints
+    thread_url       discussion thread link or none
+    bot              {"name": "Suggestions", "avatar_url": "...", "color": 0xFFD663, "app": true, "verified": true}
+    edited           optional: show "(edited)" under the message
+    csp_nonce        your page nonce (html_template() already sets it)
+
+  Labels are the bot's en_GB strings; swap in your own localisation as needed.
+-#}
+{% import "discord/components.jinja" as dc with context %}
+{%- set resolved = suggestion.state.value != "Pending" -%}
+
+{% call dc.message(author=bot, timestamp=suggestion.created_at.timestamp(), edited=edited is defined and edited) %}
+
+    {% call dc.container(accent=suggestion.color) %}
+
+        {% call dc.text() %}
+            <strong>Suggestion</strong><br>
+            <span class="dc-pre">{{ suggestion.suggestion }}</span>
+        {% endcall %}
+
+        {% if suggestion.image_urls %}{{ dc.gallery(suggestion.image_urls) }}{% endif %}
+
+        {{ dc.separator() }}
+
+        {% call dc.section(thumbnail_url=submitter.avatar_url) %}
+            {% call dc.text() %}
+                <strong>Submitter</strong><br>
+                {{ submitter.name }} ({{ dc.mention(submitter.mention) }})
+            {% endcall %}
+        {% endcall %}
+
+        {% if suggestion.moderator_note %}
+            {{ dc.separator() }}
+            {% call dc.text() %}
+                <strong>Moderator Note</strong><br>
+                <span class="dc-pre">{{ suggestion.moderator_note }}</span>
+                {{ dc.gap() }}
+                <strong>Moderator</strong><br>
+                {{ moderator.name }} ({{ dc.mention(moderator.mention) }})
+            {% endcall %}
+        {% endif %}
+
+        {% if resolved %}
+            {{ dc.separator() }}
+            {% call dc.text() %}
+                {% if suggestion.resolved_note %}
+                    <strong>Resolution Note</strong><br>
+                    <span class="dc-pre">{{ suggestion.resolved_note }}</span>
+                    {{ dc.gap() }}
+                {% endif %}
+                <strong>Resolution Type</strong><br>
+                {{ suggestion.state.value }}
+                {{ dc.gap() }}
+                <strong>Resolved By</strong><br>
+                {{ resolved_by.name }} ({{ dc.mention(resolved_by.mention) }})
+            {% endcall %}
+        {% endif %}
+
+        {{ dc.separator() }}
+
+        {% call dc.text() %}
+            <strong>{{ "Results" if resolved else "Results So Far" }}</strong><br>
+            {{ dc.twemoji("2705", "✅") }}: <strong>{{ up_votes }}</strong><br>
+            {{ dc.twemoji("274c", "❌") }}: <strong>{{ down_votes }}</strong>
+        {% endcall %}
+
+        {% if resolved and thread_url %}
+            {% call dc.text() %}{{ dc.link("View this suggestions discussion thread", thread_url) }}{% endcall %}
+        {% endif %}
+
+        {% call dc.text() %}
+            Suggestion ID: {{ dc.code(suggestion.sID) }}
+            {%- if resolved %}<br>Created {{ dc.time(suggestion.created_at.timestamp(), "R") }}
+                | Resolved {{ dc.time(suggestion.resolved_at.timestamp(), "R") }}
+            {%- else %} | Created {{ dc.time(suggestion.created_at.timestamp(), "R") }}
+            {%- endif %}
+        {% endcall %}
+
+    {% endcall %}
+
+    {% if not resolved %}
+        {% call dc.buttons() %}
+            {{ dc.button(emoji=dc.twemoji("2705", "✅")) }}
+            {{ dc.button(emoji=dc.twemoji("274c", "❌")) }}
+        {% endcall %}
+    {% endif %}
+
+{% endcall %}
