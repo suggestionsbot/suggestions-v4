@@ -159,8 +159,8 @@ class Suggestions(Table, AuditMixin):
 
     @property
     def footer_sid(self) -> str:
-        # sid_text = f"[{self.sID}]({self.dashboard_link})"
-        return f"`{self.sID}`"
+        return f"[{self.sID}]({self.dashboard_link})"
+        # return f"`{self.sID}`"
 
     @property
     def dashboard_link(self) -> str:
@@ -223,7 +223,7 @@ class Suggestions(Table, AuditMixin):
     async def fetch_suggestion_by_message(
         cls, *, channel_id: int, message_id: int, guild_id: int
     ) -> typing.Self | None:
-        """Simple helper method to also ensure configurations are prefetched"""
+        """Simple helper method to also ensure configurations are prefetched."""
         query = (
             cls.objects(
                 Suggestions.user_configuration,
@@ -252,7 +252,7 @@ class Suggestions(Table, AuditMixin):
     async def fetch_suggestion(
         cls, sID: str, guild_id: int, *, state: SuggestionStateEnum | None = None
     ) -> typing.Self | None:
-        """Simple helper method to also ensure configurations are prefetched"""
+        """Simple helper method to also ensure configurations are prefetched."""
         query = (
             cls.objects(
                 Suggestions.user_configuration,
