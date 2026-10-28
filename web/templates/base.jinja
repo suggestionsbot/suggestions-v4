@@ -9,7 +9,7 @@
     </script>
 {%- endmacro %}
 <!doctype html>
-<html lang="en" data-bs-theme="light">
+<html lang="en" data-bs-theme="light" data-bs-theme-base="gray">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
@@ -18,10 +18,13 @@
     <link rel="icon" href="/static/favicon.ico" nonce="{{ csp_nonce }}">
     <!-- CSS files -->
     <script
-            src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js" nonce="{{ csp_nonce }}">
+            src="https://cdn.jsdelivr.net/npm/@tabler/core@1.7.0/dist/js/tabler.min.js" nonce="{{ csp_nonce }}">
     </script>
     <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" nonce="{{ csp_nonce }}"/>
+          href="https://cdn.jsdelivr.net/npm/@tabler/core@1.7.0/dist/css/tabler.min.css" nonce="{{ csp_nonce }}"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/@tabler/core@1.7.1/dist/css/tabler-themes.min.css"
+          nonce="{{ csp_nonce }}"/>
     <style nonce="{{ csp_nonce }}">
         @import url('https://rsms.me/inter/inter.css');
 
