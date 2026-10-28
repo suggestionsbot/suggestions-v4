@@ -28,7 +28,7 @@
 {#- No href: a button for a script to drive, hidden until that script shows it. -#}
 {% macro dropdown_item(text, href=none, id=none) %}
     {%- if href is none %}
-        <button type="button" class="dropdown-item"{% if id %} id="{{ id }}"{% endif %} hidden>
+        <button type="button" class="dropdown-item w-100 text-start"{% if id %} id="{{ id }}"{% endif %} hidden>
             {{ text }}
         </button>
     {%- else %}
