@@ -268,7 +268,7 @@ csrf_config = CSRFConfig(
         "/admin/",
         "/auth",
         # We check the webhook secret
-        "/stripe/webhook"
+        "/stripe/webhook",
         # It's manged via Tokens not cookies so is fine
         "/api",
     ],
