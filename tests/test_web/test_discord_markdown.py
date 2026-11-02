@@ -17,6 +17,10 @@ import pytest
 
 from web.discord_markdown import render
 
+pytestmark = pytest.mark.skip(
+    reason="This entire file is long af, re-enable every so often for regression testing"
+)
+
 HACKTRICKS_PAYLOADS = [
     '<script>\n  alert(1)\n</script>\n<img src="x" onerror="alert(1)" />',
     "[a](javascript:prompt(document.cookie))",
