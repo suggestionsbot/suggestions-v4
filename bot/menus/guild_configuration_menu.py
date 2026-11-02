@@ -123,6 +123,25 @@ class GuildConfigurationMenus:
             )
             return
 
+        if id_data == "unstick_buttons":
+            suggestion_buttons: list[
+                SuggestionButtons
+            ] = await SuggestionButtons.fetch_sticky_buttons_for_guild(
+                guild_configuration=guild_config
+            )
+            for button in suggestion_buttons:
+                button.button_is_sticky = False
+                await button.save()
+
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.responses.sticky_buttons.all_unstuck",
+                    user_config.primary_language,
+                ),
+                ephemeral=True,
+            )
+            return
+
         if id_data in ("button_make_no_sticky", "button_make_sticky"):
             guild_config.suggestion_button_sticky_message = (
                 id_data == "button_make_sticky"
@@ -990,6 +1009,14 @@ class GuildConfigurationMenus:
                                     if guild_config.suggestion_button_sticky_message
                                     else 'button_make_sticky'
                                 }",
+                            ),
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.base_menu.sticky_button.unstick_buttons",
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:unstick_buttons",
                             ),
                             hikari.impl.InteractiveButtonBuilder(
                                 style=hikari.ButtonStyle.SECONDARY,

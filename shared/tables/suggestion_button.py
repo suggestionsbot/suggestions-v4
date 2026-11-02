@@ -92,6 +92,18 @@ class SuggestionButtons(Table, AuditMixin):
         return components
 
     @classmethod
+    async def fetch_sticky_buttons_for_guild(
+        cls, *, guild_configuration: GuildConfigs | int
+    ) -> list[Self]:
+        query = (
+            cls.objects()
+            .where(cls.guild_configuration == guild_configuration)
+            .where(cls.button_is_sticky.eq(value=True))
+        )
+
+        return await query
+
+    @classmethod
     async def fetch_sticky_buttons_for_channel(
         cls, *, channel_id: int, guild_configuration: GuildConfigs | int
     ) -> list[Self]:
