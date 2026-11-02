@@ -237,6 +237,7 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
 
     suggestion.channel_id = log_message.channel_id
     suggestion.message_id = log_message.id
+    await guild_config.queue_sticky_button_edit(log_message.channel_id)
     await suggestion.save()
     await suggestion.notify_users_of_resolution()
     content.write(

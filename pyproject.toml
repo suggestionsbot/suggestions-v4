@@ -53,7 +53,7 @@ migrations = [
 [tool.ruff]
 line-length = 90
 target-version = "py312"
-exclude =[
+exclude = [
     'bot/piccolo_migrations',
     'shared/piccolo_migrations',
     'web/piccolo_migrations',
@@ -98,6 +98,8 @@ ignore = [
     'S101',
     # commented out code
     'ERA001',
+    # Copyright notice
+    'CPY001'
 ]
 
 

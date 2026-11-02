@@ -189,6 +189,8 @@ saq = SAQPlugin(
                     suggestions_worker.queue_suggestion_edit,
                     suggestions_worker.edit_suggestion_message,
                     suggestions_worker.populate_sid_autocomplete,
+                    suggestions_worker.queue_sticky_button_edit,
+                    suggestions_worker.sticky_button_edit,
                     suggestions_worker.test_message_send,
                     suggestions_user_notifications_worker.suggestion_resolved_notifications,
                     suggestions_user_notifications_worker.notify_users_of_new_suggestion,

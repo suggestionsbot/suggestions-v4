@@ -1,6 +1,7 @@
 from __future__ import annotations
+from shared.saq.worker import enqueue_traced, SAQ_QUEUE
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, Any
 
 import datetime
 
@@ -135,11 +136,56 @@ class GuildConfigs(AuditMixin, Table):
         ),
         index=True,
     )
+    suggestion_button_sticky_message = Boolean(
+        default=False,
+        null=True,
+        help_text="Should the button message be re-sent when it's no"
+        " longer at the button of the channel?",
+    )
 
     @property
     def primary_language(self) -> hikari.Locale | str:
         """Return the language as a Locale, str if the locale enum value doesn't exist."""
         return hikari.Locale(self.primary_language_raw)
+
+    async def queue_sticky_button_edit(self, channel_id: int) -> None:
+        """Queues a worker task to edit any sticky buttons in that channel."""
+        from shared.saq.suggestions import queue_sticky_button_edit
+
+        await queue_sticky_button_edit(channel_id=channel_id, guild_id=self.guild_id)
+
+    async def build_default_suggestion_button(self) -> list[Any]:
+        """Build and return the suggestion button components."""
+        message: str | None = self.premium.suggestion_button_message_prefix
+        button_message: str | None = self.premium.suggestion_button_message
+        if message is None:
+            message: str = LOCALISATIONS.get_localized_string(
+                "menus.guild_configuration.responses.sent_suggestions_button.description",
+                self.primary_language,
+            )
+
+        if button_message is None:
+            button_message = LOCALISATIONS.get_localized_string(
+                "menus.guild_configuration.responses.sent_suggestions_button.button",
+                self.primary_language,
+            )
+
+        components = []
+        if not self.premium.suggestion_button_hide_message:
+            components.append(hikari.impl.TextDisplayComponentBuilder(content=message))
+
+        components.append(
+            hikari.impl.MessageActionRowBuilder(
+                components=[
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.PRIMARY,
+                        label=button_message,
+                        custom_id="v4_suggest_button",
+                    ),
+                ],
+            )
+        )
+        return components
 
     async def ensure_config_is_setup(
         self,

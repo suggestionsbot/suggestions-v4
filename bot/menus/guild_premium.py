@@ -1,6 +1,8 @@
 import io
 
 import commons
+from hikari.impl import LabelComponentBuilder
+
 import bot.constants
 from web.constants import REDIS_CLIENT
 import logging
@@ -170,7 +172,7 @@ class GuildPremiumMenu:
 
         elif id_data == "suggest_button_message":
             message: str | None = cast("str|None", cls.extract_value(event, "message"))
-            hide_message: str = cast("str", cls.extract_value(event, "hide_message")[0])
+            hide_message: str = cls.extract_value(event, "hide_message")[0]
             hide_message: bool = commons.value_to_bool(hide_message)
             button_message: str | None = cast(
                 "str|None", cls.extract_value(event, "button")
@@ -300,8 +302,7 @@ class GuildPremiumMenu:
                 ),
                 f"guild_premium_modal:{link_id}:suggest_button_message",
                 components=await cls.build_suggest_button_modal(
-                    localisations,
-                    user_config,
+                    localisations, user_config=user_config
                 ),
             )
 
@@ -326,7 +327,7 @@ class GuildPremiumMenu:
         localisations: Localisation,
         user_config: UserConfigs,
         prefix: Literal["suggestion", "queued_suggestion"],
-    ):
+    ) -> list[LabelComponentBuilder]:
         key = f"custom_{prefix}_prefix"
         return [
             hikari.impl.LabelComponentBuilder(
@@ -368,7 +369,7 @@ class GuildPremiumMenu:
     @classmethod
     async def build_cooldown_modal(
         cls, localisations: Localisation, user_config: UserConfigs
-    ):
+    ) -> list[LabelComponentBuilder]:
         return [
             hikari.impl.LabelComponentBuilder(
                 label=localisations.get_localized_string(
@@ -445,8 +446,8 @@ class GuildPremiumMenu:
 
     @classmethod
     async def build_suggest_button_modal(
-        cls, localisations: Localisation, user_config: UserConfigs
-    ):
+        cls, localisations: Localisation, *, user_config: UserConfigs
+    ) -> list[LabelComponentBuilder]:
         return [
             hikari.impl.LabelComponentBuilder(
                 label=localisations.get_localized_string(
@@ -520,7 +521,7 @@ class GuildPremiumMenu:
     @classmethod
     async def build_name_modal(
         cls, localisations: Localisation, user_config: UserConfigs
-    ):
+    ) -> list[LabelComponentBuilder]:
         return [
             hikari.impl.LabelComponentBuilder(
                 label=localisations.get_localized_string(
@@ -544,7 +545,7 @@ class GuildPremiumMenu:
     @classmethod
     async def build_avatar_modal(
         cls, localisations: Localisation, user_config: UserConfigs
-    ):
+    ) -> list[LabelComponentBuilder]:
         return [
             hikari.impl.LabelComponentBuilder(
                 label=localisations.get_localized_string(

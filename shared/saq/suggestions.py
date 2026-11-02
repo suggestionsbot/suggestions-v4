@@ -1,3 +1,4 @@
+import asyncio
 from opentelemetry import trace
 
 from shared.saq.worker import SAQ_QUEUE, traced_task, enqueue_traced
@@ -11,12 +12,13 @@ from saq.types import Context
 
 from bot import constants as b_constants
 from shared import utils
-from shared.utils import query_helpers
+from shared.utils import query_helpers, configs
 from shared.tables import (
     Suggestions,
     QueuedSuggestions,
     SuggestionStateEnum,
     QueuedSuggestionStateEnum,
+    SuggestionButtons,
 )
 from shared.utils.configs import ensure_guild_config
 from web import constants
@@ -49,6 +51,96 @@ async def queue_suggestion_edit(
     )
 
 
+async def queue_sticky_button_edit(
+    channel_id: int,
+    guild_id: int,
+) -> None:
+    redis_key = f"saq:queue_sticky_button_edit:{channel_id}"
+    result = await constants.REDIS_CLIENT.set(
+        redis_key, channel_id, nx=True, ex=timedelta(seconds=9)
+    )
+    if result is None:
+        # There is already a queued edit
+        return
+
+    await enqueue_traced(
+        SAQ_QUEUE,
+        "sticky_button_edit",
+        channel_id=channel_id,
+        guild_id=guild_id,
+        scheduled=time.time() + 10,
+    )
+
+
+@traced_task
+async def sticky_button_edit(  # noqa: C901
+    ctx: Context,
+    channel_id: int,
+    guild_id: int,
+) -> None:
+    span = trace.get_current_span()
+    if span.get_span_context().is_valid:
+        span.set_attribute("interaction.guild.id", guild_id)
+
+    guild_config = await configs.ensure_guild_config(guild_id)
+    suggestion_buttons: list[
+        SuggestionButtons
+    ] = await SuggestionButtons.fetch_sticky_buttons_for_channel(
+        channel_id=channel_id, guild_configuration=guild_config
+    )
+    if not suggestion_buttons:
+        log.debug("No buttons to update")
+        return
+
+    # These are all sticky and we should therefore update something
+    list_of_message_ids: set[int] = {sb.message_id for sb in suggestion_buttons}
+
+    async with constants.DISCORD_REST_CLIENT.acquire(
+        constants.BOT_TOKEN, hikari.TokenType.BOT
+    ) as client:
+        await ctx["job"].update()
+        try:
+            iterator = client.fetch_messages(channel_id).limit(1)
+            async for message in iterator:
+                if message.id in list_of_message_ids:
+                    log.debug(
+                        "The latest message is still a suggestion button, early return"
+                    )
+                    return
+
+        except hikari.ForbiddenError:
+            log.error("Missing permissions to fetch message history")
+            return
+        except hikari.NotFoundError:
+            log.error("Couldn't find channel to lookup message in?")
+            return
+
+        # Need to edit at this point
+        # Note if multiple 'sticky' messages exist then that's annoying
+        # but if it's what the user wants...
+        for button in suggestion_buttons:
+            await asyncio.sleep(3)  # Hello rate limits
+            try:
+                await client.delete_message(channel_id, button.message_id)
+            except hikari.ForbiddenError:
+                log.error("Missing permissions to delete button message")
+                return
+            except hikari.NotFoundError:
+                log.error("Couldn't find the button to delete, continuing")
+
+            components = await button.build_suggestion_button(guild_config)
+            try:
+                message = await client.create_message(channel_id, components=components)
+                button.message_id = message.id
+                await button.save()
+            except hikari.ForbiddenError:
+                log.error("Missing permissions to send new message to channel")
+                return
+            except hikari.NotFoundError:
+                log.error("Couldn't find channel to lookup to send?")
+                return
+
+
 @traced_task
 async def edit_suggestion_message(
     ctx: Context,
@@ -61,7 +153,6 @@ async def edit_suggestion_message(
     if span.get_span_context().is_valid:
         span.set_attribute("suggestion.id", suggestion_id)
         span.set_attribute("interaction.guild.id", guild_id)
-
 
     suggestion = await Suggestions.fetch_suggestion(suggestion_id, guild_id)
     if suggestion is None:

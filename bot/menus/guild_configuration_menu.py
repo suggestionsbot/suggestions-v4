@@ -12,7 +12,7 @@ from hikari.api import special_endpoints, ComponentBuilder
 from bot import utils
 from bot.exceptions import SuggestionException
 from bot.localisation import Localisation
-from shared.tables import GuildConfigs, UserConfigs
+from shared.tables import GuildConfigs, UserConfigs, SuggestionButtons
 from shared.utils import configs, get_cached_interaction_id
 from shared.utils.locales import language_as_word
 from web import constants as t_constants
@@ -123,6 +123,40 @@ class GuildConfigurationMenus:
             )
             return
 
+        if id_data == "unstick_buttons":
+            suggestion_buttons: list[
+                SuggestionButtons
+            ] = await SuggestionButtons.fetch_sticky_buttons_for_guild(
+                guild_configuration=guild_config
+            )
+            for button in suggestion_buttons:
+                button.button_is_sticky = False
+                await button.save()
+
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.responses.sticky_buttons.all_unstuck",
+                    user_config.primary_language,
+                ),
+                ephemeral=True,
+            )
+            return
+
+        if id_data in ("button_make_no_sticky", "button_make_sticky"):
+            guild_config.suggestion_button_sticky_message = (
+                id_data == "button_make_sticky"
+            )
+            await guild_config.save()
+            key = "now_sticky" if id_data == "button_make_sticky" else "no_sticky"
+            await ctx.respond(
+                localisations.get_localized_string(
+                    f"menus.guild_configuration.responses.sticky_buttons.{key}",
+                    user_config.primary_language,
+                ),
+                ephemeral=True,
+            )
+            return
+
         if id_data == "generic_dm_messages_disabled":
             # Flipped for legacy purposes to maintain translations
             # These are all bool answers so is fine to do as is
@@ -178,40 +212,12 @@ class GuildConfigurationMenus:
 
         if id_data == "send_suggestions_button":
             channel = int(event_values[0])
-            message: str | None = guild_config.premium.suggestion_button_message_prefix
-            button_message: str | None = guild_config.premium.suggestion_button_message
-            if message is None:
-                message: str = localisations.get_localized_string(
-                    "menus.guild_configuration.responses.sent_suggestions_button.description",
-                    guild_config.primary_language,
-                )
-
-            if button_message is None:
-                button_message = localisations.get_localized_string(
-                    "menus.guild_configuration.responses.sent_suggestions_button.button",
-                    guild_config.primary_language,
-                )
-
-            components = []
-            if not guild_config.premium.suggestion_button_hide_message:
-                components.append(
-                    hikari.impl.TextDisplayComponentBuilder(content=message)
-                )
-
-            components.append(
-                hikari.impl.MessageActionRowBuilder(
-                    components=[
-                        hikari.impl.InteractiveButtonBuilder(
-                            style=hikari.ButtonStyle.PRIMARY,
-                            label=button_message,
-                            custom_id="v4_suggest_button",
-                        ),
-                    ],
-                )
-            )
+            components = await guild_config.build_default_suggestion_button()
 
             try:
-                await ctx.client.rest.create_message(channel, components=components)
+                message = await ctx.client.rest.create_message(
+                    channel, components=components
+                )
             except hikari.ForbiddenError as e:
                 internal_error = await InternalErrors.persist_error(
                     e,
@@ -234,6 +240,16 @@ class GuildConfigurationMenus:
                     ephemeral=True,
                 )
             else:
+                await SuggestionButtons.create_new(
+                    guild_config=guild_config,
+                    channel_id=message.channel_id,
+                    message_id=message.id,
+                    message_prefix=guild_config.premium.suggestion_button_message_prefix,
+                    hide_message=guild_config.premium.suggestion_button_hide_message,
+                    button_message=guild_config.premium.suggestion_button_message,
+                    button_is_sticky=guild_config.suggestion_button_sticky_message,
+                )
+
                 await ctx.respond(
                     localisations.get_localized_string(
                         "menus.guild_configuration.responses.sent_suggestions_button",
@@ -979,6 +995,29 @@ class GuildConfigurationMenus:
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.base_menu.sticky_button.make_no_sticky"
+                                    if guild_config.suggestion_button_sticky_message
+                                    else "menus.guild_configuration.base_menu.sticky_button.make_sticky",  # noqa: E501
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:"
+                                f"{
+                                    'button_make_no_sticky'
+                                    if guild_config.suggestion_button_sticky_message
+                                    else 'button_make_sticky'
+                                }",
+                            ),
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.base_menu.sticky_button.unstick_buttons",
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:unstick_buttons",
+                            ),
                             hikari.impl.InteractiveButtonBuilder(
                                 style=hikari.ButtonStyle.SECONDARY,
                                 label=localisations.get_localized_string(

@@ -647,6 +647,7 @@ class SuggestionMenu:
                     )
 
         await s.notify_users_of_new_suggestion()
+        await guild_config.queue_sticky_button_edit(message.channel_id)
         if send_final_response:
             # We only want to send on /suggest and not queued suggestions
             content = io.StringIO()
@@ -787,6 +788,7 @@ class SuggestionMenu:
 
             qs.channel_id = message.channel_id
             qs.message_id = message.id
+            await guild_config.queue_sticky_button_edit(message.channel_id)
 
         await qs.save()
         await autocomplete.cache_sid_in_autocomplete(
