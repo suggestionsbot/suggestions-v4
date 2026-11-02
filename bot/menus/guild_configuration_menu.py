@@ -123,6 +123,21 @@ class GuildConfigurationMenus:
             )
             return
 
+        if id_data in ("button_make_no_sticky", "button_make_sticky"):
+            guild_config.suggestion_button_sticky_message = (
+                id_data == "button_make_sticky"
+            )
+            await guild_config.save()
+            key = "now_sticky" if id_data == "button_make_sticky" else "no_sticky"
+            await ctx.respond(
+                localisations.get_localized_string(
+                    f"menus.guild_configuration.responses.sticky_buttons.{key}",
+                    user_config.primary_language,
+                ),
+                ephemeral=True,
+            )
+            return
+
         if id_data == "generic_dm_messages_disabled":
             # Flipped for legacy purposes to maintain translations
             # These are all bool answers so is fine to do as is
@@ -979,6 +994,21 @@ class GuildConfigurationMenus:
                     ),
                     hikari.impl.MessageActionRowBuilder(
                         components=[
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.base_menu.sticky_button.make_no_sticky"
+                                    if guild_config.suggestion_button_sticky_message
+                                    else "menus.guild_configuration.base_menu.sticky_button.make_sticky",  # noqa: E501
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:"
+                                f"{
+                                    'button_make_no_sticky'
+                                    if guild_config.suggestion_button_sticky_message
+                                    else 'button_make_sticky'
+                                }",
+                            ),
                             hikari.impl.InteractiveButtonBuilder(
                                 style=hikari.ButtonStyle.SECONDARY,
                                 label=localisations.get_localized_string(

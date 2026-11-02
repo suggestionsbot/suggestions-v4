@@ -135,6 +135,12 @@ class GuildConfigs(AuditMixin, Table):
         ),
         index=True,
     )
+    suggestion_button_sticky_message = Boolean(
+        default=False,
+        null=True,
+        help_text="Should the button message be re-sent when it's no"
+        " longer at the button of the channel?",
+    )
 
     @property
     def primary_language(self) -> hikari.Locale | str:

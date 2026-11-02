@@ -6,6 +6,7 @@ from shared.tables.queued_suggestion import QueuedSuggestions, QueuedSuggestionS
 from shared.tables.suggestion import Suggestions, SuggestionStateEnum
 from shared.tables.suggestions_vote import SuggestionVotes, SuggestionsVoteTypeEnum
 from shared.tables.premium_user_config import PremiumUserConfigs
+from shared.tables.suggestion_button import SuggestionButtons
 
 __all__ = [
     "UserConfigs",
@@ -18,4 +19,5 @@ __all__ = [
     "PremiumGuildConfigs",
     "QueuedSuggestionStateEnum",
     "PremiumUserConfigs",
+    "SuggestionButtons",
 ]

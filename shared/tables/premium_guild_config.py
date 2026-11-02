@@ -59,7 +59,7 @@ class PremiumGuildConfigs(AuditMixin, Table):
     suggestion_button_hide_message = Boolean(
         default=False,
         null=True,
-        help_text="Should the sent messages only be the button?.",
+        help_text="Should the sent messages only be the button?",
     )
     suggestion_button_message = Text(
         default=None,
