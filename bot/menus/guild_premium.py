@@ -302,7 +302,7 @@ class GuildPremiumMenu:
                 ),
                 f"guild_premium_modal:{link_id}:suggest_button_message",
                 components=await cls.build_suggest_button_modal(
-                    localisations, user_config=user_config, guild_config=guild_config
+                    localisations, user_config=user_config
                 ),
             )
 
@@ -446,11 +446,7 @@ class GuildPremiumMenu:
 
     @classmethod
     async def build_suggest_button_modal(
-        cls,
-        localisations: Localisation,
-        *,
-        user_config: UserConfigs,
-        guild_config: GuildConfigs,
+        cls, localisations: Localisation, *, user_config: UserConfigs
     ) -> list[LabelComponentBuilder]:
         return [
             hikari.impl.LabelComponentBuilder(
