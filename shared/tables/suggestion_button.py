@@ -45,3 +45,14 @@ class SuggestionButtons(Table, AuditMixin):
         )
 
         return await query
+
+    @classmethod
+    async def create_new(
+        cls, *, guild_config: GuildConfigs, channel_id: int, message_id: int
+    ) -> Self:
+        """Create a new entry."""
+        obj = cls(
+            guild_configuration=guild_config, channel_id=channel_id, message_id=message_id
+        )
+        await obj.save()
+        return obj

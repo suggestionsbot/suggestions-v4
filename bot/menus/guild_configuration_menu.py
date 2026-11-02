@@ -12,7 +12,7 @@ from hikari.api import special_endpoints, ComponentBuilder
 from bot import utils
 from bot.exceptions import SuggestionException
 from bot.localisation import Localisation
-from shared.tables import GuildConfigs, UserConfigs
+from shared.tables import GuildConfigs, UserConfigs, SuggestionButtons
 from shared.utils import configs, get_cached_interaction_id
 from shared.utils.locales import language_as_word
 from web import constants as t_constants
@@ -193,40 +193,12 @@ class GuildConfigurationMenus:
 
         if id_data == "send_suggestions_button":
             channel = int(event_values[0])
-            message: str | None = guild_config.premium.suggestion_button_message_prefix
-            button_message: str | None = guild_config.premium.suggestion_button_message
-            if message is None:
-                message: str = localisations.get_localized_string(
-                    "menus.guild_configuration.responses.sent_suggestions_button.description",
-                    guild_config.primary_language,
-                )
-
-            if button_message is None:
-                button_message = localisations.get_localized_string(
-                    "menus.guild_configuration.responses.sent_suggestions_button.button",
-                    guild_config.primary_language,
-                )
-
-            components = []
-            if not guild_config.premium.suggestion_button_hide_message:
-                components.append(
-                    hikari.impl.TextDisplayComponentBuilder(content=message)
-                )
-
-            components.append(
-                hikari.impl.MessageActionRowBuilder(
-                    components=[
-                        hikari.impl.InteractiveButtonBuilder(
-                            style=hikari.ButtonStyle.PRIMARY,
-                            label=button_message,
-                            custom_id="v4_suggest_button",
-                        ),
-                    ],
-                )
-            )
+            components = await guild_config.build_suggestion_button()
 
             try:
-                await ctx.client.rest.create_message(channel, components=components)
+                message = await ctx.client.rest.create_message(
+                    channel, components=components
+                )
             except hikari.ForbiddenError as e:
                 internal_error = await InternalErrors.persist_error(
                     e,
@@ -249,6 +221,15 @@ class GuildConfigurationMenus:
                     ephemeral=True,
                 )
             else:
+                if guild_config.suggestion_button_sticky_message:
+                    # Maybe worth it to simply store all? Although it would mean
+                    # toggling sticky conf affects all, even the 'non-sticky' ones
+                    await SuggestionButtons.create_new(
+                        guild_config=guild_config,
+                        channel_id=message.channel_id,
+                        message_id=message.id,
+                    )
+
                 await ctx.respond(
                     localisations.get_localized_string(
                         "menus.guild_configuration.responses.sent_suggestions_button",
