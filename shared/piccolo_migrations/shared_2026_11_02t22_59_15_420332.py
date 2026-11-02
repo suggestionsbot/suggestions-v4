@@ -5,6 +5,7 @@ from piccolo.columns.column_types import BigInt
 from piccolo.columns.column_types import Boolean
 from piccolo.columns.column_types import ForeignKey
 from piccolo.columns.column_types import Serial
+from piccolo.columns.column_types import Text
 from piccolo.columns.column_types import Timestamptz
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.columns.indexes import IndexMethod
@@ -25,7 +26,7 @@ class GuildConfigs(Table, tablename="guild_configs", schema=None):
     )
 
 
-ID = "2026-11-02T21:47:15:890052"
+ID = "2026-11-02T22:59:15:420332"
 VERSION = "1.38.0"
 DESCRIPTION = ""
 
@@ -158,6 +159,90 @@ async def forwards():
         column_class=BigInt,
         params={
             "default": 0,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="SuggestionButtons",
+        tablename="suggestion_buttons",
+        column_name="message_prefix",
+        db_column_name="message_prefix",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="SuggestionButtons",
+        tablename="suggestion_buttons",
+        column_name="hide_message",
+        db_column_name="hide_message",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": False,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="SuggestionButtons",
+        tablename="suggestion_buttons",
+        column_name="button_message",
+        db_column_name="button_message",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    manager.add_column(
+        table_class_name="SuggestionButtons",
+        tablename="suggestion_buttons",
+        column_name="button_is_sticky",
+        db_column_name="button_is_sticky",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": False,
             "null": False,
             "primary_key": False,
             "unique": False,

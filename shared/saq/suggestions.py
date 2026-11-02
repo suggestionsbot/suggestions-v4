@@ -83,16 +83,16 @@ async def sticky_button_edit(  # noqa: C901
         span.set_attribute("interaction.guild.id", guild_id)
 
     guild_config = await configs.ensure_guild_config(guild_id)
-    if not guild_config.suggestion_button_sticky_message:
-        log.debug("Guild doesn't have sticky buttons, early return")
-        return
-
-    # These are all sticky and we should therefore update
     suggestion_buttons: list[
         SuggestionButtons
-    ] = await SuggestionButtons.fetch_buttons_for_channel(
+    ] = await SuggestionButtons.fetch_sticky_buttons_for_channel(
         channel_id=channel_id, guild_configuration=guild_config
     )
+    if not suggestion_buttons:
+        log.debug("No buttons to update")
+        return
+
+    # These are all sticky and we should therefore update something
     list_of_message_ids: set[int] = {sb.message_id for sb in suggestion_buttons}
 
     async with constants.DISCORD_REST_CLIENT.acquire(
@@ -128,7 +128,7 @@ async def sticky_button_edit(  # noqa: C901
             except hikari.NotFoundError:
                 log.error("Couldn't find the button to delete, continuing")
 
-            components = await guild_config.build_suggestion_button()
+            components = await button.build_suggestion_button(guild_config)
             try:
                 message = await client.create_message(channel_id, components=components)
                 button.message_id = message.id

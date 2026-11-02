@@ -154,7 +154,7 @@ class GuildConfigs(AuditMixin, Table):
 
         await queue_sticky_button_edit(channel_id=channel_id, guild_id=self.guild_id)
 
-    async def build_suggestion_button(self) -> list[Any]:
+    async def build_default_suggestion_button(self) -> list[Any]:
         """Build and return the suggestion button components."""
         message: str | None = self.premium.suggestion_button_message_prefix
         button_message: str | None = self.premium.suggestion_button_message

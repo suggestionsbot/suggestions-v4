@@ -193,7 +193,7 @@ class GuildConfigurationMenus:
 
         if id_data == "send_suggestions_button":
             channel = int(event_values[0])
-            components = await guild_config.build_suggestion_button()
+            components = await guild_config.build_default_suggestion_button()
 
             try:
                 message = await ctx.client.rest.create_message(
@@ -221,14 +221,15 @@ class GuildConfigurationMenus:
                     ephemeral=True,
                 )
             else:
-                if guild_config.suggestion_button_sticky_message:
-                    # Maybe worth it to simply store all? Although it would mean
-                    # toggling sticky conf affects all, even the 'non-sticky' ones
-                    await SuggestionButtons.create_new(
-                        guild_config=guild_config,
-                        channel_id=message.channel_id,
-                        message_id=message.id,
-                    )
+                await SuggestionButtons.create_new(
+                    guild_config=guild_config,
+                    channel_id=message.channel_id,
+                    message_id=message.id,
+                    message_prefix=guild_config.premium.suggestion_button_message_prefix,
+                    hide_message=guild_config.premium.suggestion_button_hide_message,
+                    button_message=guild_config.premium.suggestion_button_message,
+                    button_is_sticky=guild_config.suggestion_button_sticky_message,
+                )
 
                 await ctx.respond(
                     localisations.get_localized_string(
