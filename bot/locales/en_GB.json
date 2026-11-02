@@ -336,7 +336,7 @@
   "menus.guild_configuration.responses.update_channel_id.empty": "I'm sorry but the update channel choices cannot be empty. Please try again and select a new channel.",
   "menus.guild_configuration.responses.update_channel_id.set": "I have set this guilds update channel to $CHANNEL.",
   "menus.guild_configuration.responses.sticky_buttons.now_sticky": "Future messages for suggestion buttons will stick to the bottom of the channel.\n\n*Note: This is currently only when messages are sent by the bot, not other users at this time*",
-  "menus.guild_configuration.responses.sticky_buttons.no_sticky": "All suggestion buttons will stay in the current position they end up in.",
+  "menus.guild_configuration.responses.sticky_buttons.no_sticky": "All new suggestion buttons will stay in the current position they end up in.",
   "menus.guild_configuration.view_docs": "View the bots documentation here",
   "menus.guild_configuration.view_premium_docs": "View the premium documentation here",
   "menus.guild_configuration.view_premium": "View premium options",
