@@ -16,8 +16,7 @@ from starlette.responses import Response
 
 from bot.tables import InternalErrors
 from bot.utils.users import fetch_user_dm_channel_id
-from shared.utils import configs
-from shared.utils.ntfy import notify_ethan_of_something
+from shared.utils import configs, ntfy
 from web import constants
 from web.controllers import AuthController
 from web.controllers.oauth_controller import DISCORD_OAUTH
@@ -88,7 +87,7 @@ class StripeController(Controller):
                 command_name="Stripe Webhook",
                 extra_info=f"{event_type=} event_id={event['id']}",
             )
-            await notify_ethan_of_something(
+            await ntfy.notify_ethan_of_something(
                 title="Error in stripe webhook",
                 message=f"Observed {e.__class__.__name__} in the stripe webook",
                 internal_error_reference=internal_error,

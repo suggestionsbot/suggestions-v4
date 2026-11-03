@@ -1,5 +1,6 @@
 # ruff: noqa: ANN001, ANN002
 from __future__ import annotations
+
 from pydantic import BaseModel, ConfigDict
 
 import asyncio
@@ -84,9 +85,10 @@ def change_test_dir(request, monkeypatch):
 
 
 @pytest.fixture(scope="function", autouse=True)
-async def configure_testing():
+async def configure_testing(monkeypatch):
     # Due to the complexity of tables,
     #   tests can only run with a postgres db present
+    monkeypatch.setattr("shared.utils.ntfy.notify_ethan_of_something", AsyncMock())
 
     # Setup DB per test
     with set_env_var(var_name="PICCOLO_CONF", temp_value="piccolo_conf_test"):

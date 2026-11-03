@@ -7,7 +7,7 @@ import arrow
 import stripe
 from arrow import Arrow
 
-from shared.utils.ntfy import notify_ethan_of_something
+from shared.utils import ntfy
 from web import constants
 from web.tables import GuildTokens, Users, UserTokens
 from web.util.table_mixins import utc_now
@@ -129,7 +129,7 @@ async def provision_new_user_subscription(
             f" {subscription_id} for user {user.id} ({user.email})"
         )
         logger.warning(message)
-        await notify_ethan_of_something(
+        await ntfy.notify_ethan_of_something(
             title="Extra User Sub",
             message=message + ". Consider going and refunding one.",
         )
@@ -213,7 +213,7 @@ async def handle_customer_subscription_created(
                         "stripe.subscription.id": subscription_id,
                     },
                 )
-                await notify_ethan_of_something(
+                await ntfy.notify_ethan_of_something(
                     title="Unknown Stripe Price",
                     message="Observed a price ID not currently handled which should be",
                     tags="warning",
