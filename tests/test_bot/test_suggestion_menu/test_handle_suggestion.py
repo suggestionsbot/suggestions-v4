@@ -215,7 +215,7 @@ async def test_notifies_users_of_the_new_suggestion(
     _, result, _, _, _ = await invoke_suggestion(localisation)
 
     assert result is not None
-    patch_saq.assert_called_once()
+    assert patch_saq.call_count == 2
     args, kwargs = patch_saq.call_args
     assert args[0] == "notify_users_of_new_suggestion"
     assert kwargs["suggestion_id"] == result.sID
