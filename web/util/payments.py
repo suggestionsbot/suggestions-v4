@@ -18,8 +18,21 @@ PROVISION_STATUS_TYPES: Final = ("active", "trialing")
 
 async def extract_subscription_skus(event) -> list[str]:
     data = []
-    for item in event["data"]["object"]["items"]["data"]:
-        data.append(item["price"]["id"])  # noqa: PERF401
+    base_data = event["data"]["object"]
+    if "items" in base_data:
+        # Subscription object
+        for item in base_data["items"]["data"]:
+            data.append(item["price"]["id"])  # noqa: PERF401
+
+    elif "lines" in base_data:
+        # Invoice object
+        for item in base_data["lines"]["data"]:
+            data.append(item["pricing"]["price_details"]["price"])  # noqa: PERF401
+
+    else:
+        msg = "Unsure what to extract"
+        raise ValueError(msg)
+
     return data
 
 

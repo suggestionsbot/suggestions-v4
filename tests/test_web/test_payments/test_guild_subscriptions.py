@@ -568,6 +568,18 @@ async def test_extract_subscription_skus() -> None:
     assert r_1 == [STRIPE_PRICE_ID_GUILDS_MONTHLY, STRIPE_PRICE_ID_USERS_MONTHLY]
 
 
+async def test_extract_subscription_skus_failed_invoice_payment() -> None:
+    """This needs to also support invoice objects as well as subscription."""
+    event: EventT = deepcopy(empty_event)
+    subscription: InvoiceT = deepcopy(empty_invoice)
+    subscription["lines"]["data"].append(guild_invoice_data)
+    event["data"]["object"] = subscription
+
+    r_1 = await payments.extract_subscription_skus(event)
+    assert r_1 is not None
+    assert r_1 == [STRIPE_PRICE_ID_GUILDS_MONTHLY]
+
+
 # noinspection DuplicatedCode
 async def test_subscription_deleted_with_associated_guild_tokens(
     monkeypatch: pytest.MonkeyPatch,
