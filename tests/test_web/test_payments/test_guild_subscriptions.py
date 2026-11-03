@@ -677,25 +677,6 @@ async def test_subscription_deleted_with_no_associated_guild_tokens(
     assert gt_2 == 0
 
 
-async def test_subscription_deleted_with_no_guild_sku(
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-    redis_client: aioredis.Redis,
-) -> None:
-    # Once we add other SKUs this will break
-    event: EventT = deepcopy(empty_event)
-    subscription: SubscriptionT = deepcopy(empty_sub)
-    subscription["items"]["data"].append(user_price_id)
-    event["data"]["object"] = subscription
-
-    with caplog.at_level(logging.DEBUG):
-        await payments.handle_customer_subscription_deleted(event)
-
-    assert caplog.messages == [
-        f"Unknown subscription sku: {STRIPE_PRICE_ID_USERS_MONTHLY}"
-    ]
-
-
 async def test_invoice_paid_when_not_paid(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:

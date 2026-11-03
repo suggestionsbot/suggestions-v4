@@ -153,6 +153,11 @@ async def get_subscription_expiry(item, subscription_status: str) -> Arrow:
     # invoice.paid will also update the expiry to be more correct as required
     if subscription_status in PROVISION_STATUS_TYPES:
         sub_expires_at = arrow.get(item["current_period_end"]).shift(days=5)
+
+    elif subscription_status == "past_due":
+        # Five day grace period
+        sub_expires_at = arrow.get(item["current_period_start"]).shift(days=5)
+
     else:
         # Create the entry but wait for invoice.paid
         # to actually enable it
@@ -355,21 +360,9 @@ async def handle_customer_subscription_updated(event) -> None:
 
 async def handle_customer_subscription_deleted(event) -> None:
     """Handle the deletion of a subscription as it has ended."""
-    skus = await extract_subscription_skus(event)
-    for sku in skus:
-        if sku == constants.STRIPE_PRICE_ID_GUILDS_MONTHLY:
-            # Revoke guild premium tokens
-            subscription_id: str = event["data"]["object"]["id"]
-            await GuildTokens.delete().where(
-                GuildTokens.subscription_id == subscription_id
-            )
-        elif sku == constants.STRIPE_PRICE_ID_USERS_MONTHLY:
-            # Revoke user premium tokens
-            subscription_id: str = event["data"]["object"]["id"]
-            await UserTokens.delete().where(UserTokens.subscription_id == subscription_id)
-
-        else:
-            logger.debug("Unknown subscription sku: %s", sku)
+    subscription_id: str = event["data"]["object"]["id"]
+    await UserTokens.delete().where(UserTokens.subscription_id == subscription_id)
+    await GuildTokens.delete().where(GuildTokens.subscription_id == subscription_id)
 
 
 async def handle_invoice_payment_failed(event) -> None:
