@@ -365,15 +365,6 @@ async def handle_customer_subscription_deleted(event) -> None:
     await GuildTokens.delete().where(GuildTokens.subscription_id == subscription_id)
 
 
-async def handle_invoice_payment_failed(event) -> None:
-    """Handle payment failures.
-
-    I don't think we need to do more than this at this point?
-    Maybe in future we can notify the user but I think stripe does this.
-    """
-    await handle_customer_subscription_deleted(event)
-
-
 async def handle_invoice_paid(event) -> None:
     """Handle paid invoices."""
     if event["data"]["object"]["status"] != "paid":

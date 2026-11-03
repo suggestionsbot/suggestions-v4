@@ -75,9 +75,6 @@ class StripeController(Controller):
             elif event_type == "customer.subscription.deleted":
                 await payments.handle_customer_subscription_deleted(event)
 
-            elif event_type == "invoice.payment_failed":
-                await payments.handle_invoice_payment_failed(event)
-
             elif event_type == "invoice.paid":
                 await payments.handle_invoice_paid(event)
 

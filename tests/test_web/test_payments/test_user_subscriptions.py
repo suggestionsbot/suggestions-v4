@@ -448,38 +448,6 @@ async def test_user_subscription_deleted_with_associated_guild_tokens(
     assert gt_2 == QUANTITY_OF_ZERO
 
 
-# noinspection DuplicatedCode
-async def test_user_invoice_payment_failed_with_associated_guild_tokens(
-    monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
-    redis_client: aioredis.Redis,
-) -> None:
-    user = Given.user(BASE_CUSTOMER_EMAIL).object
-    Given.user_tokens_exist(
-        UserTokenT(
-            subscription_id=BASE_SUBSCRIPTION_EVENT_ID,
-            subscription_item_id=BASE_SUBSCRIPTION_ITEM_ID,
-            user=user,
-            user_id=DISCORD_USER_ID,
-        )
-    )
-    event: EventT = deepcopy(empty_event)
-    subscription: SubscriptionT = deepcopy(empty_sub)
-    subscription["items"]["data"].append(guild_price_id)
-    subscription["items"]["data"].append(user_price_id)
-    event["data"]["object"] = subscription
-    When.stripe_subscription_is_patched_with_(monkeypatch, subscription)
-
-    gt_1 = await UserTokens().count()
-    assert gt_1 == QUANTITY_OF_ONE
-
-    with caplog.at_level(logging.DEBUG):
-        await payments.handle_invoice_payment_failed(event)
-
-    gt_2 = await UserTokens().count()
-    assert gt_2 == QUANTITY_OF_ZERO
-
-
 async def test_user_subscription_deleted_with_no_associated_guild_tokens(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
