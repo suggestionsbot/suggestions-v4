@@ -1,3 +1,4 @@
+import contextlib
 from bot.constants import MAX_CONTENT_LENGTH
 from bot.hooks import early_ephemeral_defer
 import io
@@ -120,21 +121,24 @@ async def resolve_suggestion(  # noqa: PLR0915, PLR0912, C901
         else:
             if not thread.is_archived and not thread.is_locked:
                 # Thread is not already archived or locked
-                await thread.send(
-                    localisations.get_localized_string(
-                        "commands.resolve.responses.locking_thread",
-                        guild_config.primary_language,
-                    ),
-                )
-                await thread.edit(locked=True, archived=True)
-                logger.debug(
-                    "Locked thread for suggestion %s",
-                    suggestion.sID,
-                    extra={
-                        "suggestion.id": suggestion.sID,
-                        "interaction.guild.id": guild_config.guild_id,
-                    },
-                )
+                with contextlib.suppress(hikari.NotFoundError, hikari.ForbiddenError):
+                    await thread.send(
+                        localisations.get_localized_string(
+                            "commands.resolve.responses.locking_thread",
+                            guild_config.primary_language,
+                        ),
+                    )
+
+                with contextlib.suppress(hikari.NotFoundError, hikari.ForbiddenError):
+                    await thread.edit(locked=True, archived=True)
+                    logger.debug(
+                        "Locked thread for suggestion %s",
+                        suggestion.sID,
+                        extra={
+                            "suggestion.id": suggestion.sID,
+                            "interaction.guild.id": guild_config.guild_id,
+                        },
+                    )
 
     # Edit message inline with guild configuration
     if guild_config.keep_logs:
