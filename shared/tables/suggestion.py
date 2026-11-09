@@ -473,9 +473,11 @@ class Suggestions(Table, AuditMixin):
             votes = io.StringIO()
             up_votes, down_votes, neutral_votes = await self.vote_counts()
             votes.write(f"{constants.DEFAULT_UP_VOTE.mention}: **{up_votes}**\n")
-            votes.write(
-                f"{constants.DEFAULT_NEUTRAL_VOTE.mention}: **{neutral_votes}**\n"
-            )
+            if guild_config.allow_neutral_votes:
+                votes.write(
+                    f"{constants.DEFAULT_NEUTRAL_VOTE.mention}: **{neutral_votes}**\n"
+                )
+
             votes.write(f"{constants.DEFAULT_DOWN_VOTE.mention}: **{down_votes}**")
 
             components.append(
