@@ -144,6 +144,18 @@ class SuggestionMenu:
             )
             return
 
+        if (
+            vote == SuggestionsVoteTypeEnum.NeutralVote
+            and not guild_config.allow_neutral_votes
+        ):
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "values.no_neutral_votes", user_config.primary_language
+                ),
+                ephemeral=True,
+            )
+            return
+
         async with SuggestionVotes._meta.db.transaction():
             was_created = False
             try_insert = (

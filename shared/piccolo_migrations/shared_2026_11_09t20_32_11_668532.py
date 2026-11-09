@@ -1,8 +1,10 @@
 from piccolo.apps.migrations.auto.migration_manager import MigrationManager
 from enum import Enum
+from piccolo.columns.column_types import Boolean
 from piccolo.columns.column_types import Varchar
+from piccolo.columns.indexes import IndexMethod
 
-ID = "2026-11-09T18:25:13:069126"
+ID = "2026-11-09T20:32:11:668532"
 VERSION = "1.38.0"
 DESCRIPTION = ""
 
@@ -10,6 +12,27 @@ DESCRIPTION = ""
 async def forwards():
     manager = MigrationManager(
         migration_id=ID, app_name="shared", description=DESCRIPTION
+    )
+
+    manager.add_column(
+        table_class_name="GuildConfigs",
+        tablename="guild_configs",
+        column_name="allow_neutral_votes",
+        db_column_name="allow_neutral_votes",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": True,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
     )
 
     manager.alter_column(

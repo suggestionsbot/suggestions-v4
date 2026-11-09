@@ -330,10 +330,10 @@ class Suggestions(Table, AuditMixin):
         locale: hikari.Locale | str,
         localisations: Localisation,
         *,
+        guild_config: GuildConfigs,
         as_resolved: bool = False,
         exclude_buttons: bool = False,
         exclude_votes: bool = False,
-        guild_config: GuildConfigs | None = None,
         prefix: str | None = None,
     ) -> list[
         ContainerComponentBuilder | MessageActionRowBuilder | TextDisplayComponentBuilder
@@ -540,26 +540,29 @@ class Suggestions(Table, AuditMixin):
             )
         )
         if not exclude_buttons:
-            result.append(
-                hikari.impl.MessageActionRowBuilder(
-                    components=[
-                        hikari.impl.InteractiveButtonBuilder(
-                            style=hikari.ButtonStyle.SECONDARY,
-                            emoji=constants.DEFAULT_UP_VOTE,
-                            custom_id=f"v4_suggestions_up_vote:{self.sID}",
-                        ),
-                        hikari.impl.InteractiveButtonBuilder(
-                            style=hikari.ButtonStyle.SECONDARY,
-                            emoji=constants.DEFAULT_NEUTRAL_VOTE,
-                            custom_id=f"v4_suggestions_neutral_vote:{self.sID}",
-                        ),
-                        hikari.impl.InteractiveButtonBuilder(
-                            style=hikari.ButtonStyle.SECONDARY,
-                            emoji=constants.DEFAULT_DOWN_VOTE,
-                            custom_id=f"v4_suggestions_down_vote:{self.sID}",
-                        ),
-                    ]
+            vote_components = [
+                hikari.impl.InteractiveButtonBuilder(
+                    style=hikari.ButtonStyle.SECONDARY,
+                    emoji=constants.DEFAULT_UP_VOTE,
+                    custom_id=f"v4_suggestions_up_vote:{self.sID}",
+                )
+            ]
+            if guild_config.allow_neutral_votes:
+                vote_components.append(
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.SECONDARY,
+                        emoji=constants.DEFAULT_NEUTRAL_VOTE,
+                        custom_id=f"v4_suggestions_neutral_vote:{self.sID}",
+                    )
+                )
+
+            vote_components.append(
+                hikari.impl.InteractiveButtonBuilder(
+                    style=hikari.ButtonStyle.SECONDARY,
+                    emoji=constants.DEFAULT_DOWN_VOTE,
+                    custom_id=f"v4_suggestions_down_vote:{self.sID}",
                 )
             )
+            result.append(hikari.impl.MessageActionRowBuilder(components=vote_components))  # ty: ignore[invalid-argument-type]
 
         return result

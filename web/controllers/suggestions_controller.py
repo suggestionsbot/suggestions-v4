@@ -95,6 +95,7 @@ async def suggestion_context(suggestion: Suggestions) -> dict:
         "up_vote_emoji": b_constants.DEFAULT_UP_VOTE,
         "down_vote_emoji": b_constants.DEFAULT_DOWN_VOTE,
         "neutral_vote_emoji": b_constants.DEFAULT_NEUTRAL_VOTE,
+        "show_neutral_vote": suggestion.guild_configuration.allow_neutral_votes,
     }
 
 

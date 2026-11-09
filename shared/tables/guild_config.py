@@ -110,6 +110,10 @@ class GuildConfigs(AuditMixin, Table):
         help_text="If True, moderators can be anonymous when suggestions "
         "are resolved or when adding notes",
     )
+    allow_neutral_votes = Boolean(
+        default=True,
+        help_text="If True, let users vote neutrally on suggestions",
+    )
     blocked_users = Array(
         BigInt(),
         help_text="A list of users who cannot make suggestions",

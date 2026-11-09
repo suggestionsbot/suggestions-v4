@@ -263,6 +263,7 @@ async def notify_users_of_new_suggestion(
                 localisations=LOCALISATIONS,
                 exclude_buttons=True,
                 exclude_votes=True,
+                guild_config=guild_config,
             )
             async with HandleClientHTTPResponse(
                 inspect.currentframe().f_code.co_name,  # ty:ignore[unresolved-attribute],
