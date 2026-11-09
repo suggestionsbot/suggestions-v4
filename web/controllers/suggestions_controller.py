@@ -79,7 +79,7 @@ async def suggestion_context(suggestion: Suggestions) -> dict:
     submitter = person(suggestion.author_display_name)
     submitter["avatar_url"] = await avatar_url(submitter["user_id"])
 
-    up_votes, down_votes = await suggestion.vote_counts()
+    up_votes, down_votes, neutral_votes = await suggestion.vote_counts()
     return {
         "suggestion": suggestion,
         "submitter": submitter,
@@ -87,6 +87,7 @@ async def suggestion_context(suggestion: Suggestions) -> dict:
         "resolved_by": person(suggestion.resolved_by_display_text),
         "up_votes": up_votes,
         "down_votes": down_votes,
+        "neutral_votes": neutral_votes,
         "thread_url": suggestion.thread_jump_link,
         "created": timestamp(suggestion.created_at),
         "resolved_at": timestamp(suggestion.resolved_at),

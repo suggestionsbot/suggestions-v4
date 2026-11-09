@@ -191,7 +191,7 @@ class GuildConfigs(AuditMixin, Table):
         self,
         *,
         ctx: lightbulb.Context | lightbulb.components.MenuContext,
-        locale: hikari.Locale,
+        locale: hikari.Locale | str,
         skip_log_channel_check: bool = False,
     ) -> bool:
         """Returns true if the user was informed the guild still requires setup."""

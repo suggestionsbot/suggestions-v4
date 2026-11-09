@@ -73,8 +73,6 @@ async def main():
         from bot.extensions.view_voters import (
             ViewVotersCmd,  # noqa
             ViewVoterMessageCommand,
-            ViewUpVoterMessageCommand,
-            ViewDownVoterMessageCommand,
         )
 
         client.register(CONFIGURE_GROUP)
@@ -85,8 +83,6 @@ async def main():
         client.register(VIEW_GROUP)
         client.register(ResolveMessageCommand)
         client.register(ViewVoterMessageCommand)
-        client.register(ViewUpVoterMessageCommand)
-        client.register(ViewDownVoterMessageCommand)
         await client.load_extensions(
             "bot.extensions.suggest",
             "bot.extensions.generic",
