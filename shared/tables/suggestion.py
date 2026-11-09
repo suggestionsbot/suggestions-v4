@@ -189,7 +189,7 @@ class Suggestions(Table, AuditMixin):
         self.state_raw = value.value
 
     async def vote_counts(self) -> tuple[int, int, int]:
-        """(up votes, down votes) in one query."""
+        """(up votes, down votes, neutral votes) in one query."""
         from shared.tables import SuggestionVotes, SuggestionsVoteTypeEnum
 
         rows = await (
