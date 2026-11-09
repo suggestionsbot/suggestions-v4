@@ -41,7 +41,6 @@ class SuggestionVotes(Table, AuditMixin):
         index=True,
     )
     user_id = BigInt(index=True, help_text="Who put this vote down")
-    # Currently just up vote and down vote but this is future proofing
     vote_type = Varchar(length=11, choices=SuggestionsVoteTypeEnum)
     voter_display_name_raw = Text(
         help_text="How should we display the voter? Either name or <Anonymous>",

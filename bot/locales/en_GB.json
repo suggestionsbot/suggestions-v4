@@ -405,8 +405,6 @@
   "message_addons.product_updates": "Want to be in the know when new features drop? Join our discord at <https://suggestions.gg/discord>",
   "message_addons.read_changelog": "On top of this, we would also just like to inform you that we have recently released a new version of the bot. We'd recommend reading our changelog at <https://docs.suggestions.gg/> to learn about what has changed. Thank you!",
   "message_commands.resolve.name": "Resolve Suggestion",
-  "message_commands.view_down_voters.name": "View Down Voters",
-  "message_commands.view_up_voters.name": "View Up Voters",
   "message_commands.view_voters.name": "View Voters",
   "saq.notify_users_of_new_suggestion.responses.suggestion_created": "Hey $AUTHOR.\nYour suggestion has been sent to $CHANNEL to be voted on!\n\nI have attached a copy of your suggestion below for reference. You can also find the version containing votes here: $SUGGESTION_LINK",
   "saq.notify_users_of_new_suggestion.responses.suggestion_created.footer": "Guild ID: $GUILD_ID | sID: $SID",
@@ -435,7 +433,7 @@
   "values.suggestion_neutral_vote_modified_vote": "I have changed your vote to a neutral vote for this suggestion.\nThe suggestion will be updated shortly.",
   "values.suggestion_up_vote_registered_vote": "Thanks!\nI have registered your up vote.",
   "values.suggestion_neutral_vote_registered_vote": "Thanks!\nI have registered your neutral vote.",
-  "values.tense_up_vote": "Up Voted",
-  "values.tense_down_vote": "Down Voted",
-  "values.tense_neutral_vote": "Neutral Voted"
+  "values.tense_up_vote": "up voted",
+  "values.tense_down_vote": "down voted",
+  "values.tense_neutral_vote": "voted neutrally on"
 }
