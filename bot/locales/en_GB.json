@@ -315,7 +315,7 @@
   "menus.guild_configuration.responses.generic_dm_messages_disabled.disabled": "The bot will not DM users on actions such as new suggestions.",
   "menus.guild_configuration.responses.generic_dm_messages_disabled.enabled": "The bot will DM users on actions such as new suggestions.",
   "menus.guild_configuration.responses.allow_neutral_votes.disabled": "Users will not be able to cast neutral votes on suggestions.",
-  "menus.guild_configuration.responses.allow_neutral_votes.enabled": "Users can now cast neutral votes on suggestions. To see the neutral button on existing suggestions without it, cast a vote and wait roughly ten seconds for the button to appear.",
+  "menus.guild_configuration.responses.allow_neutral_votes.enabled": "Users can now cast neutral votes on suggestions. Existing suggestions will show the neutral button shortly after their next vote.",
   "menus.guild_configuration.responses.keep_logs.set": "Suggestion logs will be kept in your suggestions channel.",
   "menus.guild_configuration.responses.log_channel_id.empty": "I'm sorry but suggestion log channel choices cannot be empty. Please try again and select a new channel.",
   "menus.guild_configuration.responses.log_channel_id.set": "I have set this guilds log channel to $CHANNEL",
