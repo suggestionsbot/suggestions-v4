@@ -111,6 +111,9 @@ async def build_user_resolution_voter_notification(
             vote_key = "values.tense_down_vote"
         case SuggestionsVoteTypeEnum.NeutralVote:
             vote_key = "values.tense_neutral_vote"
+        case _:
+            msg = f"Unexpected vote of {vote.vote_type_enum}"
+            raise ValueError(msg)
 
     return [
         hikari.impl.ContainerComponentBuilder(

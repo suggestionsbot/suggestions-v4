@@ -74,6 +74,9 @@ async def get_vote_data(
                     emoji = DEFAULT_DOWN_VOTE
                 case SuggestionsVoteTypeEnum.NeutralVote:
                     emoji = DEFAULT_NEUTRAL_VOTE
+                case _:
+                    msg = f"Unexpected vote of {item.vote_type_enum}"
+                    raise ValueError(msg)
 
             text.write(f"{emoji} {item.voter_display_name}\n")
 

@@ -437,8 +437,11 @@ async def create_bot(  # noqa: PLR0915, C901
                         vote_enum = SuggestionsVoteTypeEnum.UpVote
                     case "v4_suggestions_down_vote":
                         vote_enum = SuggestionsVoteTypeEnum.DownVote
-                    case _:
+                    case "v4_suggestions_neutral_vote":
                         vote_enum = SuggestionsVoteTypeEnum.NeutralVote
+                    case _:
+                        msg = f"Unexpected custom ID of {custom_id}"
+                        raise ValueError(msg)  # noqa: TRY301
 
                 component_key = f"suggestion {vote_enum.value}"
 

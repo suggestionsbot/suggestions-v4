@@ -209,6 +209,9 @@ class SuggestionMenu:
                         key = "values.suggestion_down_vote_already_voted"
                     case SuggestionsVoteTypeEnum.NeutralVote:
                         key = "values.suggestion_neutral_vote_already_voted"
+                    case _:
+                        msg = f"Unexpected vote of {vote}"
+                        raise ValueError(msg)
 
                 await ctx.respond(
                     localisations.get_localized_string(key, user_config.primary_language),
@@ -225,6 +228,9 @@ class SuggestionMenu:
                         key = "values.suggestion_down_vote_registered_vote"
                     case SuggestionsVoteTypeEnum.NeutralVote:
                         key = "values.suggestion_neutral_vote_registered_vote"
+                    case _:
+                        msg = f"Unexpected vote of {vote}"
+                        raise ValueError(msg)
 
                 logger.debug(
                     "Member voted on %s with %s",
@@ -247,6 +253,9 @@ class SuggestionMenu:
                         key = "values.suggestion_down_vote_modified_vote"
                     case SuggestionsVoteTypeEnum.NeutralVote:
                         key = "values.suggestion_neutral_vote_modified_vote"
+                    case _:
+                        msg = f"Unexpected vote of {vote}"
+                        raise ValueError(msg)
 
                 logger.debug(
                     "Member modified their vote on %s to a %s",
