@@ -118,7 +118,7 @@ DEFAULT_DOWN_VOTE = hikari.CustomEmoji(
 )
 DEFAULT_NEUTRAL_VOTE = hikari.CustomEmoji(
     id=(
-        hikari.Snowflake(1569229592021962833)
+        hikari.Snowflake(1569234606169788436)
         if value_to_bool(os.environ.get("DEBUG"))
         else hikari.Snowflake(1569229772394070026)
     ),

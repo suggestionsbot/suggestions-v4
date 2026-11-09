@@ -82,9 +82,9 @@
         {% call dc.text() %}
             <h3 class="dc-label">{{ "Results" if resolved else "Results So Far" }}</h3>
             <span class="dc-votes">
-                {{ dc.unicode_emoji("✅", "Up votes") }}: <strong>{{ up_votes }}</strong><br>
-                {{ dc.unicode_emoji("➖", "Neutral votes") }}: <strong>{{ neutral_votes }}</strong><br>
-                {{ dc.unicode_emoji("❌", "Down votes") }}: <strong>{{ down_votes }}</strong>
+                {{ dc.emoji(up_vote_emoji.id, up_vote_emoji.name, label="Up votes") }}: <strong>{{ up_votes }}</strong><br>
+                {{ dc.emoji(neutral_vote_emoji.id, neutral_vote_emoji.name, label="Neutral votes") }}: <strong>{{ neutral_votes }}</strong><br>
+                {{ dc.emoji(down_vote_emoji.id, down_vote_emoji.name, label="Down votes") }}: <strong>{{ down_votes }}</strong>
             </span>
         {% endcall %}
 

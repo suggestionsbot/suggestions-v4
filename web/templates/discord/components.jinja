@@ -173,9 +173,10 @@
 {%- endmacro %}
 
 {# Custom Discord emoji by id. #}
-{%- macro emoji(id, name="emoji", animated=false) -%}
-    <img class="dc-emoji" src="https://cdn.discordapp.com/emojis/{{ id }}.{{ 'gif' if animated else 'webp' }}?size=48"
-         alt=":{{ name }}:" draggable="false" loading="lazy" referrerpolicy="no-referrer">
+{%- macro emoji(id, name="emoji", animated=false, label=none) -%}
+    {%- set text = label or ':' ~ name ~ ':' -%}
+    <img class="dc-emoji" src="https://cdn.discordapp.com/emojis/{{ id }}.{{ 'gif' if animated else 'webp' }}?size=64"
+         alt="{{ text }}" title="{{ text }}" draggable="false" loading="lazy" referrerpolicy="no-referrer">
 {%- endmacro %}
 
 {# Unicode emoji drawn by the viewer's own emoji font, e.g. unicode_emoji("✅", "Up votes").

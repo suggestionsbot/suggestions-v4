@@ -18,6 +18,7 @@ from web.guards import ensure_user_is_in_guild
 from web.middleware import EnsureAuth
 from web.tables import OAuthEntry
 from web.util import html_template
+from bot import constants as b_constants
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +92,9 @@ async def suggestion_context(suggestion: Suggestions) -> dict:
         "thread_url": suggestion.thread_jump_link,
         "created": timestamp(suggestion.created_at),
         "resolved_at": timestamp(suggestion.resolved_at),
+        "up_vote_emoji": b_constants.DEFAULT_UP_VOTE,
+        "down_vote_emoji": b_constants.DEFAULT_DOWN_VOTE,
+        "neutral_vote_emoji": b_constants.DEFAULT_NEUTRAL_VOTE,
     }
 
 
