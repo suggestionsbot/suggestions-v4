@@ -144,6 +144,18 @@ class SuggestionMenu:
             )
             return
 
+        if (
+            vote == SuggestionsVoteTypeEnum.NeutralVote
+            and not guild_config.allow_neutral_votes
+        ):
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "values.no_neutral_votes", user_config.primary_language
+                ),
+                ephemeral=True,
+            )
+            return
+
         async with SuggestionVotes._meta.db.transaction():
             was_created = False
             try_insert = (
@@ -190,11 +202,17 @@ class SuggestionMenu:
 
             if not was_created and vote_obj.vote_type == vote.value:
                 # Trying to vote again for the same item
-                key = (
-                    "values.suggestion_up_vote_already_voted"
-                    if vote == SuggestionsVoteTypeEnum.UpVote
-                    else "values.suggestion_down_vote_already_voted"
-                )
+                match vote:
+                    case SuggestionsVoteTypeEnum.UpVote:
+                        key = "values.suggestion_up_vote_already_voted"
+                    case SuggestionsVoteTypeEnum.DownVote:
+                        key = "values.suggestion_down_vote_already_voted"
+                    case SuggestionsVoteTypeEnum.NeutralVote:
+                        key = "values.suggestion_neutral_vote_already_voted"
+                    case _:
+                        msg = f"Unexpected vote of {vote}"
+                        raise ValueError(msg)
+
                 await ctx.respond(
                     localisations.get_localized_string(key, user_config.primary_language),
                     ephemeral=True,
@@ -203,11 +221,17 @@ class SuggestionMenu:
 
             if was_created:
                 # New vote
-                key = (
-                    "values.suggestion_up_vote_registered_vote"
-                    if vote == SuggestionsVoteTypeEnum.UpVote
-                    else "values.suggestion_down_vote_registered_vote"
-                )
+                match vote:
+                    case SuggestionsVoteTypeEnum.UpVote:
+                        key = "values.suggestion_up_vote_registered_vote"
+                    case SuggestionsVoteTypeEnum.DownVote:
+                        key = "values.suggestion_down_vote_registered_vote"
+                    case SuggestionsVoteTypeEnum.NeutralVote:
+                        key = "values.suggestion_neutral_vote_registered_vote"
+                    case _:
+                        msg = f"Unexpected vote of {vote}"
+                        raise ValueError(msg)
+
                 logger.debug(
                     "Member voted on %s with %s",
                     suggestion.sID,
@@ -222,11 +246,17 @@ class SuggestionMenu:
 
             else:
                 # Vote has changed
-                key = (
-                    "values.suggestion_down_vote_modified_vote"
-                    if vote == SuggestionsVoteTypeEnum.DownVote
-                    else "values.suggestion_up_vote_modified_vote"
-                )
+                match vote:
+                    case SuggestionsVoteTypeEnum.UpVote:
+                        key = "values.suggestion_up_vote_modified_vote"
+                    case SuggestionsVoteTypeEnum.DownVote:
+                        key = "values.suggestion_down_vote_modified_vote"
+                    case SuggestionsVoteTypeEnum.NeutralVote:
+                        key = "values.suggestion_neutral_vote_modified_vote"
+                    case _:
+                        msg = f"Unexpected vote of {vote}"
+                        raise ValueError(msg)
+
                 logger.debug(
                     "Member modified their vote on %s to a %s",
                     suggestion.sID,

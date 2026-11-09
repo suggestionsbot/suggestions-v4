@@ -188,8 +188,8 @@ class Suggestions(Table, AuditMixin):
     def state(self, value: SuggestionStateEnum) -> None:
         self.state_raw = value.value
 
-    async def vote_counts(self) -> tuple[int, int]:
-        """(up votes, down votes) in one query."""
+    async def vote_counts(self) -> tuple[int, int, int]:
+        """(up votes, down votes, neutral votes) in one query."""
         from shared.tables import SuggestionVotes, SuggestionsVoteTypeEnum
 
         rows = await (
@@ -201,6 +201,7 @@ class Suggestions(Table, AuditMixin):
         return (
             counts.get(SuggestionsVoteTypeEnum.UpVote.value, 0),
             counts.get(SuggestionsVoteTypeEnum.DownVote.value, 0),
+            counts.get(SuggestionsVoteTypeEnum.NeutralVote.value, 0),
         )
 
     @property
@@ -329,10 +330,10 @@ class Suggestions(Table, AuditMixin):
         locale: hikari.Locale | str,
         localisations: Localisation,
         *,
+        guild_config: GuildConfigs,
         as_resolved: bool = False,
         exclude_buttons: bool = False,
         exclude_votes: bool = False,
-        guild_config: GuildConfigs | None = None,
         prefix: str | None = None,
     ) -> list[
         ContainerComponentBuilder | MessageActionRowBuilder | TextDisplayComponentBuilder
@@ -470,8 +471,13 @@ class Suggestions(Table, AuditMixin):
                 )
             )
             votes = io.StringIO()
-            up_votes, down_votes = await self.vote_counts()
+            up_votes, down_votes, neutral_votes = await self.vote_counts()
             votes.write(f"{constants.DEFAULT_UP_VOTE.mention}: **{up_votes}**\n")
+            if guild_config.allow_neutral_votes:
+                votes.write(
+                    f"{constants.DEFAULT_NEUTRAL_VOTE.mention}: **{neutral_votes}**\n"
+                )
+
             votes.write(f"{constants.DEFAULT_DOWN_VOTE.mention}: **{down_votes}**")
 
             components.append(
@@ -536,21 +542,29 @@ class Suggestions(Table, AuditMixin):
             )
         )
         if not exclude_buttons:
-            result.append(
-                hikari.impl.MessageActionRowBuilder(
-                    components=[
-                        hikari.impl.InteractiveButtonBuilder(
-                            style=hikari.ButtonStyle.SECONDARY,
-                            emoji=constants.DEFAULT_UP_VOTE,
-                            custom_id=f"v4_suggestions_up_vote:{self.sID}",
-                        ),
-                        hikari.impl.InteractiveButtonBuilder(
-                            style=hikari.ButtonStyle.SECONDARY,
-                            emoji=constants.DEFAULT_DOWN_VOTE,
-                            custom_id=f"v4_suggestions_down_vote:{self.sID}",
-                        ),
-                    ]
+            vote_components = [
+                hikari.impl.InteractiveButtonBuilder(
+                    style=hikari.ButtonStyle.SECONDARY,
+                    emoji=constants.DEFAULT_UP_VOTE,
+                    custom_id=f"v4_suggestions_up_vote:{self.sID}",
+                )
+            ]
+            if guild_config.allow_neutral_votes:
+                vote_components.append(
+                    hikari.impl.InteractiveButtonBuilder(
+                        style=hikari.ButtonStyle.SECONDARY,
+                        emoji=constants.DEFAULT_NEUTRAL_VOTE,
+                        custom_id=f"v4_suggestions_neutral_vote:{self.sID}",
+                    )
+                )
+
+            vote_components.append(
+                hikari.impl.InteractiveButtonBuilder(
+                    style=hikari.ButtonStyle.SECONDARY,
+                    emoji=constants.DEFAULT_DOWN_VOTE,
+                    custom_id=f"v4_suggestions_down_vote:{self.sID}",
                 )
             )
+            result.append(hikari.impl.MessageActionRowBuilder(components=vote_components))  # ty: ignore[invalid-argument-type]
 
         return result

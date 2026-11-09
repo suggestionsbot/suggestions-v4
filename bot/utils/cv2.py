@@ -104,11 +104,17 @@ async def build_user_resolution_notification(
 async def build_user_resolution_voter_notification(
     *, user_config: UserConfigs, suggestion: Suggestions, vote: SuggestionVotes
 ) -> list[hikari.impl.ContainerComponentBuilder]:
-    vote_key = (
-        "values.tense_up_vote"
-        if vote.vote_type_enum == SuggestionsVoteTypeEnum.UpVote
-        else "values.tense_down_vote"
-    )
+    match vote.vote_type_enum:
+        case SuggestionsVoteTypeEnum.UpVote:
+            vote_key = "values.tense_up_vote"
+        case SuggestionsVoteTypeEnum.DownVote:
+            vote_key = "values.tense_down_vote"
+        case SuggestionsVoteTypeEnum.NeutralVote:
+            vote_key = "values.tense_neutral_vote"
+        case _:
+            msg = f"Unexpected vote of {vote.vote_type_enum}"
+            raise ValueError(msg)
+
     return [
         hikari.impl.ContainerComponentBuilder(
             accent_color=suggestion.color,

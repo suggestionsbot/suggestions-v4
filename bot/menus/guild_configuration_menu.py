@@ -108,6 +108,7 @@ class GuildConfigurationMenus:
             "can_have_images_in_suggestions",
             "ping_on_thread_creation",
             "allow_anonymous_moderators",
+            "allow_neutral_votes",
         ):
             # These are all bool answers so is fine to do as is
             result = commons.value_to_bool(event_values[0])
@@ -970,6 +971,39 @@ class GuildConfigurationMenus:
                                         ),
                                         value="no",
                                         is_default=not guild_config.can_have_images_in_suggestions,  # noqa: E501
+                                    ),
+                                ],
+                                min_values=1,
+                                max_values=1,
+                            ),
+                        ],
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.base_menu.can_vote_neutral",
+                            user_config.primary_language,
+                        ),
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.TextSelectMenuBuilder(
+                                custom_id=f"gcm:{link_id}:allow_neutral_votes",
+                                options=[
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.yes",
+                                            user_config.primary_language,
+                                        ),
+                                        value="yes",
+                                        is_default=guild_config.allow_neutral_votes,
+                                    ),
+                                    hikari.impl.SelectOptionBuilder(
+                                        label=localisations.get_localized_string(
+                                            "menus.guild_configuration.no",
+                                            user_config.primary_language,
+                                        ),
+                                        value="no",
+                                        is_default=not guild_config.allow_neutral_votes,  # noqa: E501
                                     ),
                                 ],
                                 min_values=1,

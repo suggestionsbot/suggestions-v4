@@ -13,6 +13,7 @@ from bot.constants import (
     PAGINATOR_OBJECTS,
     DEFAULT_UP_VOTE,
     DEFAULT_DOWN_VOTE,
+    DEFAULT_NEUTRAL_VOTE,
 )
 from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
@@ -66,11 +67,17 @@ async def get_vote_data(
     for group in batched(votes, 25):
         text = io.StringIO()
         for item in group:
-            emoji = (
-                DEFAULT_UP_VOTE
-                if item.vote_type_enum == SuggestionsVoteTypeEnum.UpVote
-                else DEFAULT_DOWN_VOTE
-            )
+            match item.vote_type_enum:
+                case SuggestionsVoteTypeEnum.UpVote:
+                    emoji = DEFAULT_UP_VOTE
+                case SuggestionsVoteTypeEnum.DownVote:
+                    emoji = DEFAULT_DOWN_VOTE
+                case SuggestionsVoteTypeEnum.NeutralVote:
+                    emoji = DEFAULT_NEUTRAL_VOTE
+                case _:
+                    msg = f"Unexpected vote of {item.vote_type_enum}"
+                    raise ValueError(msg)
+
             text.write(f"{emoji} {item.voter_display_name}\n")
 
         data.append(text.getvalue())
@@ -140,6 +147,11 @@ class ViewVotersCmd(
                 "Down",
                 localize=True,
             ),
+            lightbulb.Choice(
+                "commands.view.voters.options.filter.4.name",
+                "Neutral",
+                localize=True,
+            ),
         ],
     )
 
@@ -176,6 +188,8 @@ class ViewVotersCmd(
             if self.filter_raw == "Up"
             else SuggestionsVoteTypeEnum.DownVote
             if self.filter_raw == "Down"
+            else SuggestionsVoteTypeEnum.NeutralVote
+            if self.filter_raw == "Neutral"
             else None
         )
 
@@ -240,118 +254,6 @@ class ViewVoterMessageCommand(
             ctx=ctx,
             user_config=user_config,
             vote_type=None,
-            localisations=localisations,
-        )
-        if data is None:
-            return
-
-        await view_voters_for_suggestion(
-            suggestion=suggestion,
-            data=data,
-            ctx=ctx,
-            user_config=user_config,
-        )
-        return
-
-
-class ViewUpVoterMessageCommand(
-    lightbulb.MessageCommand,
-    name="message_commands.view_up_voters.name",
-    localize=True,
-    hooks=[early_ephemeral_defer],
-    contexts=[hikari.ApplicationContextType.GUILD],
-):
-    @lightbulb.invoke
-    async def invoke(
-        self,
-        ctx: lightbulb.Context,
-        guild_config: GuildConfigs,
-        user_config: UserConfigs,
-        localisations: Localisation,
-    ) -> None:
-        # 'self.target' contains the message object the command was executed on
-        await CommandInvokes.create(
-            user_config=user_config,
-            guild_config=guild_config,
-            action="View Up Voters",
-            command_type=CommandTypes.MESSAGE_COMMAND,
-        )
-        suggestion: Suggestions | None = await Suggestions.fetch_suggestion_by_message(
-            channel_id=self.target.channel_id,
-            message_id=self.target.id,
-            guild_id=guild_config.guild_id,
-        )
-        if suggestion is None:
-            await ctx.respond(
-                localisations.get_localized_string(
-                    "commands.view.voters.responses.not_found",
-                    user_config.primary_language,
-                ),
-                ephemeral=True,
-            )
-            return
-
-        data = await get_vote_data(
-            suggestion=suggestion,
-            ctx=ctx,
-            user_config=user_config,
-            vote_type=SuggestionsVoteTypeEnum.UpVote,
-            localisations=localisations,
-        )
-        if data is None:
-            return
-
-        await view_voters_for_suggestion(
-            suggestion=suggestion,
-            data=data,
-            ctx=ctx,
-            user_config=user_config,
-        )
-        return
-
-
-class ViewDownVoterMessageCommand(
-    lightbulb.MessageCommand,
-    name="message_commands.view_down_voters.name",
-    localize=True,
-    hooks=[early_ephemeral_defer],
-    contexts=[hikari.ApplicationContextType.GUILD],
-):
-    @lightbulb.invoke
-    async def invoke(
-        self,
-        ctx: lightbulb.Context,
-        guild_config: GuildConfigs,
-        user_config: UserConfigs,
-        localisations: Localisation,
-    ) -> None:
-        # 'self.target' contains the message object the command was executed on
-        await CommandInvokes.create(
-            user_config=user_config,
-            guild_config=guild_config,
-            action="View Down Voters",
-            command_type=CommandTypes.MESSAGE_COMMAND,
-        )
-        suggestion: Suggestions | None = await Suggestions.fetch_suggestion_by_message(
-            channel_id=self.target.channel_id,
-            message_id=self.target.id,
-            guild_id=guild_config.guild_id,
-        )
-        if suggestion is None:
-            await ctx.respond(
-                localisations.get_localized_string(
-                    "commands.view.voters.responses.not_found",
-                    user_config.primary_language,
-                ),
-                ephemeral=True,
-            )
-            return
-
-        data = await get_vote_data(
-            suggestion=suggestion,
-            ctx=ctx,
-            user_config=user_config,
-            vote_type=SuggestionsVoteTypeEnum.DownVote,
             localisations=localisations,
         )
         if data is None:

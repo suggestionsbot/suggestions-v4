@@ -25,7 +25,7 @@ class ViewVotersPaginator:
         *,
         data: list[str],
         ctx: lightbulb.Context,
-        locale: hikari.Locale,
+        locale: hikari.Locale | str,
         pid: str,
         link_id: str,
         sid: str,
@@ -34,7 +34,7 @@ class ViewVotersPaginator:
         self._paged_data: list[str] = data
         self._guild_id: int = cast("int", ctx.guild_id)
         self._rest = ctx.interaction.app.rest
-        self._locale: hikari.Locale = locale
+        self._locale: hikari.Locale | str = locale
         self._pid: str = pid
         self._link_id: str = link_id
         self.original_interaction: hikari.CommandInteraction = ctx.interaction

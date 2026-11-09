@@ -116,6 +116,15 @@ DEFAULT_DOWN_VOTE = hikari.CustomEmoji(
     name="nerdError",
     is_animated=False,
 )
+DEFAULT_NEUTRAL_VOTE = hikari.CustomEmoji(
+    id=(
+        hikari.Snowflake(1569234606169788436)
+        if value_to_bool(os.environ.get("DEBUG"))
+        else hikari.Snowflake(1569229772394070026)
+    ),
+    name="nerdNeutral",
+    is_animated=False,
+)
 
 # Clustering stuff
 CLUSTER_NAME = os.environ.get("CLUSTER_NAME")

@@ -394,11 +394,14 @@ async def create_bot(  # noqa: PLR0915, C901
                 if not custom_id.endswith("e"):
                     custom_id = custom_id[:-1]
 
-                vote_enum = (
-                    SuggestionsVoteTypeEnum.UpVote
-                    if custom_id == "suggestion_up_vote"
-                    else SuggestionsVoteTypeEnum.DownVote
-                )
+                match custom_id:
+                    case "suggestion_up_vote":
+                        vote_enum = SuggestionsVoteTypeEnum.UpVote
+                    case "suggestion_down_vote":
+                        vote_enum = SuggestionsVoteTypeEnum.DownVote
+                    case _:
+                        vote_enum = SuggestionsVoteTypeEnum.NeutralVote
+
                 component_key = f"suggestion {vote_enum.value}"
 
             elif custom_id.startswith(
@@ -422,14 +425,24 @@ async def create_bot(  # noqa: PLR0915, C901
                 component_key = f"suggestion {vote_enum.value}"
 
             elif custom_id.startswith(
-                ("v4_suggestions_up_vote", "v4_suggestions_down_vote")
+                (
+                    "v4_suggestions_up_vote",
+                    "v4_suggestions_down_vote",
+                    "v4_suggestions_neutral_vote",
+                )
             ):
                 custom_id, suggestion_id = custom_id.split(":", maxsplit=2)
-                vote_enum = (
-                    SuggestionsVoteTypeEnum.UpVote
-                    if custom_id == "v4_suggestions_up_vote"
-                    else SuggestionsVoteTypeEnum.DownVote
-                )
+                match custom_id:
+                    case "v4_suggestions_up_vote":
+                        vote_enum = SuggestionsVoteTypeEnum.UpVote
+                    case "v4_suggestions_down_vote":
+                        vote_enum = SuggestionsVoteTypeEnum.DownVote
+                    case "v4_suggestions_neutral_vote":
+                        vote_enum = SuggestionsVoteTypeEnum.NeutralVote
+                    case _:
+                        msg = f"Unexpected custom ID of {custom_id}"
+                        raise ValueError(msg)  # noqa: TRY301
+
                 component_key = f"suggestion {vote_enum.value}"
 
             with OTEL_TRACER.start_as_current_span(component_key, otel_ctx) as span:
@@ -488,7 +501,11 @@ async def create_bot(  # noqa: PLR0915, C901
                         event=event,
                     )
 
-                elif component_key in ("suggestion UpVote", "suggestion DownVote"):
+                elif component_key in (
+                    "suggestion UpVote",
+                    "suggestion DownVote",
+                    "suggestion NeutralVote",
+                ):
                     await SuggestionMenu.handle_vote(
                         suggestion_id,
                         vote_enum,
