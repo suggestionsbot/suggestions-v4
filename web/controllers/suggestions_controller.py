@@ -91,9 +91,9 @@ async def suggestion_context(suggestion: Suggestions) -> dict:
         "thread_url": suggestion.thread_jump_link,
         "created": timestamp(suggestion.created_at),
         "resolved_at": timestamp(suggestion.resolved_at),
-        "up_vote_emoji": suggestion.guild_configuration.up_vote_emoji,
-        "down_vote_emoji": suggestion.guild_configuration.down_vote_emoji,
-        "neutral_vote_emoji": suggestion.guild_configuration.neutral_vote_emoji,
+        "up_vote_emoji": await suggestion.guild_configuration.up_vote_emoji(),
+        "down_vote_emoji": await suggestion.guild_configuration.down_vote_emoji(),
+        "neutral_vote_emoji": await suggestion.guild_configuration.neutral_vote_emoji(),
         "show_neutral_vote": suggestion.guild_configuration.allow_neutral_votes,
     }
 
