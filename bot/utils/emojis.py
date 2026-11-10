@@ -32,6 +32,7 @@ async def validate_emoji(
         reaction: str = custom.name
         emoji_id = custom.id
 
+    message = None
     try:
         message = await rest.create_message(
             channel,
@@ -51,8 +52,9 @@ async def validate_emoji(
         )
         raise ValueError(msg) from exc
     finally:
-        with contextlib.suppress(hikari.HTTPError):
-            await rest.delete_message(channel, message)
+        if message is not None:
+            with contextlib.suppress(hikari.HTTPError):
+                await rest.delete_message(channel, message)
 
     return parsed
 
