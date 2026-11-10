@@ -61,9 +61,11 @@ async def get_vote_data(
         return None
 
     data = []
-    up_vote_emoji = await suggestion.guild_configuration.up_vote_emoji()
-    down_vote_emoji = await suggestion.guild_configuration.down_vote_emoji()
-    neutral_vote_emoji = await suggestion.guild_configuration.neutral_vote_emoji()
+    (
+        up_vote_emoji,
+        down_vote_emoji,
+        neutral_vote_emoji,
+    ) = await suggestion.guild_configuration.get_voting_emojis()
     for group in batched(votes, 25):
         text = io.StringIO()
         for item in group:

@@ -159,44 +159,31 @@ class GuildConfigs(AuditMixin, Table):
         """Return the language as a Locale, str if the locale enum value doesn't exist."""
         return hikari.Locale(self.primary_language_raw)
 
-    async def up_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+    async def get_voting_emojis(
+        self,
+    ) -> tuple[
+        CustomEmoji | UnicodeEmoji, CustomEmoji | UnicodeEmoji, CustomEmoji | UnicodeEmoji
+    ]:
+        """Returns (Up, down, neutral) vote emojis."""
         if not await self.premium_is_enabled():
-            return DEFAULT_UP_VOTE
+            return DEFAULT_UP_VOTE, DEFAULT_DOWN_VOTE, DEFAULT_NEUTRAL_VOTE
 
-        if self.premium is None:
-            msg = "Guild premium not fetched when looking up voting emojis."
-            raise ValueError(msg)
-
-        if self.premium.up_vote_emoji is not None:
-            return bot.utils.emojis.emoji_from_db(self.premium.up_vote_emoji)
-
-        return DEFAULT_UP_VOTE
-
-    async def down_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
-        if not await self.premium_is_enabled():
-            return DEFAULT_DOWN_VOTE
-
-        if self.premium is None:
-            msg = "Guild premium not fetched when looking up voting emojis."
-            raise ValueError(msg)
-
-        if self.premium.down_vote_emoji is not None:
-            return bot.utils.emojis.emoji_from_db(self.premium.down_vote_emoji)
-
-        return DEFAULT_DOWN_VOTE
-
-    async def neutral_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
-        if not await self.premium_is_enabled():
-            return DEFAULT_NEUTRAL_VOTE
-
-        if self.premium is None:
-            msg = "Guild premium not fetched when looking up voting emojis."
-            raise ValueError(msg)
-
-        if self.premium.neutral_vote_emoji is not None:
-            return bot.utils.emojis.emoji_from_db(self.premium.neutral_vote_emoji)
-
-        return DEFAULT_NEUTRAL_VOTE
+        up = (
+            bot.utils.emojis.emoji_from_db(self.premium.up_vote_emoji)
+            if self.premium.up_vote_emoji is not None
+            else DEFAULT_UP_VOTE
+        )
+        down = (
+            bot.utils.emojis.emoji_from_db(self.premium.down_vote_emoji)
+            if self.premium.down_vote_emoji is not None
+            else DEFAULT_DOWN_VOTE
+        )
+        neutral = (
+            bot.utils.emojis.emoji_from_db(self.premium.neutral_vote_emoji)
+            if self.premium.neutral_vote_emoji is not None
+            else DEFAULT_NEUTRAL_VOTE
+        )
+        return up, down, neutral
 
     async def queue_sticky_button_edit(self, channel_id: int) -> None:
         """Queues a worker task to edit any sticky buttons in that channel."""

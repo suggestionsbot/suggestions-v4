@@ -465,9 +465,11 @@ class Suggestions(Table, AuditMixin):
                 hikari.impl.TextDisplayComponentBuilder(content=content.getvalue())
             )
 
-        up_vote_emoji = await guild_config.up_vote_emoji()
-        neutral_vote_emoji = await guild_config.neutral_vote_emoji()
-        down_vote_emoji = await guild_config.down_vote_emoji()
+        (
+            up_vote_emoji,
+            down_vote_emoji,
+            neutral_vote_emoji,
+        ) = await guild_config.get_voting_emojis()
         if not exclude_votes:
             components.append(
                 hikari.impl.SeparatorComponentBuilder(

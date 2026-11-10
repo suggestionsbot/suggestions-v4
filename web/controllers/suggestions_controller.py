@@ -80,6 +80,11 @@ async def suggestion_context(suggestion: Suggestions) -> dict:
     submitter["avatar_url"] = await avatar_url(submitter["user_id"])
 
     up_votes, down_votes, neutral_votes = await suggestion.vote_counts()
+    (
+        up_vote_emoji,
+        down_vote_emoji,
+        neutral_vote_emoji,
+    ) = await suggestion.guild_configuration.get_voting_emojis()
     return {
         "suggestion": suggestion,
         "submitter": submitter,
@@ -91,9 +96,9 @@ async def suggestion_context(suggestion: Suggestions) -> dict:
         "thread_url": suggestion.thread_jump_link,
         "created": timestamp(suggestion.created_at),
         "resolved_at": timestamp(suggestion.resolved_at),
-        "up_vote_emoji": await suggestion.guild_configuration.up_vote_emoji(),
-        "down_vote_emoji": await suggestion.guild_configuration.down_vote_emoji(),
-        "neutral_vote_emoji": await suggestion.guild_configuration.neutral_vote_emoji(),
+        "up_vote_emoji": up_vote_emoji,
+        "down_vote_emoji": down_vote_emoji,
+        "neutral_vote_emoji": neutral_vote_emoji,
         "show_neutral_vote": suggestion.guild_configuration.allow_neutral_votes,
     }
 
