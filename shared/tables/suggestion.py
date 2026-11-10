@@ -229,6 +229,7 @@ class Suggestions(Table, AuditMixin):
             cls.objects(
                 Suggestions.user_configuration,
                 Suggestions.guild_configuration,
+                Suggestions.guild_configuration.premium,  # ty: ignore[invalid-argument-type]
             )
             .where(
                 And(
