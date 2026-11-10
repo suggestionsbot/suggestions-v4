@@ -32,10 +32,11 @@ async def validate_emoji(
         reaction: str = custom.name
         emoji_id = custom.id
 
-    message = await rest.create_message(
-        channel, "Checking emoji. This message should be automatically deleted shortly."
-    )
     try:
+        message = await rest.create_message(
+            channel,
+            "Checking emoji. This message should be automatically deleted shortly.",
+        )
         await rest.add_reaction(channel, message, reaction, emoji_id)
     except hikari.ForbiddenError as exc:
         msg = (

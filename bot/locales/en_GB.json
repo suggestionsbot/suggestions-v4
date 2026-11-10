@@ -302,7 +302,7 @@
   "menus.guild_configuration.premium_menu.responses.premium_required.link": "Purchase Premium",
   "menus.guild_configuration.premium_menu.responses.reset_custom_cooldown": "I have reset the `/suggest` cooldown back to its default setting.",
   "menus.guild_configuration.premium_menu.responses.reset_custom_emojis": "I have reset the emojis back to the default setting.",
-  "menus.guild_configuration.premium_menu.responses.invalid_custom_emoji.missing_channel_perms": "I need Add Reactions + Read Message History here to be able to test I can use your emoji.",
+  "menus.guild_configuration.premium_menu.responses.invalid_custom_emoji.missing_channel_perms": "I need Send Messages + Add Reactions + Read Message History in this channel to be able to test I can use your emoji. Please provide those permissions and try again.",
   "menus.guild_configuration.premium_menu.responses.invalid_custom_emoji.missing_emoji_perms": "I can't use that emoji, please try a different one or try again.",
   "menus.guild_configuration.premium_menu.responses.invalid_custom_emoji": "That doesnt look like an emoji.\n\nIf you keep getting this error please reach out to our support server so we can fix the issue.",
   "menus.guild_configuration.premium_menu.responses.set_custom_cooldown": "I have configured a custom cooldown for this guilds `/suggest` command. It has been set at $AMOUNT per $PERIOD.",
