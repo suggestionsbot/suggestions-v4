@@ -184,3 +184,12 @@
 {%- macro unicode_emoji(char, label) -%}
     <span class="dc-emoji-unicode" role="img" aria-label="{{ label }}">{{ char }}</span>
 {%- endmacro %}
+
+{# Either kind of hikari emoji: custom (has an id) or unicode (a str subclass). #}
+{%- macro any_emoji(e, label) -%}
+    {%- if e.id is defined -%}
+        {{ emoji(e.id, e.name, e.is_animated, label) }}
+    {%- else -%}
+        {{ unicode_emoji(e, label) }}
+    {%- endif -%}
+{%- endmacro %}
