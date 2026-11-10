@@ -66,11 +66,11 @@ async def get_vote_data(
         for item in group:
             match item.vote_type_enum:
                 case SuggestionsVoteTypeEnum.UpVote:
-                    emoji = suggestion.guild_configuration.up_vote_emoji
+                    emoji = await suggestion.guild_configuration.up_vote_emoji()
                 case SuggestionsVoteTypeEnum.DownVote:
-                    emoji = suggestion.guild_configuration.down_vote_emoji
+                    emoji = await suggestion.guild_configuration.down_vote_emoji()
                 case SuggestionsVoteTypeEnum.NeutralVote:
-                    emoji = suggestion.guild_configuration.neutral_vote_emoji
+                    emoji = await suggestion.guild_configuration.neutral_vote_emoji()
                 case _:
                     msg = f"Unexpected vote of {item.vote_type_enum}"
                     raise ValueError(msg)
