@@ -474,13 +474,14 @@ class Suggestions(Table, AuditMixin):
             )
             votes = io.StringIO()
             up_votes, down_votes, neutral_votes = await self.vote_counts()
-            votes.write(f"{guild_config.up_vote_emoji.mention}: **{up_votes}**\n")
+            up_vote_emoji = await guild_config.up_vote_emoji()
+            neutral_vote_emoji = await guild_config.neutral_vote_emoji()
+            down_vote_emoji = await guild_config.down_vote_emoji()
+            votes.write(f"{up_vote_emoji.mention}: **{up_votes}**\n")
             if guild_config.allow_neutral_votes:
-                votes.write(
-                    f"{guild_config.neutral_vote_emoji.mention}: **{neutral_votes}**\n"
-                )
+                votes.write(f"{neutral_vote_emoji.mention}: **{neutral_votes}**\n")
 
-            votes.write(f"{guild_config.down_vote_emoji.mention}: **{down_votes}**")
+            votes.write(f"{down_vote_emoji.mention}: **{down_votes}**")
 
             components.append(
                 hikari.impl.TextDisplayComponentBuilder(
@@ -544,10 +545,13 @@ class Suggestions(Table, AuditMixin):
             )
         )
         if not exclude_buttons:
+            up_vote_emoji = await guild_config.up_vote_emoji()
+            neutral_vote_emoji = await guild_config.neutral_vote_emoji()
+            down_vote_emoji = await guild_config.down_vote_emoji()
             vote_components = [
                 hikari.impl.InteractiveButtonBuilder(
                     style=hikari.ButtonStyle.SECONDARY,
-                    emoji=guild_config.up_vote_emoji,
+                    emoji=up_vote_emoji,
                     custom_id=f"v4_suggestions_up_vote:{self.sID}",
                 )
             ]
@@ -555,7 +559,7 @@ class Suggestions(Table, AuditMixin):
                 vote_components.append(
                     hikari.impl.InteractiveButtonBuilder(
                         style=hikari.ButtonStyle.SECONDARY,
-                        emoji=guild_config.neutral_vote_emoji,
+                        emoji=neutral_vote_emoji,
                         custom_id=f"v4_suggestions_neutral_vote:{self.sID}",
                     )
                 )
@@ -563,7 +567,7 @@ class Suggestions(Table, AuditMixin):
             vote_components.append(
                 hikari.impl.InteractiveButtonBuilder(
                     style=hikari.ButtonStyle.SECONDARY,
-                    emoji=guild_config.down_vote_emoji,
+                    emoji=down_vote_emoji,
                     custom_id=f"v4_suggestions_down_vote:{self.sID}",
                 )
             )

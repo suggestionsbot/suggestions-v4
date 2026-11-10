@@ -159,8 +159,10 @@ class GuildConfigs(AuditMixin, Table):
         """Return the language as a Locale, str if the locale enum value doesn't exist."""
         return hikari.Locale(self.primary_language_raw)
 
-    @property
-    def up_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+    async def up_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+        if not await self.premium_is_enabled():
+            return DEFAULT_UP_VOTE
+
         if self.premium is None:
             msg = "Guild premium not fetched when looking up voting emojis."
             raise ValueError(msg)
@@ -170,8 +172,10 @@ class GuildConfigs(AuditMixin, Table):
 
         return DEFAULT_UP_VOTE
 
-    @property
-    def down_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+    async def down_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+        if not await self.premium_is_enabled():
+            return DEFAULT_DOWN_VOTE
+
         if self.premium is None:
             msg = "Guild premium not fetched when looking up voting emojis."
             raise ValueError(msg)
@@ -181,8 +185,10 @@ class GuildConfigs(AuditMixin, Table):
 
         return DEFAULT_DOWN_VOTE
 
-    @property
-    def neutral_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+    async def neutral_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+        if not await self.premium_is_enabled():
+            return DEFAULT_NEUTRAL_VOTE
+
         if self.premium is None:
             msg = "Guild premium not fetched when looking up voting emojis."
             raise ValueError(msg)
