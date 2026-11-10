@@ -11,9 +11,6 @@ from bot import utils
 from bot.constants import (
     VIEW_GROUP,
     PAGINATOR_OBJECTS,
-    DEFAULT_UP_VOTE,
-    DEFAULT_DOWN_VOTE,
-    DEFAULT_NEUTRAL_VOTE,
 )
 from bot.hooks import early_ephemeral_defer
 from bot.localisation import Localisation
@@ -64,16 +61,21 @@ async def get_vote_data(
         return None
 
     data = []
+    (
+        up_vote_emoji,
+        down_vote_emoji,
+        neutral_vote_emoji,
+    ) = await suggestion.guild_configuration.get_voting_emojis()
     for group in batched(votes, 25):
         text = io.StringIO()
         for item in group:
             match item.vote_type_enum:
                 case SuggestionsVoteTypeEnum.UpVote:
-                    emoji = DEFAULT_UP_VOTE
+                    emoji = up_vote_emoji
                 case SuggestionsVoteTypeEnum.DownVote:
-                    emoji = DEFAULT_DOWN_VOTE
+                    emoji = down_vote_emoji
                 case SuggestionsVoteTypeEnum.NeutralVote:
-                    emoji = DEFAULT_NEUTRAL_VOTE
+                    emoji = neutral_vote_emoji
                 case _:
                     msg = f"Unexpected vote of {item.vote_type_enum}"
                     raise ValueError(msg)

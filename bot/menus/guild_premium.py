@@ -8,6 +8,7 @@ from web.constants import REDIS_CLIENT
 import logging
 from collections.abc import Sequence
 from typing import cast, Literal
+from bot.utils import emojis
 
 import hikari
 import lightbulb
@@ -21,7 +22,7 @@ from hikari.interactions.interaction_components import (
 from bot import utils
 from bot.constants import ENABLE_CUSTOM_NAME_AND_AVATARS, IS_CUSTOM_BOT
 from bot.localisation import Localisation
-from shared.tables import GuildConfigs, UserConfigs
+from shared.tables import GuildConfigs, UserConfigs, SuggestionsVoteTypeEnum
 from shared.tables.premium_guild_config import CooldownPeriod
 
 log = logging.getLogger(__name__)
@@ -188,6 +189,43 @@ class GuildPremiumMenu:
                 )
             )
 
+        elif id_data.startswith("custom_emoji"):
+            id_data, key = id_data.split(":", maxsplit=1)
+            emoji_str: str = cast("str", cls.extract_value(event, "emoji"))
+
+            try:
+                parsed = await emojis.validate_emoji(
+                    ctx.client.rest, ctx.channel_id, emoji_str
+                )
+                parsed = emojis.emoji_to_db(parsed)
+            except ValueError as exc:
+                await ctx.respond(
+                    localisations.get_localized_string(
+                        str(exc),
+                        user_config.primary_language,
+                    )
+                )
+                return
+
+            match key:
+                case "up":
+                    guild_config.premium.up_vote_emoji = parsed
+                case "down":
+                    guild_config.premium.down_vote_emoji = parsed
+                case "neutral":
+                    guild_config.premium.neutral_vote_emoji = parsed
+                case _:
+                    msg = f"Unexpected custom emoji key {key!r}"
+                    raise ValueError(msg)
+
+            await guild_config.premium.save()
+            await ctx.respond(
+                localisations.get_localized_string(
+                    f"menus.guild_configuration.premium_menu.responses.configured_custom_emoji.{key}",
+                    user_config.primary_language,
+                )
+            )
+
     @classmethod
     async def handle_interaction(  # noqa: PLR0912, PLR0911, PLR0915, C901
         cls,
@@ -247,6 +285,21 @@ class GuildPremiumMenu:
                 ),
                 f"guild_premium_modal:{link_id}:custom_name",
                 components=await cls.build_name_modal(localisations, user_config),
+            )
+
+        elif id_data.startswith("premium_modal_custom_emoji"):
+            id_data, key = id_data.split(":")
+            await ctx.respond_with_modal(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_emoji.modal_title",
+                    user_config.primary_language,
+                ),
+                f"guild_premium_modal:{link_id}:custom_emoji:{key}",
+                components=await cls.build_emoji_modal(
+                    localisations,
+                    user_config,
+                    is_for=key,  # ty: ignore[invalid-argument-type]
+                ),
             )
 
         elif id_data == "premium_modal_custom_avatar":
@@ -317,6 +370,19 @@ class GuildPremiumMenu:
             await ctx.respond(
                 localisations.get_localized_string(
                     "menus.guild_configuration.premium_menu.responses.reset_custom_cooldown",
+                    user_config.primary_language,
+                )
+            )
+
+        elif id_data == "premium_reset_custom_emojis":
+            guild_config.premium.up_vote_emoji = None
+            guild_config.premium.neutral_vote_emoji = None
+            guild_config.premium.down_vote_emoji = None
+            await guild_config.premium.save()
+
+            await ctx.respond(
+                localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.responses.reset_custom_emojis",
                     user_config.primary_language,
                 )
             )
@@ -543,6 +609,41 @@ class GuildPremiumMenu:
         ]
 
     @classmethod
+    async def build_emoji_modal(
+        cls,
+        localisations: Localisation,
+        user_config: UserConfigs,
+        is_for: Literal["up", "down", "neutral"],
+    ) -> list[
+        hikari.impl.LabelComponentBuilder | hikari.impl.TextDisplayComponentBuilder
+    ]:
+        return [
+            hikari.impl.LabelComponentBuilder(
+                label=localisations.get_localized_string(
+                    f"menus.guild_configuration.premium_menu.custom_emoji.{is_for}.title",
+                    user_config.primary_language,
+                ).capitalize(),
+                description=localisations.get_localized_string(
+                    f"menus.guild_configuration.premium_menu.custom_emoji.{is_for}.description",
+                    user_config.primary_language,
+                ),
+                component=hikari.impl.TextInputBuilder(
+                    custom_id="emoji",
+                    style=hikari.TextInputStyle.SHORT,
+                    required=True,
+                    min_length=1,
+                    max_length=64,
+                ),
+            ),
+            hikari.impl.TextDisplayComponentBuilder(
+                content=localisations.get_localized_string(
+                    "menus.guild_configuration.premium_menu.custom_emoji.extra_details",
+                    user_config.primary_language,
+                ),
+            ),
+        ]
+
+    @classmethod
     async def build_avatar_modal(
         cls, localisations: Localisation, user_config: UserConfigs
     ) -> list[LabelComponentBuilder]:
@@ -648,6 +749,48 @@ class GuildPremiumMenu:
                                     user_config.primary_language,
                                 ),
                                 custom_id=f"gcm:{link_id}:premium_modal_queued_suggestion_prefix",
+                            ),
+                        ],
+                    ),
+                    hikari.impl.TextDisplayComponentBuilder(
+                        content=localisations.get_localized_string(
+                            "menus.guild_configuration.premium_menu.custom_emojis",
+                            user_config.primary_language,
+                        ),
+                    ),
+                    hikari.impl.MessageActionRowBuilder(
+                        components=[
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.custom_emojis.up_button",
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:premium_modal_custom_emoji:up",
+                            ),
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.custom_emojis.neutral_button",
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:premium_modal_custom_emoji:neutral",
+                            ),
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.custom_emojis.down_button",
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:premium_modal_custom_emoji:down",
+                            ),
+                            hikari.impl.InteractiveButtonBuilder(
+                                style=hikari.ButtonStyle.SECONDARY,
+                                label=localisations.get_localized_string(
+                                    "menus.guild_configuration.premium_menu.custom_emojis.reset_button",
+                                    user_config.primary_language,
+                                ),
+                                custom_id=f"gcm:{link_id}:premium_reset_custom_emojis",
                             ),
                         ],
                     ),

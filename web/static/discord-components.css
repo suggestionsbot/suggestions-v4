@@ -445,6 +445,9 @@
 
 .dc-emoji-unicode {
     font-family: "Twemoji Mozilla", "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 1.375em;
+    line-height: 1;
+    vertical-align: bottom;
 }
 
 
