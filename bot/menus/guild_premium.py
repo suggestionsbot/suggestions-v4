@@ -291,7 +291,7 @@ class GuildPremiumMenu:
             id_data, key = id_data.split(":")
             await ctx.respond_with_modal(
                 localisations.get_localized_string(
-                    "menus.guild_configuration.premium_menu.custom_avatar.modal_title",
+                    "menus.guild_configuration.premium_menu.custom_emoji.modal_title",
                     user_config.primary_language,
                 ),
                 f"guild_premium_modal:{link_id}:custom_emoji:{key}",
