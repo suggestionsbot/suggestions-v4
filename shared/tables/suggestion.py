@@ -465,6 +465,9 @@ class Suggestions(Table, AuditMixin):
                 hikari.impl.TextDisplayComponentBuilder(content=content.getvalue())
             )
 
+        up_vote_emoji = await guild_config.up_vote_emoji()
+        neutral_vote_emoji = await guild_config.neutral_vote_emoji()
+        down_vote_emoji = await guild_config.down_vote_emoji()
         if not exclude_votes:
             components.append(
                 hikari.impl.SeparatorComponentBuilder(
@@ -474,9 +477,6 @@ class Suggestions(Table, AuditMixin):
             )
             votes = io.StringIO()
             up_votes, down_votes, neutral_votes = await self.vote_counts()
-            up_vote_emoji = await guild_config.up_vote_emoji()
-            neutral_vote_emoji = await guild_config.neutral_vote_emoji()
-            down_vote_emoji = await guild_config.down_vote_emoji()
             votes.write(f"{up_vote_emoji.mention}: **{up_votes}**\n")
             if guild_config.allow_neutral_votes:
                 votes.write(f"{neutral_vote_emoji.mention}: **{neutral_votes}**\n")
@@ -545,9 +545,6 @@ class Suggestions(Table, AuditMixin):
             )
         )
         if not exclude_buttons:
-            up_vote_emoji = await guild_config.up_vote_emoji()
-            neutral_vote_emoji = await guild_config.neutral_vote_emoji()
-            down_vote_emoji = await guild_config.down_vote_emoji()
             vote_components = [
                 hikari.impl.InteractiveButtonBuilder(
                     style=hikari.ButtonStyle.SECONDARY,
