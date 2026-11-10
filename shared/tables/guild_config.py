@@ -1,4 +1,8 @@
 from __future__ import annotations
+
+from hikari import CustomEmoji, UnicodeEmoji
+
+import bot.utils.emojis
 from shared.saq.worker import enqueue_traced, SAQ_QUEUE
 import logging
 from typing import TYPE_CHECKING, cast, Any
@@ -32,6 +36,9 @@ from bot.constants import (
     ENABLE_FREE_GUILD_PREMIUM,
     user_cooldown_bucket,
     OTEL_TRACER,
+    DEFAULT_UP_VOTE,
+    DEFAULT_DOWN_VOTE,
+    DEFAULT_NEUTRAL_VOTE,
 )
 
 if TYPE_CHECKING:
@@ -151,6 +158,39 @@ class GuildConfigs(AuditMixin, Table):
     def primary_language(self) -> hikari.Locale | str:
         """Return the language as a Locale, str if the locale enum value doesn't exist."""
         return hikari.Locale(self.primary_language_raw)
+
+    @property
+    def up_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+        if self.premium is None:
+            msg = "Guild premium not fetched when looking up voting emojis."
+            raise ValueError(msg)
+
+        if self.premium.up_vote_emoji is not None:
+            return bot.utils.emojis.emoji_from_db(self.premium.up_vote_emoji)
+
+        return DEFAULT_UP_VOTE
+
+    @property
+    def down_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+        if self.premium is None:
+            msg = "Guild premium not fetched when looking up voting emojis."
+            raise ValueError(msg)
+
+        if self.premium.down_vote_emoji is not None:
+            return bot.utils.emojis.emoji_from_db(self.premium.down_vote_emoji)
+
+        return DEFAULT_DOWN_VOTE
+
+    @property
+    def neutral_vote_emoji(self) -> CustomEmoji | UnicodeEmoji:
+        if self.premium is None:
+            msg = "Guild premium not fetched when looking up voting emojis."
+            raise ValueError(msg)
+
+        if self.premium.neutral_vote_emoji is not None:
+            return bot.utils.emojis.emoji_from_db(self.premium.neutral_vote_emoji)
+
+        return DEFAULT_NEUTRAL_VOTE
 
     async def queue_sticky_button_edit(self, channel_id: int) -> None:
         """Queues a worker task to edit any sticky buttons in that channel."""

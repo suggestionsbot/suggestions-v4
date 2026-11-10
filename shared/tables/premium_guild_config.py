@@ -2,7 +2,7 @@ from datetime import timedelta
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from piccolo.columns import Text, Integer, BigInt, Serial, Boolean
+from piccolo.columns import Text, Integer, BigInt, Serial, Boolean, Varchar
 from piccolo.table import Table
 
 from shared.tables.mixins import AuditMixin
@@ -76,3 +76,6 @@ class PremiumGuildConfigs(AuditMixin, Table):
         null=True,
         help_text="How many times during the period can /suggest be used?",
     )
+    up_vote_emoji = Varchar(length=65, null=True, default=None)
+    neutral_vote_emoji = Varchar(length=65, null=True, default=None)
+    down_vote_emoji = Varchar(length=65, null=True, default=None)
