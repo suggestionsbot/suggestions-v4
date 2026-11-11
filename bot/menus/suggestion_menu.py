@@ -509,7 +509,7 @@ class SuggestionMenu:
         # Need to inject into both user supplied and localized so do here
         thread_name = thread_name.replace("$SID", s.sID)
         max_thread_length = 100
-        if len(thread_name) >= max_thread_length:
+        if len(thread_name) > max_thread_length:
             internal_error: InternalErrors = await InternalErrors.persist_error(
                 "Thread name too long",
                 command_name="suggest",

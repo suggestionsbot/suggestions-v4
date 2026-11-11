@@ -345,7 +345,12 @@ class Suggestions(Table, AuditMixin):
             rough_content_length += len(self.resolved_note)
         if self.moderator_note:
             rough_content_length += len(self.moderator_note)
-        is_probs_over_max_length = rough_content_length >= 3500  # noqa: PLR2004
+        if prefix:
+            rough_content_length += len(prefix)
+
+        # Discord caps total CV2 text at 4000; leave ~1000 for localised
+        # headings, footer link, display names, emojis and the thread link
+        is_probs_over_max_length = rough_content_length >= 3000  # noqa: PLR2004
 
         components: list = [
             hikari.impl.TextDisplayComponentBuilder(
@@ -445,7 +450,10 @@ class Suggestions(Table, AuditMixin):
                     "components.suggestions.resolved_type",
                     locale,
                     extras={
-                        "RESOLVED_TYPE": self.state.value.capitalize(),
+                        "RESOLVED_TYPE": localisations.get_localized_string(
+                            f"values.state.{self.state.value.lower()}",
+                            locale,
+                        ),
                     },
                     guild_config=guild_config,
                 )

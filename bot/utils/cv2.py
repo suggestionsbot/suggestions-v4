@@ -75,7 +75,10 @@ async def build_user_resolution_notification(
                         user_config.primary_language,
                         extras={
                             "AUTHOR": suggestion.author_display_name,
-                            "STATE": suggestion.state.value,
+                            "STATE": LOCALISATIONS.get_localized_string(
+                                f"values.state.{suggestion.state.value.lower()}",
+                                user_config.primary_language,
+                            ),
                             "JUMP_TO": suggestion.message_jump_link,
                             "RESOLVED_BY": suggestion.resolved_by_display_text,
                             "SID": f"**{suggestion.sID}**",
@@ -125,7 +128,10 @@ async def build_user_resolution_voter_notification(
                         user_config.primary_language,
                         extras={
                             "USER": vote.voter_display_name,
-                            "STATE": suggestion.state.value,
+                            "STATE": LOCALISATIONS.get_localized_string(
+                                f"values.state.{suggestion.state.value.lower()}",
+                                user_config.primary_language,
+                            ),
                             "JUMP_TO": suggestion.message_jump_link,
                             "RESOLVED_BY": suggestion.resolved_by_display_text,
                             "SID": f"**{suggestion.sID}**",
