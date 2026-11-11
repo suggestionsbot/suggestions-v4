@@ -119,7 +119,7 @@
   "commands.resolve.options.response.name": "antwort",
   "commands.resolve.options.suggestion_id.description": "Die sID, die Sie abschließen möchten.",
   "commands.resolve.options.suggestion_id.name": "vorschlags_id",
-  "commands.resolve.responses.cant_get_log_channel": "Der Vorschlag konnte nicht gefunden und an Ihren Log-Kanal gesendet werden. Bitte stellen Sie sicher, dass der Bot im Log-Kanal die richtigen Berechtigungen hat, und versuchen Sie es erneut.",
+  "commands.resolve.responses.cant_get_log_channel": "Ihr Log-Kanal konnte nicht gefunden oder der Vorschlag nicht dorthin gesendet werden. Bitte stellen Sie sicher, dass der Bot im Log-Kanal die richtigen Berechtigungen hat, und versuchen Sie es erneut.",
   "commands.resolve.responses.keep_logs_edit_soon": "Danke, dass Sie den Vorschlag `$SID` abgeschlossen haben. Er wird in wenigen Sekunden bearbeitet, um den neuen Status widerzuspiegeln.",
   "commands.resolve.responses.locking_thread": "Dieser Thread wird gesperrt, da der Vorschlag abgeschlossen wurde.",
   "commands.resolve.responses.missing_queued_suggestion_channel_perms": "Ich kann den ursprünglichen Vorschlag in der Warteschlange nicht löschen. Bitte stellen Sie sicher, dass der Bot im Kanal die richtigen Berechtigungen hat, und versuchen Sie es erneut.",

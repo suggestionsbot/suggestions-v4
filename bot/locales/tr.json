@@ -119,7 +119,7 @@
   "commands.resolve.options.response.name": "yanıt",
   "commands.resolve.options.suggestion_id.description": "Sonuçlandırmak istediğiniz önerinin sID'si.",
   "commands.resolve.options.suggestion_id.name": "öneri-id",
-  "commands.resolve.responses.cant_get_log_channel": "Öneri log kanalınızda bulunamadı ve oraya gönderilemedi. Lütfen botun log kanalında doğru izinlere sahip olduğundan emin olun ve tekrar deneyin.",
+  "commands.resolve.responses.cant_get_log_channel": "Log kanalınız bulunamadı veya öneri oraya gönderilemedi. Lütfen botun log kanalında doğru izinlere sahip olduğundan emin olun ve tekrar deneyin.",
   "commands.resolve.responses.keep_logs_edit_soon": "`$SID` önerisini sonuçlandırdığınız için teşekkürler. Yeni durumu yansıtması için birkaç saniye içinde düzenlenecek.",
   "commands.resolve.responses.locking_thread": "Öneri sonuçlandırıldığı için bu alt başlık kilitleniyor.",
   "commands.resolve.responses.missing_queued_suggestion_channel_perms": "Kuyruktaki orijinal öneriyi silemiyorum. Lütfen botun kanalda doğru izinlere sahip olduğundan emin olun ve tekrar deneyin.",

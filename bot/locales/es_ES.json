@@ -278,7 +278,7 @@
   "menus.guild_configuration.premium_menu.suggestion_button.title": "Editar mensaje del botón",
   "menus.guild_configuration.premium_menu.suggestion_button.description": "¿Qué texto debe mostrar el botón? Déjalo vacío para restablecer el valor predeterminado.",
   "menus.guild_configuration.premium_menu.suggestion_button_message.title": "Editar mensaje",
-  "menus.guild_configuration.premium_menu.suggestion_button_message.description": "¿Qué mensaje quieres que se envíe al usarlo? Déjalo vacío para restablecer el nombre.",
+  "menus.guild_configuration.premium_menu.suggestion_button_message.description": "¿Qué mensaje quieres que se envíe al usarlo? Déjalo vacío para restablecer el mensaje.",
   "menus.guild_configuration.premium_menu.suggestion_button_no_message.title": "Ocultar mensaje de sugerencia",
   "menus.guild_configuration.premium_menu.suggestion_button_no_message.description": "¿Debe el bot enviar solo un botón sin mensaje?",
   "menus.guild_configuration.premium_menu.suggestion_button_no_message.hide_message": "Ocultar el mensaje",
