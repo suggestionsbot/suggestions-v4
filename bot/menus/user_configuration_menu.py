@@ -81,7 +81,7 @@ class UserConfigurationMenus:
             await user_config.save()
             await ctx.respond(
                 constants.LOCALISATIONS.get_localized_string(
-                    "menus.guild_configuration.responses.primary_language",
+                    "menus.user_configuration.responses.primary_language",
                     user_config.primary_language,
                     extras={
                         "LANGUAGE": language_as_word(user_config.primary_language_raw)

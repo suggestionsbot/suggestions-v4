@@ -325,12 +325,20 @@ class QueuedSuggestions(Table, AuditMixin):
             )
             content = io.StringIO()
             if self.resolved_note is not None:
+                # Discord caps total CV2 text at 4000, there is no dashboard
+                # link for queued suggestions so truncate the note instead
+                # TODO: Once queued suggestions have a dashboard page, reuse
+                #  components.suggestions.too_much_content with a link instead
+                note = self.resolved_note
+                budget = max(0, 3000 - len(self.suggestion) - len(prefix or ""))
+                if len(note) > budget:
+                    note = note[:budget] + "…"
                 content.write(
                     localisations.get_localized_string(
                         "components.queued_suggestions.resolved_note",
                         locale,
                         extras={
-                            "RESOLVED_BY_NOTE": self.resolved_note,
+                            "RESOLVED_BY_NOTE": note,
                         },
                     )
                 )

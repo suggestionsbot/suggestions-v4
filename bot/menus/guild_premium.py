@@ -167,7 +167,14 @@ class GuildPremiumMenu:
                 localisations.get_localized_string(
                     "menus.guild_configuration.premium_menu.responses.set_custom_cooldown",
                     user_config.primary_language,
-                    extras={"AMOUNT": amount, "PERIOD": period_enum.value},
+                    extras={
+                        "AMOUNT": amount,
+                        "PERIOD": localisations.get_localized_string(
+                            "menus.guild_configuration.premium_menu.custom_cooldown.amount.options."
+                            f"{period_enum.value.lower()}",
+                            user_config.primary_language,
+                        ),
+                    },
                 )
             )
 

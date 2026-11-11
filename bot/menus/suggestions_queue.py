@@ -131,7 +131,7 @@ class SuggestionsQueueMenu:
                         user_config.primary_language,
                     ).capitalize(),
                     description=localisations.get_localized_string(
-                        "components.suggestions.thread_name.description",
+                        "components.queued_suggestions.thread_name.description",
                         user_config.primary_language,
                     ),
                     component=hikari.impl.TextInputBuilder(
